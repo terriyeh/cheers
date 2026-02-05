@@ -290,6 +290,15 @@ vault-pal/
 
 Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
+### Automated Code Review
+
+All pull requests are automatically reviewed by Claude AI. The review covers:
+- **Code Quality**: Anti-patterns, error handling, maintainability
+- **Security**: Vulnerabilities, secrets, input validation
+- **Testing**: Coverage, test quality, edge cases
+
+Review results are posted as PR comments. Critical issues will block the merge.
+
 ### Reporting Issues
 
 Found a bug or have a feature request? [Open an issue](https://github.com/terriyeh/vault-pal/issues) on GitHub.
