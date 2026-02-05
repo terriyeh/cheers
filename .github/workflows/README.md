@@ -1,107 +1,135 @@
 # GitHub Actions Workflows
 
-## Claude Code Review
+## Overview
 
-Automated code review using Claude AI that runs on every pull request.
+This project uses the official [Anthropic Claude Code Action](https://github.com/anthropics/claude-code-action) for automated code reviews and interactive assistance.
 
-### How It Works
+## Workflows
 
-1. **Triggers**: Automatically runs when:
-   - A PR is opened, reopened, or updated
-   - Someone comments with `@claude` on the PR
-2. **Review Process**: Runs three parallel reviews using Claude API:
-   - **Code Quality**: Code smells, error handling, maintainability
-   - **Security**: Vulnerabilities, secrets, input validation
-   - **Testing**: Coverage, test quality, edge cases
-3. **Results**: Posts a comprehensive review comment on the PR
-4. **Gating**: Fails the workflow if CRITICAL issues are found
+### 1. Claude Code Review (`claude-code-review.yml`)
 
-### Manual Triggering
+Automated comprehensive code review that runs on every pull request.
 
-You can manually trigger a review at any time by commenting on the PR:
+**Triggers:**
+- Pull request opened
+- New commits pushed to PR
 
+**What it does:**
+- Automatically reviews all code changes
+- Provides feedback on code quality, security, and testing
+- Posts review as PR comment
+- Updates same comment on subsequent pushes (sticky comment)
+
+**Review Coverage:**
+- **Code Quality**: Anti-patterns, error handling, maintainability
+- **Security**: Vulnerabilities, secrets, input validation
+- **Testing**: Coverage, test quality, edge cases
+
+**No @claude mention needed** - runs automatically!
+
+### 2. Claude Interactive (`claude.yml`)
+
+Interactive Claude assistance triggered by @claude mentions.
+
+**Triggers:**
+- `@claude` in PR comments
+- `@claude` in issue comments
+- `@claude` in PR review comments
+- `@claude` in issue titles/descriptions
+
+**What it does:**
+- Responds to your questions
+- Makes code changes per your request
+- Runs allowed commands (`npm run build`, `npm run test`, etc.)
+- Has context about the Vault Pal project
+
+**Examples:**
 ```
-@claude
+@claude Can you explain how the pet animation system works?
 ```
-
-or
-
 ```
-@claude please review
+@claude Please refactor this function to be more maintainable
 ```
-
-The workflow will:
-- React with 👀 to acknowledge your comment
-- Run a fresh review
-- Update or create a new review comment
-
-### Setup
-
-The workflow requires the `CLAUDE_CODE_OAUTH_TOKEN` secret to be configured in your GitHub repository:
-
-1. Go to your repository **Settings** → **Secrets and variables** → **Actions**
-2. Verify `CLAUDE_CODE_OAUTH_TOKEN` is set with your Claude API key
-3. The workflow will automatically use this token for API calls
-
-### Review Output
-
-The workflow posts a comment on your PR with:
-
-```markdown
-## 🤖 Claude Code Review
-
-### ⚠️ Issues Found
-- Critical: 0
-- High: 2
-
----
-
-## ✓ Code Quality Review
-[Detailed feedback...]
-
----
-
-## ✓ Security Review
-[Detailed feedback...]
-
----
-
-## ✓ Testing Review
-[Detailed feedback...]
+```
+@claude Run the tests and fix any failures
 ```
 
-### Issue Priorities
+## Setup
 
-- **CRITICAL**: Must be fixed before merge (blocks workflow)
-- **HIGH**: Should be fixed before merge
-- **MEDIUM**: Consider fixing
-- **LOW**: Optional improvements
+### Prerequisites
 
-### Customization
+1. **CLAUDE_CODE_OAUTH_TOKEN** secret must be configured:
+   - Go to repository **Settings** → **Secrets and variables** → **Actions**
+   - Verify `CLAUDE_CODE_OAUTH_TOKEN` is set with your Claude OAuth token
 
-To modify the review criteria, edit:
-- `.github/scripts/claude-review.js` - Review prompts and logic
-- `.github/workflows/claude-review.yml` - Workflow configuration
+### Permissions
 
-### Model Used
+The workflows require these permissions:
+- `contents: read` - Read repository code
+- `pull-requests: read` - Read PR information
+- `issues: read` - Read issue information
+- `id-token: write` - Authenticate with Claude
+- `actions: read` - Read CI results (for interactive Claude)
 
-Currently uses `claude-sonnet-4-20250514` for optimal balance of:
-- Speed: Fast review turnaround
-- Quality: Comprehensive analysis
-- Cost: Efficient token usage
+## Customization
 
-To use a different model, update the `model` field in `claude-review.js:22`.
+### Modify Review Prompt
 
-### Troubleshooting
+Edit the `direct_prompt` in `claude-code-review.yml` to focus on specific areas:
 
-**Workflow fails with authentication error:**
-- Verify `CLAUDE_OAUTH_TOKEN` is correctly set in repository secrets
-- Check the token has not expired
+```yaml
+direct_prompt: |
+  Focus on:
+  - TypeScript type safety
+  - Obsidian API usage
+  - Plugin performance
+```
 
-**Review is incomplete:**
-- Check if the diff is too large (>15KB is truncated)
-- Review the workflow logs for API errors
+### Change Allowed Commands
 
-**False positives:**
-- Reviews are AI-generated and may need human judgment
-- Use review comments to discuss findings with the team
+Edit `allowed_tools` in `claude.yml` to allow/restrict commands:
+
+```yaml
+allowed_tools: "Bash(npm install),Bash(npm run build),Bash(npm test)"
+```
+
+### Add Custom Instructions
+
+Edit `custom_instructions` in `claude.yml` for project-specific guidance:
+
+```yaml
+custom_instructions: |
+  - Follow Obsidian plugin best practices
+  - Maintain compatibility with Obsidian 1.0.0+
+  - Test changes in a real vault
+```
+
+### Use Different Model
+
+Uncomment and set the model parameter (defaults to Claude Sonnet 4):
+
+```yaml
+model: "claude-opus-4-1-20250805"
+```
+
+## Troubleshooting
+
+**Workflow doesn't trigger:**
+- Verify `CLAUDE_CODE_OAUTH_TOKEN` is set correctly
+- Check workflow permissions in repository settings
+- Ensure @claude mentions are spelled correctly (case-sensitive)
+
+**Authentication errors:**
+- Regenerate your Claude OAuth token
+- Update the GitHub secret with new token
+
+**Review not posting comments:**
+- Check workflow logs for errors
+- Verify PR has write permissions enabled
+- Ensure repository allows GitHub Actions to create PR comments
+
+## Official Documentation
+
+For more details, see:
+- [Claude Code Action on GitHub](https://github.com/anthropics/claude-code-action)
+- [Anthropic API Documentation](https://docs.anthropic.com/)

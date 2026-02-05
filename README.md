@@ -292,12 +292,14 @@ Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for gu
 
 ### Automated Code Review
 
-All pull requests are automatically reviewed by Claude AI. The review covers:
-- **Code Quality**: Anti-patterns, error handling, maintainability
-- **Security**: Vulnerabilities, secrets, input validation
-- **Testing**: Coverage, test quality, edge cases
+All pull requests are automatically reviewed by Claude AI using the official [Anthropic Claude Code Action](https://github.com/anthropics/claude-code-action):
 
-Review results are posted as PR comments. Critical issues will block the merge.
+- **Automatic**: Runs on every PR, no @claude mention needed
+- **Comprehensive**: Reviews code quality, security, and testing
+- **Interactive**: Comment `@claude` on PRs/issues for assistance
+- **Sticky Comments**: Updates same comment on new pushes
+
+See [`.github/workflows/README.md`](.github/workflows/README.md) for details.
 
 ### Reporting Issues
 
