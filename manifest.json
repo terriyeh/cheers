@@ -1,7 +1,7 @@
 {
 	"id": "vault-pal",
 	"name": "Vault Pal",
-	"version": "1.0.1",
+	"version": "0.0.1",
 	"minAppVersion": "1.0.0",
 	"description": "Interactive pet companion for gamified daily note-taking",
 	"author": "Terri Yeh",

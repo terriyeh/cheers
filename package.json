@@ -1,6 +1,6 @@
 {
   "name": "vault-pal",
-  "version": "1.0.1",
+  "version": "0.0.1",
   "description": "Interactive pet companion for gamified daily note-taking",
   "main": "main.js",
   "scripts": {
