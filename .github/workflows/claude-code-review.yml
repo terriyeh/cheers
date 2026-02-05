@@ -1,0 +1,56 @@
+name: Claude Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  claude-review:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+      issues: read
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Run Claude Code Review
+        id: claude-review
+        uses: anthropics/claude-code-action@beta
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          allowed_bots: "*"
+
+          # Automated review prompt for all PRs
+          direct_prompt: |
+            Please review this pull request comprehensively and provide feedback on:
+
+            **Code Quality:**
+            - Code smells and anti-patterns
+            - Error handling completeness
+            - Naming conventions and clarity
+            - Code organization and maintainability
+            - Performance considerations
+
+            **Security:**
+            - Security vulnerabilities (OWASP Top 10)
+            - Exposed secrets or credentials
+            - Input validation and sanitization
+            - Authentication and authorization issues
+
+            **Testing:**
+            - Test coverage adequacy
+            - Test quality and assertions
+            - Edge case handling
+            - Missing test scenarios
+
+            Categorize issues as CRITICAL, HIGH, MEDIUM, or LOW priority.
+            Be constructive and specific with file:line references.
+
+          # Use sticky comments to update the same comment on subsequent pushes
+          use_sticky_comment: true

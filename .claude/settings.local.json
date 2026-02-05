@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e \"const fs = require\\(''fs''\\); const data = JSON.parse\\(fs.readFileSync\\(''C:\\\\Users\\\\Terri\\\\.claude\\\\projects\\\\d--vault-pal\\\\e811f109-9373-4d47-90c1-df8a940dcce1\\\\tool-results\\\\toolu_011xHQEFsy3jeDLtMBswvNxU.json'', ''utf8''\\)\\); fs.writeFileSync\\(''d:\\\\vault-pal\\\\DETAILED_IMPLEMENTATION_PLANS.md'', data[0].text\\);\")",
+      "Bash(gh issue create:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nAdd comprehensive documentation and README\n\n- Add README.md with installation, quick start, and development guides\n- Add IMPLEMENTATION_ROADMAP.md with 12-week development plan\n- Add TECHNICAL_ARCHITECTURE.md with system design and tech stack\n- Add SETUP_TEST_VAULT.md with testing instructions\n\nAll 28 GitHub issues created for MVP development.\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(npm run build:*)",
+      "Bash(npm install)",
+      "Bash(npm run lint:*)",
+      "Bash(git commit:*)"
+    ]
+  }
+}
