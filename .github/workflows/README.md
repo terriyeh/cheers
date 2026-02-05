@@ -6,13 +6,34 @@ Automated code review using Claude AI that runs on every pull request.
 
 ### How It Works
 
-1. **Triggers**: Automatically runs when a PR is opened, reopened, or updated
+1. **Triggers**: Automatically runs when:
+   - A PR is opened, reopened, or updated
+   - Someone comments with `@claude` on the PR
 2. **Review Process**: Runs three parallel reviews using Claude API:
    - **Code Quality**: Code smells, error handling, maintainability
    - **Security**: Vulnerabilities, secrets, input validation
    - **Testing**: Coverage, test quality, edge cases
 3. **Results**: Posts a comprehensive review comment on the PR
 4. **Gating**: Fails the workflow if CRITICAL issues are found
+
+### Manual Triggering
+
+You can manually trigger a review at any time by commenting on the PR:
+
+```
+@claude
+```
+
+or
+
+```
+@claude please review
+```
+
+The workflow will:
+- React with 👀 to acknowledge your comment
+- Run a fresh review
+- Update or create a new review comment
 
 ### Setup
 
