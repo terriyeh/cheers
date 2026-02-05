@@ -13,6 +13,21 @@ if (!ANTHROPIC_API_KEY) {
 }
 
 /**
+ * Detect token type and return appropriate headers
+ */
+function getAuthHeaders(token) {
+  // OAuth tokens typically start with specific prefixes or are longer
+  // API keys start with 'sk-ant-'
+  if (token.startsWith('sk-ant-')) {
+    // Standard API key
+    return { 'x-api-key': token };
+  } else {
+    // Assume OAuth token - use Bearer authentication
+    return { 'Authorization': `Bearer ${token}` };
+  }
+}
+
+/**
  * Call Claude API with streaming support
  */
 async function callClaude(prompt, maxTokens = 4096) {
@@ -27,6 +42,8 @@ async function callClaude(prompt, maxTokens = 4096) {
     ]
   });
 
+  const authHeaders = getAuthHeaders(ANTHROPIC_API_KEY);
+
   return new Promise((resolve, reject) => {
     const options = {
       hostname: 'api.anthropic.com',
@@ -36,8 +53,8 @@ async function callClaude(prompt, maxTokens = 4096) {
       headers: {
         'Content-Type': 'application/json',
         'Content-Length': data.length,
-        'x-api-key': ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01'
+        'anthropic-version': '2023-06-01',
+        ...authHeaders
       }
     };
 
