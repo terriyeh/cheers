@@ -42,7 +42,7 @@ jobs:
       - name: Run Claude Code Review
         id: review
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.CLAUDE_OAUTH_TOKEN }}
+          ANTHROPIC_API_KEY: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           PR_TITLE: ${{ github.event.pull_request.title }}
           REPO_NAME: ${{ github.repository }}

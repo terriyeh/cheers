@@ -16,10 +16,10 @@ Automated code review using Claude AI that runs on every pull request.
 
 ### Setup
 
-The workflow requires the `CLAUDE_OAUTH_TOKEN` secret to be configured in your GitHub repository:
+The workflow requires the `CLAUDE_CODE_OAUTH_TOKEN` secret to be configured in your GitHub repository:
 
 1. Go to your repository **Settings** → **Secrets and variables** → **Actions**
-2. Verify `CLAUDE_OAUTH_TOKEN` is set with your Claude API key
+2. Verify `CLAUDE_CODE_OAUTH_TOKEN` is set with your Claude API key
 3. The workflow will automatically use this token for API calls
 
 ### Review Output
