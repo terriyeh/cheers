@@ -1,0 +1,38 @@
+{
+  "name": "vault-pal",
+  "version": "1.0.1",
+  "description": "Interactive pet companion for gamified daily note-taking",
+  "main": "main.js",
+  "scripts": {
+    "dev": "node esbuild.config.mjs",
+    "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
+    "version": "node version-bump.mjs && git add manifest.json versions.json",
+    "lint": "eslint src --ext .ts,.svelte"
+  },
+  "keywords": [
+    "obsidian",
+    "obsidian-plugin",
+    "daily-notes",
+    "gamification",
+    "journaling"
+  ],
+  "author": "Terri Yeh",
+  "license": "MIT",
+  "devDependencies": {
+    "@tsconfig/svelte": "^5.0.4",
+    "@types/node": "^20.11.19",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
+    "esbuild": "^0.27.2",
+    "esbuild-svelte": "0.8.0",
+    "eslint": "^8.56.0",
+    "obsidian": "^1.5.0",
+    "svelte": "^4.2.12",
+    "svelte-preprocess": "^5.1.3",
+    "tslib": "^2.6.2",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "obsidian-daily-notes-interface": "^0.9.4"
+  }
+}
