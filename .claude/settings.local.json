@@ -8,7 +8,16 @@
       "Bash(npm run build:*)",
       "Bash(npm install)",
       "Bash(npm run lint:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(gh pr view:*)",
+      "Bash(git branch:*)",
+      "Bash(xargs git branch:*)",
+      "WebFetch(domain:www.obsidianstats.com)",
+      "WebFetch(domain:docs.obsidian.md)",
+      "Bash(npm run test:*)",
+      "Bash(node --loader ts-node/esm -e:*)",
+      "Skill(update-issue)",
+      "Skill(update-issue:*)"
     ]
   }
 }
