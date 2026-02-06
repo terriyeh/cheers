@@ -1,0 +1,90 @@
+/**
+ * Vault Pal Plugin Styles
+ * Theme-compatible styles for the pet companion view
+ */
+
+/* Main container for the pet view */
+.vault-pal-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background-color: var(--background-primary);
+}
+
+/* Loading state */
+.vault-pal-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
+/* Error state container */
+.vault-pal-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  text-align: center;
+  max-width: 300px;
+}
+
+.vault-pal-error h3 {
+  color: var(--text-error);
+  margin-bottom: 0.5rem;
+  font-size: 1.1rem;
+}
+
+.vault-pal-error-message {
+  color: var(--text-normal);
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.vault-pal-error-hint {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-style: italic;
+}
+
+/* State-specific container styling */
+.vault-pal-container[data-pet-state='happy'] {
+  background-color: var(--background-primary);
+}
+
+.vault-pal-container[data-pet-state='celebrating'] {
+  background-color: var(--background-primary);
+}
+
+.vault-pal-container[data-pet-state='sleeping'] {
+  opacity: 0.8;
+}
+
+.vault-pal-container[data-pet-state='encouraging'] {
+  border-left: 3px solid var(--interactive-accent);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .vault-pal-container {
+    padding: 0.5rem;
+  }
+}
+
+/* Theme compatibility - ensure proper contrast */
+.theme-dark .vault-pal-container {
+  background-color: var(--background-primary);
+}
+
+.theme-light .vault-pal-container {
+  background-color: var(--background-primary);
+}
