@@ -5,6 +5,7 @@ module.exports = {
 		ecmaVersion: 2018,
 		sourceType: 'module',
 		project: './tsconfig.json',
+		extraFileExtensions: ['.svelte'],
 	},
 	env: {
 		browser: true,
@@ -36,6 +37,10 @@ module.exports = {
 			parser: 'svelte-eslint-parser',
 			parserOptions: {
 				parser: '@typescript-eslint/parser',
+			},
+			rules: {
+				// Allow function declarations in Svelte script blocks
+				'no-inner-declarations': 'off',
 			},
 		},
 	],
