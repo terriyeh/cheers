@@ -21,7 +21,11 @@ try {
 		logLevel: "info",
 		sourcemap: production ? false : "inline",
 		treeShaking: true,
+		minify: production,
 		outfile: "main.js",
+		define: {
+			"__DEV__": JSON.stringify(!production)
+		},
 		plugins: [
 			sveltePlugin({
 				preprocess: sveltePreprocess(),
