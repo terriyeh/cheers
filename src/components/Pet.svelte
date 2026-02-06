@@ -12,13 +12,26 @@
   export let spriteSheetPath: string = 'assets/pet-sprite-sheet.png';
 
   /**
+   * Pet's name (from settings)
+   */
+  export let petName: string = 'Kit';
+
+  /**
+   * User's name (from settings, optional)
+   */
+  export let userName: string = '';
+
+  /**
    * Get display text for current state
    */
   function getStateText(currentState: PetState): string {
+    const greeting = userName ? `Hello ${userName}!` : 'Hello there!';
+    const talking = userName ? `How was your day, ${userName}?` : 'How was your day?';
+
     const stateTexts: Record<PetState, string> = {
       idle: 'Just hanging out...',
-      greeting: 'Hello there!',
-      talking: 'How was your day?',
+      greeting: greeting,
+      talking: talking,
       listening: 'I\'m listening...',
       'small-celebration': 'Great job!',
       'big-celebration': 'Amazing! You did it!',

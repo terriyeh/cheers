@@ -1,6 +1,9 @@
 import { Plugin } from 'obsidian';
 import { PetView, VIEW_TYPE_PET } from './views/PetView';
 import type { PetState } from './types/pet';
+import type { VaultPalSettings } from './types/settings';
+import { DEFAULT_SETTINGS } from './types/settings';
+import { WelcomeModal } from './modals/WelcomeModal';
 
 // Build-time constant injected by esbuild
 declare const __DEV__: boolean;
@@ -22,8 +25,13 @@ declare global {
 }
 
 export default class VaultPalPlugin extends Plugin {
+	settings: VaultPalSettings = DEFAULT_SETTINGS;
+
 	async onload() {
 		console.log('🦊 Vault Pal loading...');
+
+		// Load settings
+		await this.loadSettings();
 
 		// Register the pet view
 		this.registerView(
@@ -43,6 +51,15 @@ export default class VaultPalPlugin extends Plugin {
 			name: 'Open Vault Pal',
 			callback: () => {
 				this.activatePetView();
+			},
+		});
+
+		// Add command to edit pet settings
+		this.addCommand({
+			id: 'edit-pet-settings',
+			name: 'Edit Pet Settings',
+			callback: () => {
+				new WelcomeModal(this).open();
 			},
 		});
 
@@ -149,5 +166,19 @@ Available states:
 			return leaves[0].view as PetView;
 		}
 		return null;
+	}
+
+	/**
+	 * Load settings from disk
+	 */
+	async loadSettings() {
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+	}
+
+	/**
+	 * Save settings to disk
+	 */
+	async saveSettings() {
+		await this.saveData(this.settings);
 	}
 }

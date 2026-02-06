@@ -51,7 +51,17 @@ Vault Pal integrates with Obsidian's built-in Daily Notes plugin:
 2. Enable "Daily notes"
 3. Configure your daily notes folder and template location
 
-### 2. Create a Template with VaultPal Prompts
+### 2. Configure Your Pet Companion
+
+On first launch, you'll see a welcome modal:
+
+1. Enter your pet's name (default: Kit)
+2. Optionally enter your name (what your pet will call you)
+3. Click "Let's Go!" or Skip to use defaults
+
+You can change these settings later using **Command Palette → "Edit Pet Settings"**
+
+### 3. Create a Template with VaultPal Prompts
 
 Add vaultpal code blocks to your daily note template:
 
@@ -77,7 +87,7 @@ prompt: "What are you grateful for?"
 ```
 ```
 
-### 3. Start Journaling
+### 4. Start Journaling
 
 1. Click the paw icon in the sidebar to open Vault Pal
 2. Click "Start Conversation" button
@@ -147,16 +157,33 @@ Kit the Fox has 7 distinct animation states:
 
 ---
 
-## Settings
+## Settings & Configuration
 
-Configure Vault Pal in Settings → Community Plugins → Vault Pal:
+### Pet Personalization
 
-| Setting | Description | Default |
-|---------|-------------|---------|
-| Daily Notes folder | Auto-detected from Daily Notes plugin | Read-only |
-| Daily Notes template | Auto-detected from Daily Notes plugin | Read-only |
-| Pet name | Your companion's name | Kit |
-| XP per note | Experience points per completed note | 10 |
+Vault Pal uses a welcome modal for configuration instead of a traditional settings page.
+
+**First Run:**
+- Welcome modal appears automatically when you first open the Pet View
+- Configure your pet's name and your own name
+- Settings are saved to `.obsidian/plugins/vault-pal/data.json`
+
+**Changing Settings Later:**
+- Open Command Palette (Ctrl/Cmd + P)
+- Type "Edit Pet Settings"
+- Update your pet's name or your name
+
+**Available Settings:**
+
+| Setting | Description | Default | Validation |
+|---------|-------------|---------|------------|
+| Pet name | Your companion's name | Kit | 1-30 characters, alphanumeric + spaces only |
+| Your name | What your pet calls you | (optional) | 0-30 characters, alphanumeric + spaces only |
+
+**Daily Notes Configuration:**
+Vault Pal automatically detects your Daily Notes folder and template from Obsidian's Daily Notes core plugin settings. No additional configuration needed!
+
+**Note:** The welcome modal includes a reminder that enabling the Daily Notes core plugin is required for full functionality.
 
 ---
 
@@ -262,6 +289,15 @@ vault-pal/
 
 ---
 
+## Command Palette Commands
+
+Vault Pal provides these commands accessible via Command Palette (Ctrl/Cmd + P):
+
+- **Open Vault Pal** - Opens the pet view in the sidebar
+- **Edit Pet Settings** - Reopens the welcome modal to change pet/user names
+
+---
+
 ## Troubleshooting
 
 ### Plugin won't load
@@ -283,6 +319,16 @@ vault-pal/
 - Ensure responses are written below vaultpal code blocks
 - Wait a moment for the calendar to refresh
 - Try switching views and back to calendar
+
+### Welcome modal doesn't appear
+- Welcome modal only appears on first view open, not plugin load
+- If you want to see it again, use Command Palette → "Edit Pet Settings"
+- Check that `hasCompletedWelcome` is false in `data.json`
+
+### Settings validation errors
+- Pet name must be 1-30 characters (alphanumeric + spaces only)
+- Your name must be 0-30 characters (alphanumeric + spaces only)
+- Special characters like @#$%^&* are not allowed
 
 ---
 
