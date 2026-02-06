@@ -1,4 +1,4 @@
-import { ItemView, type WorkspaceLeaf } from 'obsidian';
+import { ItemView, type WorkspaceLeaf, Notice } from 'obsidian';
 import type { PetState, StateChangeListener } from '../types/pet';
 import { PetStateMachine } from '../pet/PetStateMachine';
 import PetComponent from '../components/Pet.svelte';
@@ -102,6 +102,13 @@ export class PetView extends ItemView {
 
       // Hide loading state
       this.hideLoading();
+
+      // Add top-right corner action button (matches Graph view pattern)
+      this.addAction(
+        'calendar-plus',
+        'Open Today\'s Daily Note',
+        () => this.openDailyNote()
+      );
     } catch (error) {
       console.error('Failed to mount Pet View:', error);
 
@@ -277,5 +284,41 @@ export class PetView extends ItemView {
     console.debug(`Sprite sheet path resolved to: ${spriteSheetPath}`);
 
     return spriteSheetPath;
+  }
+
+  /**
+   * Create or open today's daily note
+   * Handles edge cases: plugin disabled, creation errors
+   */
+  async openDailyNote(): Promise<void> {
+    try {
+      const {
+        createDailyNote,
+        getDailyNote,
+        getAllDailyNotes,
+        appHasDailyNotesPluginLoaded
+      } = await import('obsidian-daily-notes-interface');
+
+      // Edge case: Daily Notes plugin not enabled
+      if (!appHasDailyNotesPluginLoaded()) {
+        new Notice('Daily Notes plugin is not enabled. Please enable it in Settings → Core Plugins.');
+        return;
+      }
+
+      // Get or create today's note
+      const today = window.moment();
+      let dailyNote = getDailyNote(today, getAllDailyNotes());
+
+      if (!dailyNote) {
+        dailyNote = await createDailyNote(today);
+      }
+
+      // Open in workspace
+      await this.app.workspace.getLeaf(false).openFile(dailyNote);
+
+    } catch (error) {
+      new Notice('Failed to create daily note: ' + (error as Error).message);
+      console.error('Error opening daily note:', error);
+    }
   }
 }

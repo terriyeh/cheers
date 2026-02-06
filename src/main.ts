@@ -1,4 +1,4 @@
-import { Plugin } from 'obsidian';
+import { Plugin, Notice } from 'obsidian';
 import { PetView, VIEW_TYPE_PET } from './views/PetView';
 import type { PetState } from './types/pet';
 import type { VaultPalSettings } from './types/settings';
@@ -61,6 +61,41 @@ export default class VaultPalPlugin extends Plugin {
 			callback: () => {
 				new WelcomeModal(this).open();
 			},
+		});
+
+		// Command: Open today's daily note
+		this.addCommand({
+			id: 'open-daily-note',
+			name: 'Open Today\'s Daily Note',
+			callback: async () => {
+				const leaves = this.app.workspace.getLeavesOfType(VIEW_TYPE_PET);
+				const petViewLeaf = leaves.length > 0 ? leaves[0] : null;
+
+				if (petViewLeaf?.view && petViewLeaf.view instanceof PetView) {
+					// Pet View is open - use its method
+					await (petViewLeaf.view as PetView).openDailyNote();
+				} else {
+					// Fallback: Open note without Pet View
+					const {
+						createDailyNote,
+						getDailyNote,
+						getAllDailyNotes,
+						appHasDailyNotesPluginLoaded
+					} = await import('obsidian-daily-notes-interface');
+
+					if (!appHasDailyNotesPluginLoaded()) {
+						new Notice('Daily Notes plugin is not enabled. Please enable it in Settings → Core Plugins.');
+						return;
+					}
+
+					const today = window.moment();
+					let note = getDailyNote(today, getAllDailyNotes());
+					if (!note) {
+						note = await createDailyNote(today);
+					}
+					await this.app.workspace.getLeaf(false).openFile(note);
+				}
+			}
 		});
 
 		// Don't auto-open on startup - let user open manually via ribbon/command

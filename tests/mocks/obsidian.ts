@@ -5,18 +5,42 @@
 
 import { vi } from 'vitest';
 
+export interface TFile {
+  path: string;
+  name: string;
+  basename: string;
+  extension: string;
+}
+
 export class App {
   vault: Vault;
+  workspace: any;
   plugins: {
     manifests: Record<string, { dir: string }>;
+    plugins: Record<string, any>;
   };
 
   constructor() {
     this.vault = new Vault();
+    this.workspace = {
+      getLeavesOfType: vi.fn().mockReturnValue([]),
+      getLeaf: vi.fn().mockReturnValue({
+        openFile: vi.fn(),
+      }),
+    };
     this.plugins = {
       manifests: {
         'vault-pal': {
           dir: '.obsidian/plugins/vault-pal',
+        },
+      },
+      plugins: {
+        'vault-pal': {
+          settings: {
+            petName: 'Kit',
+            userName: '',
+            hasCompletedWelcome: false,
+          },
         },
       },
     };
@@ -182,6 +206,50 @@ export class ItemView {
   async onClose(): Promise<void> {
     // Override in subclass
   }
+
+  addAction(icon: string, title: string, callback: () => void): HTMLElement {
+    const button = document.createElement('button');
+    button.setAttribute('aria-label', title);
+    button.setAttribute('data-icon', icon);
+    button.onclick = callback;
+    return button;
+  }
+}
+
+export class Modal {
+  app: App;
+  contentEl: any;
+
+  constructor(app: App) {
+    this.app = app;
+    this.contentEl = document.createElement('div');
+  }
+
+  open(): void {
+    // Mock implementation
+  }
+
+  close(): void {
+    // Mock implementation
+  }
+}
+
+export class Notice {
+  constructor(message: string) {
+    // Mock implementation - just store the message
+    console.log('Notice:', message);
+  }
+}
+
+// Mock window.moment (Obsidian provides this globally)
+if (typeof window !== 'undefined') {
+  (window as any).moment = () => {
+    return {
+      format: (format?: string) => '2024-01-15',
+      toDate: () => new Date('2024-01-15'),
+      valueOf: () => Date.now(),
+    };
+  };
 }
 
 // Export mock functions for convenience
