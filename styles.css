@@ -88,3 +88,41 @@
 .theme-light .vault-pal-container {
   background-color: var(--background-primary);
 }
+
+/* Welcome Modal Styles */
+.vault-pal-welcome-modal .modal-content {
+  max-width: 500px;
+  padding: 1.5rem;
+}
+
+.vault-pal-welcome-modal h2 {
+  text-align: center;
+  margin-bottom: 0.5rem;
+  color: var(--text-normal);
+}
+
+.vault-pal-welcome-subtitle {
+  text-align: center;
+  color: var(--text-muted);
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+}
+
+.vault-pal-info-box {
+  background-color: var(--background-secondary);
+  border-left: 3px solid var(--interactive-accent);
+  padding: 0.75rem 1rem;
+  margin: 1rem 0;
+  border-radius: 4px;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.vault-pal-button-container {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--background-modifier-border);
+}

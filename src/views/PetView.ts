@@ -2,6 +2,8 @@ import { ItemView, type WorkspaceLeaf } from 'obsidian';
 import type { PetState, StateChangeListener } from '../types/pet';
 import { PetStateMachine } from '../pet/PetStateMachine';
 import PetComponent from '../components/Pet.svelte';
+import type VaultPalPlugin from '../main';
+import { WelcomeModal } from '../modals/WelcomeModal';
 
 /**
  * View type identifier for the pet view
@@ -47,6 +49,13 @@ export class PetView extends ItemView {
    */
   async onOpen(): Promise<void> {
     try {
+      // Show welcome modal on first run
+      // @ts-expect-error - accessing internal plugin registry
+      const plugin = this.app.plugins.plugins['vault-pal'] as VaultPalPlugin;
+      if (plugin && !plugin.settings.hasCompletedWelcome) {
+        new WelcomeModal(plugin).open();
+      }
+
       // Show loading state
       this.showLoading();
 
@@ -76,12 +85,18 @@ export class PetView extends ItemView {
       // Get the sprite sheet path with validation
       const spriteSheetPath = this.getSpriteSheetPath();
 
-      // Mount Svelte component with asset path
+      // Get plugin settings for pet name and user name (reuse plugin variable from above)
+      const petName = plugin?.settings?.petName ?? 'Kit';
+      const userName = plugin?.settings?.userName ?? '';
+
+      // Mount Svelte component with asset path and settings
       this.petComponent = new PetComponent({
         target: this.containerDiv,
         props: {
           state: this.stateMachine.getCurrentState(),
           spriteSheetPath: spriteSheetPath,
+          petName: petName,
+          userName: userName,
         },
       });
 

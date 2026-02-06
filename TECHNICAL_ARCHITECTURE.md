@@ -1,8 +1,8 @@
 # Vault Pal - Technical Architecture
 
-**Version:** 1.0
-**Date:** 2026-02-04
-**Status:** Planning Phase
+**Version:** 1.1
+**Date:** 2026-02-05
+**Status:** Active Development (Phase 1)
 
 ---
 
@@ -28,49 +28,48 @@ Vault Pal is an Obsidian plugin that gamifies daily note-taking through an inter
 ```
 vault-pal/
 ├── src/
-│   ├── main.ts                    # Main plugin class
-│   ├── settings.ts                # Settings tab implementation
+│   ├── main.ts                    # ✅ Main plugin class
+│   ├── modals/
+│   │   └── WelcomeModal.ts       # ✅ First-run settings modal
 │   ├── views/
-│   │   ├── PetView.ts            # Main pet panel (ItemView)
-│   │   └── CalendarView.ts       # Calendar navigation panel
+│   │   ├── PetView.ts            # ✅ Main pet panel (ItemView)
+│   │   └── CalendarView.ts       # 🔮 Calendar navigation panel (planned)
 │   ├── components/               # Svelte components
-│   │   ├── Pet.svelte           # Pet display with animations
-│   │   ├── Chat.svelte          # Chat interface for questions
-│   │   ├── ProgressBar.svelte   # XP and streak display
-│   │   └── Calendar.svelte      # Calendar component
-│   ├── core/
-│   │   ├── TemplateParser.ts    # Parse vaultpal code blocks
-│   │   ├── NoteCreator.ts       # Daily note creation logic
+│   │   ├── Pet.svelte            # ✅ Pet display with animations
+│   │   ├── Chat.svelte           # 🔮 Chat interface for questions (planned)
+│   │   ├── ProgressBar.svelte    # 🔮 XP and streak display (planned)
+│   │   └── Calendar.svelte       # 🔮 Calendar component (planned)
+│   ├── pet/
+│   │   └── PetStateMachine.ts    # ✅ Animation state management
+│   ├── core/                      # 🔮 Planned features
+│   │   ├── TemplateParser.ts     # Parse vaultpal code blocks
+│   │   ├── NoteCreator.ts        # Daily note creation logic
 │   │   ├── ConversationManager.ts # Q&A flow management
 │   │   └── ProgressionSystem.ts  # XP, streaks, milestones
-│   ├── animations/
-│   │   ├── PetStateMachine.ts   # Animation state management
-│   │   ├── LayerManager.ts      # SVG layer switching
-│   │   └── AnimationController.ts
-│   ├── stores/
-│   │   └── petStore.ts          # Svelte stores for reactive state
 │   └── types/
-│       └── index.ts             # TypeScript interfaces
+│       ├── settings.ts           # ✅ Settings interface and validation
+│       └── index.ts              # ✅ TypeScript interfaces
 ├── assets/
-│   ├── pet/
-│   │   ├── states/              # SVG files per animation state
-│   │   │   ├── idle.svg
-│   │   │   ├── greeting.svg
-│   │   │   ├── talking.svg
-│   │   │   ├── listening.svg
-│   │   │   ├── small-celebration.svg
-│   │   │   ├── big-celebration.svg
-│   │   │   └── petting.svg
-│   │   └── layers/
-│   │       ├── backgrounds/     # Background variations
-│   │       └── accessories/     # Unlockable accessories
-│   └── greetings.json           # Random greeting messages
-├── styles.css                    # Global styles and animations
+│   └── sprites/
+│       └── kit-sprite-sheet.png  # ✅ Pixel art sprite sheet
+├── styles.css                    # ✅ Global styles and animations
+├── tests/                        # ✅ Comprehensive test suite
+│   ├── unit/                     # Unit tests
+│   │   ├── PetStateMachine.test.ts
+│   │   ├── SettingsValidation.test.ts
+│   │   └── SettingsPersistence.test.ts
+│   └── integration/              # Integration tests
+│       └── PetView.integration.test.ts
 ├── manifest.json
 ├── versions.json
 ├── esbuild.config.mjs
+├── vitest.config.ts              # ✅ Test configuration
 ├── tsconfig.json
 └── package.json
+
+Legend:
+✅ = Currently implemented
+🔮 = Planned for future phases
 ```
 
 ---
@@ -534,59 +533,55 @@ export class PetStateMachine {
 ### Data Schema
 
 ```typescript
+/**
+ * VaultPal Plugin Settings
+ */
 interface VaultPalSettings {
-  // Template Settings
-  templatePath: string;
-  notesFolder: string;
-  dateFormat: string;
-  stripVPBlocks: boolean;
-
-  // Pet Settings
+  /** Name of the pet companion */
   petName: string;
-  selectedBackground: string;
-  selectedAccessories: string[];
-
-  // Progression Data
-  progression: ProgressionData;
-
-  // UI Preferences
-  greetingStyle: 'random' | 'simple' | 'custom';
-  customGreetings: string[];
+  /** Name of the user (what pet calls them) */
+  userName: string;
+  /** Whether the welcome modal has been shown */
+  hasCompletedWelcome: boolean;
 }
 
 const DEFAULT_SETTINGS: VaultPalSettings = {
-  templatePath: '',
-  notesFolder: '',
-  dateFormat: 'YYYY-MM-DD',
-  stripVPBlocks: false,
-  petName: 'Fox',
-  selectedBackground: 'default',
-  selectedAccessories: [],
-  progression: {
-    xp: 0,
-    totalNotes: 0,
-    currentStreak: 0,
-    longestStreak: 0,
-    lastCompleted: '',
-    milestones: {
-      '7day': false,
-      '30day': false,
-      '60day': false,
-      '100day': false
-    },
-    unlockedAccessories: []
-  },
-  greetingStyle: 'random',
-  customGreetings: []
+  petName: 'Kit',
+  userName: '',
+  hasCompletedWelcome: false,
 };
+
+/**
+ * Validation rules for settings
+ */
+const VALIDATION_RULES = {
+  petName: {
+    minLength: 1,
+    maxLength: 30,
+    pattern: /^[a-zA-Z0-9 ]+$/, // Alphanumeric + spaces only
+    errorMessage: 'Pet name must be 1-30 characters (letters, numbers, spaces only)',
+  },
+  userName: {
+    minLength: 0, // Can be empty
+    maxLength: 30,
+    pattern: /^[a-zA-Z0-9 ]*$/, // Alphanumeric + spaces only (optional)
+    errorMessage: 'Your name must be 0-30 characters (letters, numbers, spaces only)',
+  },
+} as const;
 ```
+
+**Implementation Notes:**
+- Pet name is required (min 1 character)
+- User name is optional (min 0 characters)
+- Both restricted to alphanumeric + spaces for security
+- Daily Notes folder and template are auto-detected, not stored
 
 ### Data Access Pattern
 
 ```typescript
 // main.ts
 export default class VaultPalPlugin extends Plugin {
-  settings: VaultPalSettings;
+  settings: VaultPalSettings = DEFAULT_SETTINGS;
 
   async onload() {
     await this.loadSettings();
@@ -606,83 +601,206 @@ export default class VaultPalPlugin extends Plugin {
 
 ## 4. Settings Implementation
 
-### Settings Tab Structure
+### Welcome Modal Pattern
+
+Vault Pal uses a **modal-based settings approach** instead of a traditional settings tab. This provides a better first-run experience and keeps the settings simple and focused.
+
+#### Implementation
 
 ```typescript
-// src/settings.ts
-export class VaultPalSettingTab extends PluginSettingTab {
-  display(): void {
-    const { containerEl } = this;
-    containerEl.empty();
+// src/modals/WelcomeModal.ts
+export class WelcomeModal extends Modal {
+  private plugin: VaultPalPlugin;
+  private petNameInput: TextComponent;
+  private userNameInput: TextComponent;
+  private petNameError: HTMLElement;
+  private userNameError: HTMLElement;
 
-    // Section: Template Configuration
-    containerEl.createEl('h2', { text: 'Template Configuration' });
+  constructor(plugin: VaultPalPlugin) {
+    super(plugin.app);
+    this.plugin = plugin;
+  }
 
-    new Setting(containerEl)
-      .setName('Template Path')
-      .setDesc('Path to your daily note template')
-      .addText(text => text
-        .setPlaceholder('Templates/Daily Note Template.md')
-        .setValue(this.plugin.settings.templatePath)
-        .onChange(async (value) => {
-          this.plugin.settings.templatePath = value;
-          await this.plugin.saveSettings();
-        }));
+  onOpen() {
+    const { contentEl } = this;
+    contentEl.empty();
 
-    new Setting(containerEl)
-      .setName('Notes Folder')
-      .setDesc('Folder where daily notes are created')
-      .addText(text => text
-        .setPlaceholder('Daily Notes/')
-        .setValue(this.plugin.settings.notesFolder)
-        .onChange(async (value) => {
-          this.plugin.settings.notesFolder = value;
-          await this.plugin.saveSettings();
-        }));
-
-    // Section: Pet Customization
-    containerEl.createEl('h2', { text: 'Pet Customization' });
-
-    new Setting(containerEl)
-      .setName('Pet Name')
-      .setDesc('Give your pet a name')
-      .addText(text => text
-        .setValue(this.plugin.settings.petName)
-        .onChange(async (value) => {
-          this.plugin.settings.petName = value;
-          await this.plugin.saveSettings();
-        }));
-
-    // Section: Progress (read-only display)
-    containerEl.createEl('h2', { text: 'Your Progress' });
-
-    containerEl.createEl('p', {
-      text: `XP: ${this.plugin.settings.progression.xp}`
-    });
-    containerEl.createEl('p', {
-      text: `Current Streak: ${this.plugin.settings.progression.currentStreak} days`
-    });
-    containerEl.createEl('p', {
-      text: `Longest Streak: ${this.plugin.settings.progression.longestStreak} days`
+    // Title and description
+    contentEl.createEl('h2', { text: 'Welcome to Vault Pal! 🦊' });
+    contentEl.createEl('p', {
+      text: 'Let\'s set up your pet companion. You can change these settings anytime.'
     });
 
-    // Reset button
-    new Setting(containerEl)
-      .setName('Reset Progress')
-      .setDesc('Warning: This will reset all XP and streak data')
-      .addButton(button => button
-        .setButtonText('Reset')
-        .setWarning()
+    // Info box about Daily Notes requirement
+    const infoBox = contentEl.createDiv({ cls: 'vault-pal-info-box' });
+    infoBox.createEl('p', {
+      text: 'ℹ️  Requires enabling the Daily Notes core plugin for full functionality'
+    });
+
+    // Pet name setting with validation
+    new Setting(contentEl)
+      .setName('Pet name')
+      .setDesc('What should we call your companion? (1-30 characters)')
+      .addText(text => {
+        this.petNameInput = text;
+        text
+          .setPlaceholder('Kit')
+          .setValue(this.plugin.settings.petName)
+          .onChange(async (value) => {
+            this.validatePetName(value);
+          });
+      });
+
+    // Error container for pet name
+    this.petNameError = contentEl.createDiv({ cls: 'setting-error' });
+
+    // User name setting with validation
+    new Setting(contentEl)
+      .setName('Your name')
+      .setDesc('What should your pet call you? (Optional, 0-30 characters)')
+      .addText(text => {
+        this.userNameInput = text;
+        text
+          .setPlaceholder('Leave empty to be called "there"')
+          .setValue(this.plugin.settings.userName)
+          .onChange(async (value) => {
+            this.validateUserName(value);
+          });
+      });
+
+    // Error container for user name
+    this.userNameError = contentEl.createDiv({ cls: 'setting-error' });
+
+    // Save button
+    new Setting(contentEl)
+      .addButton(btn => btn
+        .setButtonText('Save and Start')
+        .setCta()
         .onClick(async () => {
-          if (confirm('Are you sure you want to reset all progress?')) {
-            this.plugin.settings.progression = DEFAULT_SETTINGS.progression;
-            await this.plugin.saveSettings();
-            this.display(); // Refresh
-          }
+          await this.saveSettings();
         }));
+  }
+
+  // Real-time validation with error display
+  private validatePetName(value: string): boolean {
+    const trimmed = value.trim();
+    const rules = VALIDATION_RULES.petName;
+
+    if (trimmed.length < rules.minLength || trimmed.length > rules.maxLength) {
+      this.petNameError.setText(rules.errorMessage);
+      this.petNameError.style.display = 'block';
+      return false;
+    }
+
+    if (!rules.pattern.test(trimmed)) {
+      this.petNameError.setText(rules.errorMessage);
+      this.petNameError.style.display = 'block';
+      return false;
+    }
+
+    this.petNameError.style.display = 'none';
+    return true;
+  }
+
+  private validateUserName(value: string): boolean {
+    const trimmed = value.trim();
+    const rules = VALIDATION_RULES.userName;
+
+    if (trimmed.length > rules.maxLength) {
+      this.userNameError.setText(rules.errorMessage);
+      this.userNameError.style.display = 'block';
+      return false;
+    }
+
+    if (!rules.pattern.test(trimmed)) {
+      this.userNameError.setText(rules.errorMessage);
+      this.userNameError.style.display = 'block';
+      return false;
+    }
+
+    this.userNameError.style.display = 'none';
+    return true;
+  }
+
+  private async saveSettings() {
+    const petName = this.petNameInput.getValue().trim();
+    const userName = this.userNameInput.getValue().trim();
+
+    // Validate before saving
+    const petNameValid = this.validatePetName(petName);
+    const userNameValid = this.validateUserName(userName);
+
+    if (!petNameValid || !userNameValid) {
+      return; // Don't close modal if validation fails
+    }
+
+    // Save settings
+    this.plugin.settings.petName = petName;
+    this.plugin.settings.userName = userName;
+    this.plugin.settings.hasCompletedWelcome = true;
+    await this.plugin.saveSettings();
+
+    // Refresh pet view to apply new names
+    const petView = this.app.workspace.getLeavesOfType(PET_VIEW_TYPE)[0];
+    if (petView?.view instanceof PetView) {
+      petView.view.updatePetNames(petName, userName);
+    }
+
+    this.close();
   }
 }
 ```
+
+#### Trigger Logic
+
+The welcome modal appears automatically on **first view open** (not on plugin enable):
+
+```typescript
+// src/views/PetView.ts
+async onOpen() {
+  const container = this.containerEl.children[1];
+  container.empty();
+
+  // Show welcome modal on first run
+  const plugin = this.app.plugins.plugins['vault-pal'] as VaultPalPlugin;
+  if (plugin && !plugin.settings.hasCompletedWelcome) {
+    new WelcomeModal(plugin).open();
+  }
+
+  // ... continue with view initialization
+}
+```
+
+This approach is less intrusive than showing the modal immediately when the plugin loads, as it waits until the user actively opens the pet view.
+
+#### Command Palette Integration
+
+Users can reopen the settings modal at any time:
+
+```typescript
+// src/main.ts
+this.addCommand({
+  id: 'edit-pet-settings',
+  name: 'Edit Pet Settings',
+  callback: () => {
+    new WelcomeModal(this).open();
+  }
+});
+```
+
+#### Settings Persistence
+
+Settings are saved to `.obsidian/plugins/vault-pal/data.json`:
+
+```json
+{
+  "petName": "Kit",
+  "userName": "Alice",
+  "hasCompletedWelcome": true
+}
+```
+
+The `hasCompletedWelcome` flag ensures the modal only appears once automatically.
 
 ---
 
