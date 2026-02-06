@@ -12,7 +12,7 @@
   align-items: center;
   justify-content: center;
   padding: 1rem;
-  background-color: var(--background-primary);
+  /* No background color - inherit from parent for consistency */
 }
 
 /* Loading state */
@@ -57,13 +57,7 @@
 }
 
 /* State-specific container styling */
-.vault-pal-container[data-pet-state='happy'] {
-  background-color: var(--background-primary);
-}
-
-.vault-pal-container[data-pet-state='celebrating'] {
-  background-color: var(--background-primary);
-}
+/* Note: happy and celebrating states use default styling */
 
 .vault-pal-container[data-pet-state='sleeping'] {
   opacity: 0.8;
@@ -80,14 +74,7 @@
   }
 }
 
-/* Theme compatibility - ensure proper contrast */
-.theme-dark .vault-pal-container {
-  background-color: var(--background-primary);
-}
-
-.theme-light .vault-pal-container {
-  background-color: var(--background-primary);
-}
+/* Theme compatibility - no background overrides, use Obsidian defaults */
 
 /* Welcome Modal Styles */
 .vault-pal-welcome-modal .modal-content {
@@ -125,4 +112,66 @@
   margin-top: 1.5rem;
   padding-top: 1rem;
   border-top: 1px solid var(--background-modifier-border);
+}
+
+/* View Header and Action Buttons - Graph View Style */
+/* Background colors inherit from Obsidian theme for automatic light/dark mode support */
+
+.workspace-leaf-content[data-type="vault-pal-pet-view"] {
+  position: relative;
+}
+
+.workspace-leaf-content[data-type="vault-pal-pet-view"] .view-header {
+  /* !important required to override Obsidian's default display: none on view headers */
+  display: flex !important;
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 10;
+  background: transparent;
+  border: none;
+  padding: 0;
+  height: auto;
+  min-height: 0;
+  pointer-events: none; /* Hide header chrome but keep action buttons clickable */
+}
+
+/* Re-enable pointer events for action buttons */
+.workspace-leaf-content[data-type="vault-pal-pet-view"] .view-actions {
+  pointer-events: auto;
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-end;
+}
+
+/* Hide the view header title and navigation */
+.workspace-leaf-content[data-type="vault-pal-pet-view"] .view-header-title,
+.workspace-leaf-content[data-type="vault-pal-pet-view"] .view-header-nav-buttons,
+.workspace-leaf-content[data-type="vault-pal-pet-view"] .view-header-icon {
+  display: none;
+}
+
+/* Style individual action buttons - floating style like Graph view */
+/* Background colors inherit from Obsidian for automatic theme adaptation */
+.workspace-leaf-content[data-type="vault-pal-pet-view"] .view-action {
+  border-radius: 4px;
+  padding: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+}
+
+/* Icon styling */
+.workspace-leaf-content[data-type="vault-pal-pet-view"] .view-action svg {
+  width: 18px;
+  height: 18px;
+  color: var(--icon-color);
 }

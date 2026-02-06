@@ -21,3 +21,5 @@ Thumbs.db
 
 # Obsidian
 data.json
+# Test coverage reports
+coverage/
