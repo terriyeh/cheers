@@ -43,7 +43,7 @@ export function parseTemplate(content: string): ParseResult {
   if (content.length > MAX_TEMPLATE_SIZE) {
     warnings.push({
       line: 0,
-      message: `Template exceeds maximum allowed size (${MAX_TEMPLATE_SIZE} bytes)`
+      message: `⚠️ VaultPal: Invalid Syntax. Template exceeds maximum allowed size (${MAX_TEMPLATE_SIZE} bytes).`
     });
     return { questions: [], warnings };
   }
@@ -65,7 +65,7 @@ export function parseTemplate(content: string): ParseResult {
         // Nested block detected - mark current block as invalid
         warnings.push({
           line: blockStartLine,
-          message: 'Nested vaultpal block detected (close previous block first)'
+          message: '⚠️ VaultPal: Invalid Syntax. Nested vaultpal block detected.'
         });
         blockHasError = true;
         continue; // Don't start a new block, skip this line
@@ -113,7 +113,7 @@ export function parseTemplate(content: string): ParseResult {
           // Already have a journal line - this is an error
           warnings.push({
             line: blockStartLine,
-            message: 'Multiple journal lines found (use one journal per block)'
+            message: '⚠️ VaultPal: Invalid Syntax. Multiple journal lines found.'
           });
           blockHasError = true;
         } else {
@@ -127,7 +127,7 @@ export function parseTemplate(content: string): ParseResult {
   if (inVaultPalBlock) {
     warnings.push({
       line: blockStartLine,
-      message: 'Unclosed vaultpal block (missing closing ```)'
+      message: '⚠️ VaultPal: Invalid Syntax. Unclosed vaultpal block.'
     });
   }
 
@@ -148,7 +148,7 @@ function validatePromptLine(line: string): {
   if (!line) {
     return {
       valid: false,
-      error: 'Missing "journal" line in vaultpal block'
+      error: '⚠️ VaultPal: Invalid Syntax. Missing "journal" field.'
     };
   }
 
@@ -159,7 +159,7 @@ function validatePromptLine(line: string): {
   if (!match) {
     return {
       valid: false,
-      error: 'Invalid syntax (expected: journal Your question here)'
+      error: '⚠️ VaultPal: Invalid Syntax. Malformed "journal" field.'
     };
   }
 
@@ -169,14 +169,14 @@ function validatePromptLine(line: string): {
   if (prompt.length === 0) {
     return {
       valid: false,
-      error: 'Empty question (text is required after "journal")'
+      error: '⚠️ VaultPal: Invalid Syntax. Empty question.'
     };
   }
 
   if (prompt.length > MAX_PROMPT_LENGTH) {
     return {
       valid: false,
-      error: `Question exceeds ${MAX_PROMPT_LENGTH} characters (found ${prompt.length})`
+      error: `⚠️ VaultPal: Invalid Syntax. Question is too long (${prompt.length} characters, max ${MAX_PROMPT_LENGTH}).`
     };
   }
 
@@ -185,7 +185,7 @@ function validatePromptLine(line: string): {
   if (emojiRegex.test(prompt)) {
     return {
       valid: false,
-      error: 'Question contains emoji characters (not allowed)'
+      error: '⚠️ VaultPal: Invalid Syntax. Question cannot contain emoji characters.'
     };
   }
 

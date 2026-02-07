@@ -161,7 +161,7 @@ journal Nested?
 journal ${'a'.repeat(1001)}
 \`\`\`
 `,
-    expectedError: 'exceeds 1000',
+    expectedError: 'too long',
   },
 
   emptyBlock: {

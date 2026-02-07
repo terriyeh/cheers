@@ -9,6 +9,7 @@ interface CachedResult {
   questions: VaultPalQuestion[];
   warnings: ParseResult['warnings'];
   mtime: number; // File modification timestamp
+  lastAccess: number; // Last access timestamp for LRU eviction
 }
 
 /**
@@ -44,6 +45,8 @@ export class TemplateCache {
 
     // Cache hit - file hasn't changed
     if (cached && cached.mtime === currentMtime) {
+      // Update last access time for LRU tracking
+      cached.lastAccess = Date.now();
       return {
         questions: cached.questions,
         warnings: cached.warnings
@@ -61,21 +64,32 @@ export class TemplateCache {
     this.cache.set(file.path, {
       questions: result.questions,
       warnings: result.warnings,
-      mtime: currentMtime
+      mtime: currentMtime,
+      lastAccess: Date.now()
     });
 
     return result;
   }
 
   /**
-   * Evict oldest entry if cache is at capacity
+   * Evict least recently used entry if cache is at capacity
    * Prevents unbounded memory growth
    */
   private evictLRU(): void {
     if (this.cache.size >= this.MAX_CACHE_ENTRIES) {
-      const firstKey = this.cache.keys().next().value;
-      if (firstKey) {
-        this.cache.delete(firstKey);
+      // Find entry with oldest lastAccess timestamp (true LRU)
+      let oldestKey: string | null = null;
+      let oldestAccess = Infinity;
+
+      for (const [key, value] of this.cache.entries()) {
+        if (value.lastAccess < oldestAccess) {
+          oldestAccess = value.lastAccess;
+          oldestKey = key;
+        }
+      }
+
+      if (oldestKey) {
+        this.cache.delete(oldestKey);
       }
     }
   }
