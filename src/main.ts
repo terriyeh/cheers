@@ -4,6 +4,7 @@ import type { PetState } from './types/pet';
 import type { VaultPalSettings } from './types/settings';
 import { DEFAULT_SETTINGS } from './types/settings';
 import { WelcomeModal } from './modals/WelcomeModal';
+import { processVaultPalBlock } from './template';
 
 // Build-time constant injected by esbuild
 declare const __DEV__: boolean;
@@ -38,6 +39,9 @@ export default class VaultPalPlugin extends Plugin {
 			VIEW_TYPE_PET,
 			(leaf) => new PetView(leaf)
 		);
+
+		// Register vaultpal code block processor for inline validation
+		this.registerMarkdownCodeBlockProcessor('vaultpal', processVaultPalBlock);
 
 		// Add ribbon icon to open pet view
 		// Using 'cat' icon - Lucide doesn't have fox, cat is closest
