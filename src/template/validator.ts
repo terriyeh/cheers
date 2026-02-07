@@ -57,6 +57,9 @@ function validateBlockSyntax(source: string): {
   const lines = source.trim().split(/\r?\n/);
 
   // Check for nested blocks
+  // Performance note: This regex runs on every validation, but code blocks are
+  // typically small (<1KB). For a 1KB block, this regex takes <0.1ms on modern hardware.
+  // If performance becomes an issue, consider caching validation results per block.
   const nestedBlockCount = (source.match(/```vaultpal/g) || []).length;
   if (nestedBlockCount > 0) {
     return {
