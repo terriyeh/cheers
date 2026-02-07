@@ -76,10 +76,11 @@ export class PetStateMachine {
   /**
    * Transition to a new state
    * @param newState - The state to transition to
+   * @param returnTarget - Optional state to return to after duration (defaults to 'idle')
    * @returns true if transition occurred, false if already in that state
    * @throws Error if state is invalid
    */
-  transition(newState: PetState): boolean {
+  transition(newState: PetState, returnTarget?: PetState): boolean {
     // Validate state at runtime
     if (!this.isValidState(newState)) {
       console.error(`Invalid pet state: ${newState}`);
@@ -106,18 +107,21 @@ export class PetStateMachine {
     // If state has a duration and returns to idle, schedule return
     const config = this.stateConfigs[newState];
     if (config.duration > 0 && config.returnsToIdle) {
-      this.scheduleReturnToIdle(config.duration);
+      const target = returnTarget || 'idle';
+      this.scheduleReturnTo(config.duration, target);
     }
 
     return true;
   }
 
   /**
-   * Schedule automatic return to idle state after duration
+   * Schedule automatic return to target state after duration
+   * @param duration - Duration in milliseconds before returning
+   * @param targetState - State to return to after duration (usually 'idle')
    */
-  private scheduleReturnToIdle(duration: number): void {
+  private scheduleReturnTo(duration: number, targetState: PetState): void {
     this.transitionTimer = setTimeout(() => {
-      this.transition('idle');
+      this.transition(targetState);
     }, duration);
   }
 

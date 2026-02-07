@@ -1,9 +1,10 @@
-import { Plugin, Notice } from 'obsidian';
+import { Plugin, Notice, WorkspaceLeaf } from 'obsidian';
 import { PetView, VIEW_TYPE_PET } from './views/PetView';
 import type { PetState } from './types/pet';
 import type { VaultPalSettings } from './types/settings';
 import { DEFAULT_SETTINGS } from './types/settings';
 import { WelcomeModal } from './modals/WelcomeModal';
+import { processVaultPalBlock } from './template';
 
 // Build-time constant injected by esbuild
 declare const __DEV__: boolean;
@@ -39,13 +40,13 @@ export default class VaultPalPlugin extends Plugin {
 			(leaf) => new PetView(leaf)
 		);
 
-		// Add ribbon icon to open pet view
-		// Using 'cat' icon - Lucide doesn't have fox, cat is closest
-		this.addRibbonIcon('cat', 'Open Vault Pal', () => {
-			this.activatePetView();
-		});
+		// Register vaultpal code block processor for inline validation
+		this.registerMarkdownCodeBlockProcessor('vaultpal', processVaultPalBlock);
 
-		// Add command to open pet view
+		// Initialize the view in the left sidebar (creates tab icon for switching)
+		this.initializePetView();
+
+		// Add command to open pet view (for command palette)
 		this.addCommand({
 			id: 'open-vault-pal',
 			name: 'Open Vault Pal',
@@ -165,31 +166,52 @@ Available states:
 	}
 
 	/**
-	 * Activate the pet view in right sidebar
+	 * Initialize the pet view in left sidebar on plugin load
+	 * Creates the tab icon but doesn't activate the view
+	 */
+	async initializePetView() {
+		await this.ensurePetViewExists(false);
+	}
+
+	/**
+	 * Activate the pet view in left sidebar
+	 * Recreates the view if it has been closed
 	 */
 	async activatePetView() {
 		const { workspace } = this.app;
+		const leaf = await this.ensurePetViewExists(true);
 
-		// Check if view is already open
+		// Reveal the view (either existing or newly created)
+		if (leaf) {
+			workspace.revealLeaf(leaf);
+		}
+	}
+
+	/**
+	 * Ensure pet view exists in the left sidebar
+	 * @param active - Whether to activate the view when creating/finding it
+	 * @returns The leaf containing the pet view, or null if creation failed
+	 */
+	private async ensurePetViewExists(active: boolean): Promise<WorkspaceLeaf | null> {
+		const { workspace } = this.app;
 		const leaves = workspace.getLeavesOfType(VIEW_TYPE_PET);
 
 		if (leaves.length > 0) {
-			// View already exists, just reveal it
-			workspace.revealLeaf(leaves[0]);
-		} else {
-			// Get the right sidebar leaf
-			const leaf = workspace.getRightLeaf(false);
-
-			if (leaf) {
-				await leaf.setViewState({
-					type: VIEW_TYPE_PET,
-					active: true,
-				});
-
-				// Reveal the leaf and show the sidebar
-				workspace.revealLeaf(leaf);
-			}
+			// View already exists, return the first one
+			return leaves[0];
 		}
+
+		// View doesn't exist - create it
+		const leaf = workspace.getLeftLeaf(false);
+		if (leaf) {
+			await leaf.setViewState({
+				type: VIEW_TYPE_PET,
+				active: active,
+			});
+			return leaf;
+		}
+
+		return null;
 	}
 
 	/**

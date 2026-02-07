@@ -483,4 +483,69 @@ describe('PetStateMachine', () => {
       expect(stateMachine.getCurrentState()).toBe('idle');
     });
   });
+
+  describe('returnTarget parameter', () => {
+    it('should return to specified state after petting from idle', () => {
+      // Transition to petting with returnTarget = 'talking'
+      stateMachine.transition('petting', 'talking');
+      expect(stateMachine.getCurrentState()).toBe('petting');
+
+      // After petting duration (2s), should return to 'talking'
+      vi.advanceTimersByTime(2000);
+      expect(stateMachine.getCurrentState()).toBe('talking');
+    });
+
+    it('should return to specified state after petting from greeting', () => {
+      stateMachine.transition('greeting');
+      expect(stateMachine.getCurrentState()).toBe('greeting');
+
+      // Pet while in greeting state, should return to greeting
+      stateMachine.transition('petting', 'greeting');
+      expect(stateMachine.getCurrentState()).toBe('petting');
+
+      // After petting duration (2s), should return to 'greeting'
+      vi.advanceTimersByTime(2000);
+      expect(stateMachine.getCurrentState()).toBe('greeting');
+    });
+
+    it('should default to idle when returnTarget is not specified', () => {
+      stateMachine.transition('talking');
+      expect(stateMachine.getCurrentState()).toBe('talking');
+
+      // Transition to petting without returnTarget
+      stateMachine.transition('petting');
+      expect(stateMachine.getCurrentState()).toBe('petting');
+
+      // After petting duration (2s), should return to 'idle' (default)
+      vi.advanceTimersByTime(2000);
+      expect(stateMachine.getCurrentState()).toBe('idle');
+    });
+
+    it('should handle returnTarget for greeting state', () => {
+      // Greeting already has auto-return to idle, but returnTarget should override
+      stateMachine.transition('greeting', 'talking');
+      expect(stateMachine.getCurrentState()).toBe('greeting');
+
+      // After greeting duration (2s), should return to 'talking' (not idle)
+      vi.advanceTimersByTime(2000);
+      expect(stateMachine.getCurrentState()).toBe('talking');
+    });
+
+    it('should clear previous returnTarget when transitioning manually', () => {
+      // Set up petting with returnTarget = 'talking'
+      stateMachine.transition('petting', 'talking');
+      expect(stateMachine.getCurrentState()).toBe('petting');
+
+      // Manually transition before timer expires
+      vi.advanceTimersByTime(1000);
+      stateMachine.transition('listening');
+      expect(stateMachine.getCurrentState()).toBe('listening');
+
+      // Wait for what would have been the petting timeout
+      vi.advanceTimersByTime(2000);
+
+      // Should still be in listening, not talking (timer was cleared)
+      expect(stateMachine.getCurrentState()).toBe('listening');
+    });
+  });
 });
