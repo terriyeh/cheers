@@ -478,9 +478,9 @@ export class PetView extends ItemView {
       // Obsidian paths should be vault-relative (e.g., "templates/daily" not "/absolute/path")
       if (
         templatePath.includes('..') ||      // Path traversal (e.g., "../../etc/passwd")
-        templatePath.includes('\\') ||      // Windows-style paths (e.g., "C:\path")
+        templatePath.includes('\\') ||      // Windows-style paths and UNC paths (e.g., "C:\path", "\\server\share")
         templatePath.startsWith('/') ||     // Absolute Unix paths (e.g., "/etc/passwd")
-        /^[a-zA-Z]:/.test(templatePath)     // Windows absolute paths (e.g., "C:", "D:")
+        /^[a-zA-Z]:/.test(templatePath)     // Windows drive letters (e.g., "C:", "D:")
       ) {
         return {
           valid: false,
@@ -543,6 +543,11 @@ export class PetView extends ItemView {
     if (this.stateMachine) {
       // First show greeting
       this.stateMachine.transition('greeting');
+
+      // Clear any existing timeout to prevent race conditions
+      if (this.conversationTimerId) {
+        clearTimeout(this.conversationTimerId);
+      }
 
       // Then transition to talking after greeting duration (2 seconds)
       // Store timeout ID for cleanup
