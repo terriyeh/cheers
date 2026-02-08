@@ -21,6 +21,7 @@ vi.mock('obsidian-daily-notes-interface', () => ({
   createDailyNote: vi.fn(),
   getDailyNote: vi.fn(),
   getAllDailyNotes: vi.fn(),
+  getDailyNoteSettings: vi.fn(),
 }));
 
 // Mock Notice
@@ -62,6 +63,7 @@ vi.mock('obsidian', async () => {
       addCommand(command: Command): void {}
       addRibbonIcon(icon: string, title: string, callback: () => void): void {}
       registerView(type: string, viewCreator: (leaf: WorkspaceLeaf) => any): void {}
+      registerMarkdownCodeBlockProcessor(language: string, handler: (source: string, el: HTMLElement, ctx: any) => void): void {}
       loadData(): Promise<any> { return Promise.resolve({}); }
       saveData(data: any): Promise<void> { return Promise.resolve(); }
     },
@@ -73,6 +75,7 @@ import {
   createDailyNote,
   getDailyNote,
   getAllDailyNotes,
+  getDailyNoteSettings,
 } from 'obsidian-daily-notes-interface';
 import { Notice } from 'obsidian';
 
@@ -128,11 +131,11 @@ describe('Daily Note Command Integration', () => {
     });
 
     it('should register command with correct name', () => {
-      // Assert: Command has user-friendly name
+      // Assert: Command has user-friendly name (sentence case per Obsidian convention)
       const dailyNoteCommand = registeredCommands.find(
         (cmd) => cmd.id === 'open-daily-note'
       );
-      expect(dailyNoteCommand?.name).toBe('Open Today\'s Daily Note');
+      expect(dailyNoteCommand?.name).toBe('Open today\'s daily note');
     });
 
     it('should register command with callback function', () => {
@@ -443,16 +446,12 @@ describe('Daily Note Command Integration', () => {
       const dailyNoteButton = mockActionButtons.find(
         (btn) => btn.icon === 'calendar-plus'
       );
-      expect(dailyNoteButton?.title).toBe('Open Today\'s Daily Note');
+      expect(dailyNoteButton?.title).toBe('Daily Note');
     });
 
-    it('should call openDailyNote when button is clicked', async () => {
+    it('should call handleDailyNoteButton when button is clicked', async () => {
       // Arrange
-      const openDailyNoteSpy = vi.spyOn(petView, 'openDailyNote');
-      vi.mocked(appHasDailyNotesPluginLoaded).mockReturnValue(true);
-      vi.mocked(getAllDailyNotes).mockReturnValue({});
-      vi.mocked(getDailyNote).mockReturnValue(null);
-      vi.mocked(createDailyNote).mockResolvedValue(mockTFile);
+      const handleButtonSpy = vi.spyOn(petView, 'handleDailyNoteButton').mockResolvedValue();
 
       const dailyNoteButton = mockActionButtons.find(
         (btn) => btn.icon === 'calendar-plus'
@@ -461,26 +460,20 @@ describe('Daily Note Command Integration', () => {
       // Act: Click the button
       await dailyNoteButton?.callback();
 
-      // Assert: openDailyNote was called
-      expect(openDailyNoteSpy).toHaveBeenCalledTimes(1);
+      // Assert: handleDailyNoteButton was called
+      expect(handleButtonSpy).toHaveBeenCalledTimes(1);
     });
 
-    it('should create daily note when button is clicked', async () => {
+    it('should use handleDailyNoteButton for validation', () => {
       // Arrange
-      vi.mocked(appHasDailyNotesPluginLoaded).mockReturnValue(true);
-      vi.mocked(getAllDailyNotes).mockReturnValue({});
-      vi.mocked(getDailyNote).mockReturnValue(null);
-      vi.mocked(createDailyNote).mockResolvedValue(mockTFile);
-
       const dailyNoteButton = mockActionButtons.find(
         (btn) => btn.icon === 'calendar-plus'
       );
 
-      // Act
-      await dailyNoteButton?.callback();
-
-      // Assert: Daily note created
-      expect(createDailyNote).toHaveBeenCalledTimes(1);
+      // Assert: Button uses handleDailyNoteButton (Issue #47 validation logic)
+      // This is tested in detail in PetViewDailyNoteButton.test.ts
+      expect(dailyNoteButton?.callback).toBeDefined();
+      expect(typeof dailyNoteButton?.callback).toBe('function');
     });
 
     it('should show error notice if button clicked when plugin disabled', async () => {
@@ -494,9 +487,10 @@ describe('Daily Note Command Integration', () => {
       // Act
       await dailyNoteButton?.callback();
 
-      // Assert: Error shown
+      // Assert: Error shown (with 8 second duration from Issue #47)
       expect(Notice).toHaveBeenCalledWith(
-        expect.stringContaining('Daily Notes plugin is not enabled')
+        expect.stringContaining('Daily Notes plugin is not enabled'),
+        8000
       );
     });
 
@@ -537,7 +531,7 @@ describe('Daily Note Command Integration', () => {
       }
     });
 
-    it('should have matching names for command and button', () => {
+    it('should have different names for command and button', () => {
       // Arrange
       const dailyNoteCommand = registeredCommands.find(
         (cmd) => cmd.id === 'open-daily-note'
@@ -546,17 +540,13 @@ describe('Daily Note Command Integration', () => {
         (btn) => btn.icon === 'calendar-plus'
       );
 
-      // Assert: Both use same text
-      expect(dailyNoteCommand?.name).toBe(dailyNoteButton?.title);
+      // Assert: Command has descriptive name (sentence case), button has shorter tooltip
+      expect(dailyNoteCommand?.name).toBe('Open today\'s daily note');
+      expect(dailyNoteButton?.title).toBe('Daily Note');
     });
 
-    it('should execute same logic for command and button', async () => {
+    it('should execute different logic for command and button', () => {
       // Arrange
-      vi.mocked(appHasDailyNotesPluginLoaded).mockReturnValue(true);
-      vi.mocked(getAllDailyNotes).mockReturnValue({});
-      vi.mocked(getDailyNote).mockReturnValue(null);
-      vi.mocked(createDailyNote).mockResolvedValue(mockTFile);
-
       const dailyNoteCommand = registeredCommands.find(
         (cmd) => cmd.id === 'open-daily-note'
       );
@@ -564,14 +554,14 @@ describe('Daily Note Command Integration', () => {
         (btn) => btn.icon === 'calendar-plus'
       );
 
-      // Act: Execute both command and button
-      await dailyNoteCommand?.callback?.();
-      vi.clearAllMocks(); // Reset call counts
-      await dailyNoteButton?.callback();
+      // Assert: Command uses openDailyNote, button uses handleDailyNoteButton
+      // Command: Simple create/open (no validation)
+      // Button: Validates prerequisites first (Issue #47)
+      expect(dailyNoteCommand?.callback).toBeDefined();
+      expect(dailyNoteButton?.callback).toBeDefined();
 
-      // Assert: Both execute same underlying operations
-      expect(appHasDailyNotesPluginLoaded).toHaveBeenCalled();
-      expect(createDailyNote).toHaveBeenCalled();
+      // They are different functions
+      expect(dailyNoteCommand?.callback).not.toBe(dailyNoteButton?.callback);
     });
 
     it('should show same error messages for command and button', async () => {

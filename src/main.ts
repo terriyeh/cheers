@@ -1,4 +1,5 @@
-import { Plugin, Notice, WorkspaceLeaf } from 'obsidian';
+import { Plugin, Notice } from 'obsidian';
+import type { WorkspaceLeaf } from 'obsidian';
 import { PetView, VIEW_TYPE_PET } from './views/PetView';
 import type { PetState } from './types/pet';
 import type { VaultPalSettings } from './types/settings';
@@ -58,7 +59,7 @@ export default class VaultPalPlugin extends Plugin {
 		// Add command to edit pet settings
 		this.addCommand({
 			id: 'edit-pet-settings',
-			name: 'Edit Pet Settings',
+			name: 'Edit pet settings',
 			callback: () => {
 				new WelcomeModal(this).open();
 			},
@@ -67,7 +68,7 @@ export default class VaultPalPlugin extends Plugin {
 		// Command: Open today's daily note
 		this.addCommand({
 			id: 'open-daily-note',
-			name: 'Open Today\'s Daily Note',
+			name: 'Open today\'s daily note',
 			callback: async () => {
 				const leaves = this.app.workspace.getLeavesOfType(VIEW_TYPE_PET);
 				const petViewLeaf = leaves.length > 0 ? leaves[0] : null;
