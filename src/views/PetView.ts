@@ -1,9 +1,10 @@
-import { ItemView, type WorkspaceLeaf, Notice } from 'obsidian';
+import { ItemView, type WorkspaceLeaf, Notice, type TFile } from 'obsidian';
 import type { PetState, StateChangeListener } from '../types/pet';
 import { PetStateMachine } from '../pet/PetStateMachine';
 import PetComponent from '../components/Pet.svelte';
 import type VaultPalPlugin from '../main';
 import { WelcomeModal } from '../modals/WelcomeModal';
+import { parseTemplate } from '../template/parser';
 
 // Build-time constant injected by esbuild
 declare const __DEV__: boolean;
@@ -22,6 +23,7 @@ export class PetView extends ItemView {
   private containerDiv: HTMLDivElement | null = null;
   private stateChangeListener: StateChangeListener | null = null;
   private petEventListener: ((event: CustomEvent<{ returnToState: PetState }>) => void) | null = null;
+  private conversationTimerId: NodeJS.Timeout | null = null;
 
   constructor(leaf: WorkspaceLeaf) {
     super(leaf);
@@ -115,8 +117,8 @@ export class PetView extends ItemView {
       // Add top-right corner action button (matches Graph view pattern)
       this.addAction(
         'calendar-plus',
-        'Open Today\'s Daily Note',
-        () => this.openDailyNote()
+        'Daily Note',
+        () => this.handleDailyNoteButton()
       );
     } catch (error) {
       console.error('Failed to mount Pet View:', error);
@@ -146,6 +148,12 @@ export class PetView extends ItemView {
    * Called when the view is closed
    */
   async onClose(): Promise<void> {
+    // Clear any pending conversation animations
+    if (this.conversationTimerId) {
+      clearTimeout(this.conversationTimerId);
+      this.conversationTimerId = null;
+    }
+
     // Remove state change listener before cleanup
     if (this.stateMachine && this.stateChangeListener) {
       this.stateMachine.removeListener(this.stateChangeListener);
@@ -389,6 +397,166 @@ export class PetView extends ItemView {
     } catch (error) {
       new Notice('Failed to create daily note: ' + (error as Error).message);
       console.error('Error opening daily note:', error);
+    }
+  }
+
+  /**
+   * Handle daily note button click with validation and routing
+   * Issue #47: Implements 3-step button behavior
+   */
+  async handleDailyNoteButton(): Promise<void> {
+    try {
+      // Step 1: Validate prerequisites
+      const validation = await this.validatePrerequisites();
+      if (!validation.valid) {
+        new Notice(validation.error || 'Unknown validation error', 8000);
+        return;
+      }
+
+      // Step 2: Check if today's note exists
+      const {
+        getDailyNote,
+        getAllDailyNotes,
+        createDailyNote
+      } = await import('obsidian-daily-notes-interface');
+
+      const today = window.moment();
+      let dailyNote = getDailyNote(today, getAllDailyNotes());
+
+      // Step 3: Route based on result
+      if (dailyNote) {
+        // Valid + note exists → Open note
+        const leaf = this.app.workspace.getLeaf(false);
+        if (leaf) {
+          await leaf.openFile(dailyNote);
+        } else {
+          new Notice('Failed to open daily note: Could not get workspace leaf', 8000);
+        }
+      } else {
+        // Valid + note doesn't exist → Create and start conversation
+        dailyNote = await createDailyNote(today);
+        await this.startConversation(dailyNote);
+      }
+    } catch (error) {
+      new Notice(
+        'Failed to open daily note: ' + (error as Error).message,
+        8000
+      );
+      console.error('Error in handleDailyNoteButton:', error);
+    }
+  }
+
+  /**
+   * Validate prerequisites for daily note button
+   * Issue #47: Step 1 validation logic
+   *
+   * @returns Validation result with error message if invalid
+   */
+  async validatePrerequisites(): Promise<{ valid: boolean; error?: string }> {
+    try {
+      // Check 1: Daily Notes plugin enabled
+      const { appHasDailyNotesPluginLoaded, getDailyNoteSettings } = await import('obsidian-daily-notes-interface');
+      if (!appHasDailyNotesPluginLoaded()) {
+        return {
+          valid: false,
+          error: 'Daily Notes plugin is not enabled. Please enable it in Settings → Core Plugins.'
+        };
+      }
+
+      // Check 2: Template configured
+      const settings = getDailyNoteSettings();
+      let templatePath = settings.template?.trim();
+
+      if (!templatePath) {
+        return {
+          valid: false,
+          error: 'No template configured. Please set a template in Settings → Core Plugins → Daily Notes.'
+        };
+      }
+
+      // Security: Validate template path to prevent path traversal and absolute paths
+      // Obsidian paths should be vault-relative (e.g., "templates/daily" not "/absolute/path")
+      if (
+        templatePath.includes('..') ||      // Path traversal (e.g., "../../etc/passwd")
+        templatePath.includes('\\') ||      // Windows-style paths and UNC paths (e.g., "C:\path", "\\server\share")
+        templatePath.startsWith('/') ||     // Absolute Unix paths (e.g., "/etc/passwd")
+        /^[a-zA-Z]:/.test(templatePath)     // Windows drive letters (e.g., "C:", "D:")
+      ) {
+        return {
+          valid: false,
+          error: 'Invalid template path. Template must be within the vault.'
+        };
+      }
+
+      // Add .md extension if not present (Obsidian stores paths without extension)
+      if (!templatePath.endsWith('.md')) {
+        templatePath = templatePath + '.md';
+      }
+
+      // Check 3: Template file exists
+      const templateFile = this.app.vault.getAbstractFileByPath(templatePath);
+
+      if (!templateFile) {
+        return {
+          valid: false,
+          error: 'Template file not found. Please check your Daily Notes template settings.'
+        };
+      }
+
+      // Check 4: Template has vaultpal blocks
+      const templateContent = await this.app.vault.read(templateFile as TFile);
+      const parseResult = parseTemplate(templateContent);
+
+      if (parseResult.questions.length === 0) {
+        return {
+          valid: false,
+          error: 'Template has no vaultpal blocks. Add ```vaultpal blocks to your template.'
+        };
+      }
+
+      return { valid: true };
+    } catch (error) {
+      return {
+        valid: false,
+        error: 'Failed to read template: ' + (error as Error).message
+      };
+    }
+  }
+
+  /**
+   * Start conversation mode for daily note
+   * Issue #47: Stub for Issue #12 implementation
+   *
+   * @param dailyNote - The daily note file to use for conversation
+   */
+  async startConversation(dailyNote: TFile): Promise<void> {
+    // Open the note
+    const leaf = this.app.workspace.getLeaf(false);
+    if (leaf) {
+      await leaf.openFile(dailyNote);
+    }
+
+    // Show coming soon notice
+    new Notice('Conversation mode coming soon! (Issue #12)', 5000);
+
+    // Trigger animation sequence: greeting → talking
+    if (this.stateMachine) {
+      // First show greeting
+      this.stateMachine.transition('greeting');
+
+      // Clear any existing timeout to prevent race conditions
+      if (this.conversationTimerId) {
+        clearTimeout(this.conversationTimerId);
+      }
+
+      // Then transition to talking after greeting duration (2 seconds)
+      // Store timeout ID for cleanup
+      this.conversationTimerId = setTimeout(() => {
+        if (this.stateMachine) {
+          this.stateMachine.transition('talking');
+        }
+        this.conversationTimerId = null;
+      }, 2000);
     }
   }
 }

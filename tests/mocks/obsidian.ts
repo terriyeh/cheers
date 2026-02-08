@@ -10,6 +10,19 @@ export interface TFile {
   name: string;
   basename: string;
   extension: string;
+  stat: {
+    mtime: number;
+    ctime: number;
+    size: number;
+  };
+}
+
+export interface MarkdownPostProcessorContext {
+  docId: string;
+  sourcePath: string;
+  frontmatter: Record<string, any> | null;
+  addChild(component: any): void;
+  getSectionInfo(el: HTMLElement): { lineStart: number; lineEnd: number; text: string } | null;
 }
 
 export class App {
