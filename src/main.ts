@@ -5,7 +5,6 @@ import type { PetState } from './types/pet';
 import type { VaultPalSettings } from './types/settings';
 import { DEFAULT_SETTINGS } from './types/settings';
 import { WelcomeModal } from './modals/WelcomeModal';
-import { processVaultPalBlock } from './template';
 
 // Build-time constant injected by esbuild
 declare const __DEV__: boolean;
@@ -40,9 +39,6 @@ export default class VaultPalPlugin extends Plugin {
 			VIEW_TYPE_PET,
 			(leaf) => new PetView(leaf)
 		);
-
-		// Register vaultpal code block processor for inline validation
-		this.registerMarkdownCodeBlockProcessor('vaultpal', processVaultPalBlock);
 
 		// Initialize the view in the left sidebar (creates tab icon for switching)
 		this.initializePetView();
@@ -86,7 +82,7 @@ export default class VaultPalPlugin extends Plugin {
 					} = await import('obsidian-daily-notes-interface');
 
 					if (!appHasDailyNotesPluginLoaded()) {
-						new Notice('Daily Notes plugin is not enabled. Please enable it in Settings → Core Plugins.');
+						new Notice('Daily Notes plugin is not enabled. Please enable it in Settings → Core Plugins.', 8000);
 						return;
 					}
 
@@ -141,8 +137,6 @@ export default class VaultPalPlugin extends Plugin {
 Available states:
   - idle
   - greeting
-  - talking
-  - listening
   - small-celebration
   - big-celebration
   - petting

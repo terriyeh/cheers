@@ -1,23 +1,25 @@
-# Vault Pal - Technical Architecture
+# Obsidian Pets - Technical Architecture
 
-**Version:** 1.1
-**Date:** 2026-02-05
-**Status:** Active Development (Phase 1)
+**Version:** 2.0
+**Date:** 2026-02-09
+**Status:** Active Development (v0.1.0 Foundation Complete, v0.2.0 Celebration System In Progress)
 
 ---
 
 ## Executive Summary
 
-Vault Pal is an Obsidian plugin that gamifies daily note-taking through an interactive virtual pet companion. This document outlines the technical architecture, technology stack, implementation approach, and development roadmap.
+Obsidian Pets is an Obsidian plugin that transforms your vault into a delightful space by celebrating your writing journey. Your companion notices when you create notes, reach word count milestones, check off tasks, and engage with your knowledge base—responding with ambient celebrations that make your vault feel alive.
+
+**Philosophy:** *Feeling the plugin, not thinking about it.*
 
 ### Core Technology Stack
 
 - **Language:** TypeScript
 - **Framework:** Obsidian Plugin API + Svelte 4
 - **Build Tool:** esbuild with esbuild-svelte plugin
-- **Animation:** SVG with CSS animations + lightweight TypeScript state machine
+- **Animation:** Sprite-based CSS animations + lightweight TypeScript state machine
 - **Data Storage:** Obsidian Plugin API (vault-specific JSON)
-- **Daily Notes:** obsidian-daily-notes-interface library
+- **Vault Integration:** Obsidian Workspace API for event listening
 
 ---
 
@@ -26,41 +28,49 @@ Vault Pal is an Obsidian plugin that gamifies daily note-taking through an inter
 ### Plugin Structure
 
 ```
-vault-pal/
+obsidian-pets/
 ├── src/
 │   ├── main.ts                    # ✅ Main plugin class
 │   ├── modals/
 │   │   └── WelcomeModal.ts       # ✅ First-run settings modal
 │   ├── views/
-│   │   ├── PetView.ts            # ✅ Main pet panel (ItemView)
-│   │   └── CalendarView.ts       # 🔮 Calendar navigation panel (planned)
+│   │   └── PetView.ts            # ✅ Main pet panel (ItemView)
 │   ├── components/               # Svelte components
-│   │   ├── Pet.svelte            # ✅ Pet display with animations
-│   │   ├── Chat.svelte           # 🔮 Chat interface for questions (planned)
-│   │   ├── ProgressBar.svelte    # 🔮 XP and streak display (planned)
-│   │   └── Calendar.svelte       # 🔮 Calendar component (planned)
+│   │   └── Pet.svelte            # ✅ Pet display with animations
 │   ├── pet/
 │   │   └── PetStateMachine.ts    # ✅ Animation state management
-│   ├── core/                      # 🔮 Planned features
-│   │   ├── TemplateParser.ts     # Parse vaultpal code blocks
-│   │   ├── NoteCreator.ts        # Daily note creation logic
-│   │   ├── ConversationManager.ts # Q&A flow management
-│   │   └── ProgressionSystem.ts  # XP, streaks, milestones
+│   ├── celebration/              # 🚧 v0.2.0 - Celebration System
+│   │   ├── CelebrationEngine.ts  # Core celebration orchestration
+│   │   ├── VaultEventListeners.ts # Listens to vault activities
+│   │   ├── MilestoneTracker.ts   # Tracks word counts, cooldowns
+│   │   ├── EmojiRenderer.ts      # Emoji speech bubbles
+│   │   └── SoundEffects.ts       # Audio playback (optional)
 │   └── types/
 │       ├── settings.ts           # ✅ Settings interface and validation
-│       └── index.ts              # ✅ TypeScript interfaces
+│       ├── pet.ts                # ✅ Pet state types
+│       └── celebration.ts        # 🚧 Celebration trigger types
 ├── assets/
-│   └── sprites/
-│       └── kit-sprite-sheet.png  # ✅ Pixel art sprite sheet
+│   ├── sprites/
+│   │   └── kit-sprite-sheet.png  # ✅ Pixel art sprite sheet
+│   ├── sounds/                    # 🚧 Optional sound effects
+│   │   ├── celebration-small.mp3
+│   │   ├── celebration-big.mp3
+│   │   └── petting.mp3
+│   └── heart.png                 # ✅ Heart sprite
+├── archive/                       # 🗄️ Deprecated code (conversation system)
+│   ├── TemplateParser.ts         # Archived
+│   ├── ConversationManager.ts    # Archived
+│   ├── ProgressionSystem.ts      # Archived
+│   └── CalendarView.ts           # Archived
 ├── styles.css                    # ✅ Global styles and animations
 ├── tests/                        # ✅ Comprehensive test suite
-│   ├── unit/                     # Unit tests
+│   ├── unit/
 │   │   ├── PetStateMachine.test.ts
 │   │   ├── SettingsValidation.test.ts
-│   │   └── SettingsPersistence.test.ts
-│   └── integration/              # Integration tests
+│   │   └── CelebrationEngine.test.ts  # 🚧 Planned
+│   └── integration/
 │       └── PetView.integration.test.ts
-├── manifest.json
+├── manifest.json                 # ✅ Plugin metadata
 ├── versions.json
 ├── esbuild.config.mjs
 ├── vitest.config.ts              # ✅ Test configuration
@@ -69,7 +79,8 @@ vault-pal/
 
 Legend:
 ✅ = Currently implemented
-🔮 = Planned for future phases
+🚧 = In progress / planned
+🗄️ = Archived (preserved for reference)
 ```
 
 ---
@@ -78,14 +89,14 @@ Legend:
 
 ### 2.1 Pet View System (ItemView)
 
-**Responsibility:** Main interactive panel with pet, chat, and controls
+**Responsibility:** Main interactive panel with pet display and controls
 
 **Key Components:**
 - Pet animation display (sprite-based with state machine)
-- Chat interface for questions/responses (planned)
-- Progress indicators (XP, streak) (planned)
-- "Capture Daily Note" 💬 button to initiate conversation (planned)
-- "View Daily Note" 📅 button to open today's note
+- Emoji speech bubbles for celebrations
+- Petting interaction (click/tap anytime)
+- Welcome modal integration
+- Settings access
 
 **Implementation:**
 
@@ -94,6 +105,7 @@ Legend:
 export class PetView extends ItemView {
   private petComponent: PetComponent | null = null;
   private stateMachine: PetStateMachine | null = null;
+  private celebrationEngine: CelebrationEngine | null = null;
   private containerDiv: HTMLDivElement | null = null;
 
   getViewType(): string {
@@ -106,6 +118,10 @@ export class PetView extends ItemView {
 
     // Initialize state machine
     this.stateMachine = new PetStateMachine();
+
+    // Initialize celebration engine (v0.2.0)
+    this.celebrationEngine = new CelebrationEngine(this.app, this.stateMachine);
+    this.celebrationEngine.start();
 
     // Get validated asset paths
     const spriteSheetPath = this.getSpriteSheetPath();
@@ -120,14 +136,32 @@ export class PetView extends ItemView {
         heartSpritePath,
         petName: plugin?.settings?.petName ?? 'Kit',
         userName: plugin?.settings?.userName ?? '',
+        celebrationEmoji: '', // Updated by celebration engine
       },
     });
 
     // Setup event listeners
     this.setupPetInteraction();
 
+    // Show welcome modal on first run
+    const plugin = this.app.plugins.plugins['obsidian-pets'] as ObsidianPetsPlugin;
+    if (plugin && !plugin.settings.hasCompletedWelcome) {
+      new WelcomeModal(plugin).open();
+    }
+
     // Hide loading state
     this.hideLoading();
+  }
+
+  async onClose(): Promise<void> {
+    // Cleanup celebration engine
+    this.celebrationEngine?.stop();
+
+    // Destroy Svelte component
+    if (this.petComponent) {
+      this.petComponent.$destroy();
+      this.petComponent = null;
+    }
   }
 }
 ```
@@ -144,337 +178,492 @@ export class PetView extends ItemView {
 <!-- src/components/Pet.svelte -->
 <script lang="ts">
   export let state: PetState;
-  export let xp: number;
-  export let streak: number;
+  export let spriteSheetPath: string;
+  export let heartSpritePath: string;
+  export let petName: string;
+  export let userName: string;
+  export let celebrationEmoji: string; // v0.2.0+
+
+  import { createEventDispatcher } from 'svelte';
+  const dispatch = createEventDispatcher();
+
+  function handlePet(event: MouseEvent | TouchEvent) {
+    if (event.type === 'touchend') {
+      event.preventDefault();
+    }
+    dispatch('pet', { returnToState: state });
+  }
 </script>
 
 <div class="pet-view">
-  <div class="pet-container" data-state={state}>
-    <!-- SVG layers -->
+  <div class="pet-container"
+       data-state={state}
+       on:click={handlePet}
+       on:touchend={handlePet}
+       role="button"
+       tabindex="0"
+       aria-label="Pet {petName}">
+
+    <!-- Sprite-based animation -->
+    <div class="pet-sprite-wrapper">
+      <img src={spriteSheetPath}
+           alt="{petName} the pet"
+           class="pet-sprite" />
+    </div>
+
+    <!-- Emoji speech bubble (v0.2.0+) -->
+    {#if celebrationEmoji}
+      <div class="emoji-bubble">
+        {celebrationEmoji}
+      </div>
+    {/if}
   </div>
-  <ProgressBar {xp} {streak} />
-  <Chat />
 </div>
 ```
 
-### 2.2 Calendar View System
+---
 
-**Responsibility:** Visual calendar for navigating daily notes
+### 2.2 Celebration System (v0.2.0)
 
-**Features:**
-- Monthly calendar display
-- Visual indicators for completed notes
-- Streak visualization
-- Click to open/create daily note
-- Quick navigation (week/month views)
+**Responsibility:** Detect vault activities and trigger celebrations
 
-**Integration:**
-- Can toggle between Pet View and Calendar View
-- Both views accessible from sidebar
+#### 2.2.1 Celebration Engine
 
-### 2.3 Template Parser
-
-**Responsibility:** Extract questions from user's daily note template
-
-**Code Block Syntax:**
-
-```markdown
-## Today
-
-What went well? (1-3 bullets)
-
-```vaultpal
-prompt: "What went well today?"
-```
-
-What was difficult?
-
-```vaultpal
-prompt: "What was difficult today?"
-```
-```
-
-**Implementation:**
+**Core orchestration of celebration system:**
 
 ```typescript
-// src/core/TemplateParser.ts
-interface VaultPalQuestion {
-  prompt: string;
-  position: number; // Line number in template
-}
+// src/celebration/CelebrationEngine.ts
+export class CelebrationEngine {
+  private app: App;
+  private stateMachine: PetStateMachine;
+  private vaultListeners: VaultEventListeners;
+  private milestoneTracker: MilestoneTracker;
+  private emojiRenderer: EmojiRenderer;
+  private soundEffects: SoundEffects | null = null;
 
-export class TemplateParser {
-  async parseTemplate(templatePath: string): Promise<VaultPalQuestion[]> {
-    const file = this.app.vault.getAbstractFileByPath(templatePath);
-    const content = await this.app.vault.read(file);
+  constructor(app: App, stateMachine: PetStateMachine) {
+    this.app = app;
+    this.stateMachine = stateMachine;
+    this.vaultListeners = new VaultEventListeners(app, this.onVaultEvent.bind(this));
+    this.milestoneTracker = new MilestoneTracker();
+    this.emojiRenderer = new EmojiRenderer();
 
-    // Regex to find ```vaultpal code blocks
-    const regex = /```vaultpal\s+prompt:\s*"([^"]+)"/g;
-    const questions: VaultPalQuestion[] = [];
-
-    let match;
-    while ((match = regex.exec(content)) !== null) {
-      questions.push({
-        prompt: match[1],
-        position: content.substring(0, match.index).split('\n').length
-      });
+    // Load sound effects if enabled
+    const settings = this.getSettings();
+    if (settings.celebrationSoundsEnabled) {
+      this.soundEffects = new SoundEffects();
     }
-
-    return questions;
-  }
-}
-```
-
-**Alternative Syntax Consideration:**
-
-Based on research, we could also use YAML-style syntax inside code blocks:
-
-```markdown
-```vaultpal
-prompt: "What went well today?"
-optional: false
-placeholder: "Think about 1-3 things..."
-```
-```
-
-### 2.4 Note Creation System
-
-**Responsibility:** Create and populate daily notes
-
-**Key Requirements:**
-- Integrate with Obsidian's Daily Notes plugin settings
-- Use `obsidian-daily-notes-interface` library
-- Check if note already exists
-- Preserve non-VaultPal content in existing notes
-- Insert responses immediately after corresponding questions
-
-**Implementation:**
-
-```typescript
-// src/core/NoteCreator.ts
-import { createDailyNote, getDailyNote, getAllDailyNotes } from 'obsidian-daily-notes-interface';
-
-export class NoteCreator {
-  async createOrOpenDailyNote(date: moment.Moment): Promise<TFile> {
-    const allNotes = getAllDailyNotes();
-    let note = getDailyNote(date, allNotes);
-
-    if (!note) {
-      note = await createDailyNote(date);
-    }
-
-    return note;
   }
 
-  async insertResponse(
-    note: TFile,
-    questionPosition: number,
-    response: string
-  ): Promise<void> {
-    await this.app.vault.process(note, (content) => {
-      const lines = content.split('\n');
-      // Find the vaultpal code block at questionPosition
-      // Insert response immediately after the block
-      lines.splice(questionPosition + 1, 0, response);
-      return lines.join('\n');
-    });
-  }
-}
-```
-
-**Note Conflict Handling:**
-
-```typescript
-async checkExistingAnswers(note: TFile): Promise<boolean> {
-  const content = await this.app.vault.read(note);
-
-  // Check if VaultPal responses already exist
-  // Look for responses immediately after vaultpal blocks
-  const hasAnswers = /```vaultpal[\s\S]*?```\s*\n[^\s]/.test(content);
-
-  if (hasAnswers) {
-    return await this.confirmOverwrite();
+  start(): void {
+    this.vaultListeners.register();
   }
 
-  return true;
-}
-```
-
-### 2.5 Conversation Manager
-
-**Responsibility:** Orchestrate the Q&A flow
-
-**Flow:**
-1. User clicks "Capture Daily Note" 💬
-2. Validate prerequisites (Daily Notes enabled, template has questions)
-3. Parse template to get questions
-4. Create/open daily note
-4. Present first question in chat
-5. User responds
-6. Save response to note
-7. Repeat until all questions answered
-8. Show completion message
-9. Award XP
-
-**Implementation:**
-
-```typescript
-// src/core/ConversationManager.ts
-export class ConversationManager {
-  private questions: VaultPalQuestion[];
-  private currentIndex: number = 0;
-  private dailyNote: TFile;
-
-  async startConversation(): Promise<void> {
-    // 1. Parse template
-    this.questions = await this.templateParser.parseTemplate(
-      this.plugin.settings.templatePath
-    );
-
-    // 2. Create/open daily note
-    this.dailyNote = await this.noteCreator.createOrOpenDailyNote(moment());
-
-    // 3. Check for existing answers
-    const canProceed = await this.noteCreator.checkExistingAnswers(this.dailyNote);
-    if (!canProceed) return;
-
-    // 4. Start with first question
-    this.askNextQuestion();
+  stop(): void {
+    this.vaultListeners.unregister();
   }
 
-  private askNextQuestion(): void {
-    if (this.currentIndex >= this.questions.length) {
-      this.completeConversation();
+  private onVaultEvent(event: VaultEvent): void {
+    const settings = this.getSettings();
+
+    // Check if celebration is enabled for this event type
+    if (!this.shouldCelebrate(event, settings)) {
       return;
     }
 
-    const question = this.questions[this.currentIndex];
-    this.petView.displayQuestion(question.prompt);
-    this.petStateMachine.transitionTo('talking');
+    // Check cooldown
+    if (!this.milestoneTracker.canCelebrate(event.type)) {
+      return;
+    }
+
+    // Trigger celebration
+    this.celebrate(event);
+
+    // Update cooldown
+    this.milestoneTracker.recordCelebration(event.type);
   }
 
-  async submitResponse(response: string): Promise<void> {
-    const question = this.questions[this.currentIndex];
+  private celebrate(event: VaultEvent): void {
+    // Get celebration config
+    const config = this.getCelebrationConfig(event.type);
 
-    // Save to daily note
-    await this.noteCreator.insertResponse(
-      this.dailyNote,
-      question.position,
-      response
-    );
+    // Trigger animation
+    this.stateMachine.transitionTo(config.animation);
 
-    // Move to next question
-    this.currentIndex++;
+    // Show emoji bubble
+    this.emojiRenderer.show(config.emoji, config.duration);
 
-    if (this.currentIndex < this.questions.length) {
-      // Encourage user
-      this.petView.displayMessage("Great! Let's continue...");
-      setTimeout(() => this.askNextQuestion(), 1000);
-    } else {
-      this.completeConversation();
+    // Play sound if enabled
+    if (this.soundEffects) {
+      this.soundEffects.play(config.animation);
     }
   }
 
-  private async completeConversation(): Promise<void> {
-    this.petView.displayMessage("Thank you for sharing your day with me!");
-    this.petStateMachine.transitionTo('big-celebration');
+  private getCelebrationConfig(eventType: VaultEventType): CelebrationConfig {
+    const configs: Record<VaultEventType, CelebrationConfig> = {
+      'daily-note-created': {
+        emoji: '🎉',
+        animation: 'small-celebration',
+        duration: 2000,
+      },
+      'note-created': {
+        emoji: '❤️',
+        animation: 'small-celebration',
+        duration: 1500,
+      },
+      'task-completed': {
+        emoji: '🎊',
+        animation: 'small-celebration',
+        duration: 1500,
+      },
+      'link-added': {
+        emoji: '✨',
+        animation: 'small-celebration',
+        duration: 1500,
+      },
+      'word-milestone': {
+        emoji: '🎆',
+        animation: 'big-celebration',
+        duration: 3000,
+      },
+    };
 
-    // Award XP
-    await this.progressionSystem.completeNote();
+    return configs[eventType];
   }
 }
 ```
 
-### 2.6 Progression System
+#### 2.2.2 Vault Event Listeners
 
-**Responsibility:** Track XP, streaks, and milestones
-
-**Data Structure:**
+**Listens to Obsidian vault activities:**
 
 ```typescript
-interface ProgressionData {
-  xp: number;
-  totalNotes: number;
-  currentStreak: number;
-  longestStreak: number;
-  lastCompleted: string; // ISO date
-  milestones: {
-    '7day': boolean;
-    '30day': boolean;
-    '60day': boolean;
-    '100day': boolean;
-  };
-  unlockedAccessories: string[];
+// src/celebration/VaultEventListeners.ts
+export type VaultEventType =
+  | 'daily-note-created'
+  | 'note-created'
+  | 'task-completed'
+  | 'link-added'
+  | 'word-milestone';
+
+export interface VaultEvent {
+  type: VaultEventType;
+  timestamp: number;
+  metadata?: Record<string, unknown>;
+}
+
+export class VaultEventListeners {
+  private app: App;
+  private onEvent: (event: VaultEvent) => void;
+  private listeners: Array<() => void> = [];
+  private dailyNotesSettings: DailyNoteSettings | null = null;
+
+  constructor(app: App, onEvent: (event: VaultEvent) => void) {
+    this.app = app;
+    this.onEvent = onEvent;
+  }
+
+  register(): void {
+    // Listen for file creation
+    const createListener = this.app.vault.on('create', (file) => {
+      if (!(file instanceof TFile)) return;
+
+      // Check if it's a daily note
+      if (this.isDailyNote(file)) {
+        this.onEvent({
+          type: 'daily-note-created',
+          timestamp: Date.now(),
+          metadata: { file: file.path },
+        });
+      } else {
+        this.onEvent({
+          type: 'note-created',
+          timestamp: Date.now(),
+          metadata: { file: file.path },
+        });
+      }
+    });
+
+    // Listen for file modifications (for task completion and links)
+    const modifyListener = this.app.vault.on('modify', async (file) => {
+      if (!(file instanceof TFile)) return;
+
+      // Detect task completion
+      const content = await this.app.vault.read(file);
+      if (this.hasNewCompletedTask(content)) {
+        this.onEvent({
+          type: 'task-completed',
+          timestamp: Date.now(),
+          metadata: { file: file.path },
+        });
+      }
+
+      // Detect new links
+      if (this.hasNewLink(content)) {
+        this.onEvent({
+          type: 'link-added',
+          timestamp: Date.now(),
+          metadata: { file: file.path },
+        });
+      }
+
+      // Detect word count milestones
+      const wordCount = this.getWordCount(content);
+      const milestone = this.checkWordMilestone(wordCount);
+      if (milestone) {
+        this.onEvent({
+          type: 'word-milestone',
+          timestamp: Date.now(),
+          metadata: { file: file.path, wordCount, milestone },
+        });
+      }
+    });
+
+    this.listeners.push(createListener, modifyListener);
+  }
+
+  unregister(): void {
+    this.listeners.forEach(unregister => unregister());
+    this.listeners = [];
+  }
+
+  private isDailyNote(file: TFile): boolean {
+    // Use obsidian-daily-notes-interface to check
+    const dailyNotes = getAllDailyNotes();
+    return Object.values(dailyNotes).some(note => note.path === file.path);
+  }
+
+  private hasNewCompletedTask(content: string): boolean {
+    // Detect newly completed checkbox: - [x]
+    // This is a simplified version - production would track state changes
+    return /- \[x\]/i.test(content);
+  }
+
+  private hasNewLink(content: string): boolean {
+    // Detect wiki links: [[note]]
+    return /\[\[.+?\]\]/.test(content);
+  }
+
+  private getWordCount(content: string): number {
+    // Remove frontmatter, code blocks, and links
+    const cleaned = content
+      .replace(/---[\s\S]*?---/g, '') // Remove frontmatter
+      .replace(/```[\s\S]*?```/g, '') // Remove code blocks
+      .replace(/\[\[.+?\]\]/g, ''); // Remove links
+
+    return cleaned.trim().split(/\s+/).length;
+  }
+
+  private checkWordMilestone(wordCount: number): number | null {
+    const settings = this.getSettings();
+    const milestones = settings.wordMilestones || [100, 250, 500, 1000];
+
+    // Find if we just crossed a milestone
+    for (const milestone of milestones) {
+      if (wordCount >= milestone && !this.hasReachedMilestone(milestone)) {
+        return milestone;
+      }
+    }
+
+    return null;
+  }
 }
 ```
 
-**Implementation:**
+#### 2.2.3 Milestone Tracker
+
+**Tracks cooldowns and milestones:**
 
 ```typescript
-// src/core/ProgressionSystem.ts
-export class ProgressionSystem {
-  async completeNote(): Promise<void> {
-    const today = moment().format('YYYY-MM-DD');
-    const lastCompleted = this.plugin.settings.progression.lastCompleted;
-    const yesterday = moment().subtract(1, 'day').format('YYYY-MM-DD');
+// src/celebration/MilestoneTracker.ts
+export class MilestoneTracker {
+  private lastCelebrations: Map<VaultEventType, number> = new Map();
+  private cooldowns: Map<VaultEventType, number> = new Map([
+    ['daily-note-created', 60000], // 1 minute
+    ['note-created', 30000], // 30 seconds
+    ['task-completed', 10000], // 10 seconds
+    ['link-added', 15000], // 15 seconds
+    ['word-milestone', 120000], // 2 minutes
+  ]);
 
-    // Award XP
-    this.plugin.settings.progression.xp += 10;
-    this.plugin.settings.progression.totalNotes++;
+  canCelebrate(eventType: VaultEventType): boolean {
+    const lastTime = this.lastCelebrations.get(eventType);
+    if (!lastTime) return true;
 
-    // Update streak
-    if (lastCompleted === yesterday) {
-      // Continuing streak
-      this.plugin.settings.progression.currentStreak++;
-    } else if (lastCompleted !== today) {
-      // Starting new streak
-      this.plugin.settings.progression.currentStreak = 1;
-    }
+    const cooldown = this.cooldowns.get(eventType) || 30000;
+    const elapsed = Date.now() - lastTime;
 
-    // Update longest streak
-    if (this.plugin.settings.progression.currentStreak >
-        this.plugin.settings.progression.longestStreak) {
-      this.plugin.settings.progression.longestStreak =
-        this.plugin.settings.progression.currentStreak;
-    }
-
-    // Check milestones
-    await this.checkMilestones();
-
-    // Save
-    this.plugin.settings.progression.lastCompleted = today;
-    await this.plugin.saveSettings();
+    return elapsed >= cooldown;
   }
 
-  private async checkMilestones(): Promise<void> {
-    const streak = this.plugin.settings.progression.currentStreak;
-
-    if (streak === 7 && !this.plugin.settings.progression.milestones['7day']) {
-      this.unlockMilestone('7day');
-    }
-    // ... check other milestones
+  recordCelebration(eventType: VaultEventType): void {
+    this.lastCelebrations.set(eventType, Date.now());
   }
 }
 ```
 
-### 2.7 Animation System
+#### 2.2.4 Emoji Renderer
+
+**Displays emoji speech bubbles:**
+
+```typescript
+// src/celebration/EmojiRenderer.ts
+export class EmojiRenderer {
+  private currentBubble: HTMLElement | null = null;
+
+  show(emoji: string, duration: number): void {
+    // Remove existing bubble
+    if (this.currentBubble) {
+      this.currentBubble.remove();
+    }
+
+    // Create bubble element
+    const bubble = document.createElement('div');
+    bubble.className = 'pet-emoji-bubble';
+    bubble.textContent = emoji;
+
+    // Append to pet container
+    const container = document.querySelector('.pet-container');
+    if (container) {
+      container.appendChild(bubble);
+      this.currentBubble = bubble;
+
+      // Animate in
+      setTimeout(() => bubble.classList.add('visible'), 10);
+
+      // Remove after duration
+      setTimeout(() => {
+        bubble.classList.remove('visible');
+        setTimeout(() => {
+          bubble.remove();
+          if (this.currentBubble === bubble) {
+            this.currentBubble = null;
+          }
+        }, 300); // Wait for fade-out animation
+      }, duration);
+    }
+  }
+}
+```
+
+**CSS for Emoji Bubbles:**
+
+```css
+.pet-emoji-bubble {
+  position: absolute;
+  top: -60px;
+  left: 50%;
+  transform: translateX(-50%) scale(0);
+  font-size: 32px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 2px solid #ccc;
+  border-radius: 20px;
+  padding: 8px 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  pointer-events: none;
+  z-index: 100;
+}
+
+.pet-emoji-bubble.visible {
+  transform: translateX(-50%) scale(1);
+  opacity: 1;
+}
+
+/* Speech bubble pointer */
+.pet-emoji-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-top: 10px solid #ccc;
+}
+```
+
+#### 2.2.5 Sound Effects System (Optional)
+
+**Plays celebration sounds (Option 1: Tied to Animation):**
+
+```typescript
+// src/celebration/SoundEffects.ts
+export class SoundEffects {
+  private sounds: Map<PetState, HTMLAudioElement> = new Map();
+  private enabled: boolean = true;
+
+  constructor() {
+    this.loadSounds();
+  }
+
+  private loadSounds(): void {
+    const soundMap: Record<PetState, string> = {
+      'small-celebration': 'celebration-small.mp3',
+      'big-celebration': 'celebration-big.mp3',
+      'petting': 'petting.mp3',
+    };
+
+    for (const [state, filename] of Object.entries(soundMap)) {
+      const audio = new Audio(this.getAssetPath(filename));
+      audio.volume = 0.3; // Default volume
+      this.sounds.set(state as PetState, audio);
+    }
+  }
+
+  play(state: PetState): void {
+    if (!this.enabled) return;
+
+    const sound = this.sounds.get(state);
+    if (sound) {
+      // Reset to start if already playing
+      sound.currentTime = 0;
+      sound.play().catch(err => {
+        console.error('Failed to play sound:', err);
+      });
+    }
+  }
+
+  setEnabled(enabled: boolean): void {
+    this.enabled = enabled;
+  }
+
+  private getAssetPath(filename: string): string {
+    // Similar path validation as in PetView
+    const manifest = app.plugins.manifests['obsidian-pets'];
+    const pluginDir = manifest?.dir || '.obsidian/plugins/obsidian-pets';
+    const normalizedDir = pluginDir.replace(/\\/g, '/').replace(/\/\//g, '/');
+    return `${normalizedDir}/assets/sounds/${filename}`;
+  }
+}
+```
+
+---
+
+### 2.3 Animation System
 
 **Responsibility:** Manage pet animation states and transitions
 
-**7 Animation States:**
+**6 Animation States (Simplified):**
 1. **Idle** - Default state, gentle breathing animation
 2. **Greeting** - When user opens the panel
-3. **Talking** - When presenting a question
-4. **Listening** - When user is typing
-5. **Small Celebration** - After each answer
-6. **Big Celebration** - After completing all questions
-7. **Petting** - User clicks on pet for affection
+3. **Walking** - Ambient movement across panel (v0.3.0+)
+4. **Small Celebration** - Brief cheer for everyday actions
+5. **Big Celebration** - Enthusiastic celebration for milestones
+6. **Petting** - Content reaction when user clicks/tap (available anytime)
+
+**Removed States:**
+- ~~Talking~~ - No longer needed (no conversation)
+- ~~Listening~~ - No longer needed (no conversation)
 
 **State Machine:**
 
 ```typescript
-// src/animations/PetStateMachine.ts
-type PetState = 'idle' | 'greeting' | 'talking' | 'listening' |
+// src/pet/PetStateMachine.ts
+type PetState = 'idle' | 'greeting' | 'walking' |
                 'small-celebration' | 'big-celebration' | 'petting';
 
 interface StateTransition {
@@ -487,52 +676,81 @@ interface StateTransition {
 const transitions: StateTransition[] = [
   { from: 'idle', to: 'greeting', duration: 1000, canInterrupt: true },
   { from: 'greeting', to: 'idle', duration: 500, canInterrupt: true },
-  { from: 'idle', to: 'talking', duration: 300, canInterrupt: true },
-  { from: 'talking', to: 'listening', duration: 300, canInterrupt: true },
-  { from: 'listening', to: 'small-celebration', duration: 500, canInterrupt: false },
-  // ... more transitions
+  { from: 'idle', to: 'small-celebration', duration: 2000, canInterrupt: false },
+  { from: 'idle', to: 'big-celebration', duration: 3000, canInterrupt: false },
+  { from: 'small-celebration', to: 'idle', duration: 300, canInterrupt: false },
+  { from: 'big-celebration', to: 'idle', duration: 300, canInterrupt: false },
+  { from: 'idle', to: 'petting', duration: 1500, canInterrupt: true },
+  { from: 'petting', to: 'idle', duration: 300, canInterrupt: true },
+  { from: 'idle', to: 'walking', duration: 5000, canInterrupt: true },
+  { from: 'walking', to: 'idle', duration: 300, canInterrupt: true },
 ];
 
 export class PetStateMachine {
   private currentState: PetState = 'idle';
   private isTransitioning: boolean = false;
+  private returnTimer: NodeJS.Timeout | null = null;
 
   async transitionTo(targetState: PetState): Promise<boolean> {
     // Validate transition exists
+    const transition = transitions.find(
+      t => t.from === this.currentState && t.to === targetState
+    );
+
+    if (!transition) {
+      console.error(`Invalid transition: ${this.currentState} -> ${targetState}`);
+      return false;
+    }
+
     // Check if can interrupt
+    if (this.isTransitioning && !transition.canInterrupt) {
+      return false;
+    }
+
+    // Update state
+    this.currentState = targetState;
+    this.isTransitioning = true;
+
+    // Clear existing timer
+    if (this.returnTimer) {
+      clearTimeout(this.returnTimer);
+      this.returnTimer = null;
+    }
+
     // Update DOM data-state attribute
-    // Wait for animation duration
-    // Return success/failure
+    this.updateDataAttribute(targetState);
+
+    // Set timer to return to idle
+    if (targetState !== 'idle') {
+      this.returnTimer = setTimeout(() => {
+        this.transitionTo('idle');
+        this.isTransitioning = false;
+      }, transition.duration);
+    } else {
+      this.isTransitioning = false;
+    }
+
+    return true;
+  }
+
+  getCurrentState(): PetState {
+    return this.currentState;
+  }
+
+  private updateDataAttribute(state: PetState): void {
+    const container = document.querySelector('.pet-container');
+    if (container) {
+      container.setAttribute('data-state', state);
+    }
   }
 }
 ```
 
-**SVG Layer System:**
-
-```html
-<div class="pet-container" data-state="idle">
-  <!-- Background Layer -->
-  <svg class="layer layer-background">
-    <use href="#background-default" />
-  </svg>
-
-  <!-- Pet Layer -->
-  <svg class="layer layer-pet">
-    <use href="#pet-idle" />
-  </svg>
-
-  <!-- Accessory Layer -->
-  <svg class="layer layer-accessory">
-    <use href="#accessory-none" />
-  </svg>
-</div>
-```
-
-**CSS Animations:**
+**Sprite-Based Animation:**
 
 ```css
 /* Idle state */
-.pet-container[data-state="idle"] .layer-pet {
+.pet-container[data-state="idle"] .pet-sprite {
   animation: idle-breathe 3s ease-in-out infinite;
 }
 
@@ -541,22 +759,62 @@ export class PetStateMachine {
   50% { transform: scale(1.02); }
 }
 
-/* Talking state */
-.pet-container[data-state="talking"] .layer-pet {
-  animation: talking-bounce 0.5s ease-in-out infinite;
+/* Greeting state */
+.pet-container[data-state="greeting"] .pet-sprite {
+  animation: greeting-wave 1s ease-in-out;
 }
 
-@keyframes talking-bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-5px); }
+@keyframes greeting-wave {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-5deg); }
+  75% { transform: rotate(5deg); }
 }
 
-/* ... more states */
+/* Small celebration */
+.pet-container[data-state="small-celebration"] .pet-sprite {
+  animation: celebrate-small 0.5s ease-in-out 2;
+}
+
+@keyframes celebrate-small {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-10px) scale(1.1); }
+}
+
+/* Big celebration */
+.pet-container[data-state="big-celebration"] .pet-sprite {
+  animation: celebrate-big 0.6s ease-in-out 3;
+}
+
+@keyframes celebrate-big {
+  0%, 100% { transform: translateY(0) rotate(0deg) scale(1); }
+  25% { transform: translateY(-15px) rotate(-10deg) scale(1.15); }
+  75% { transform: translateY(-15px) rotate(10deg) scale(1.15); }
+}
+
+/* Petting */
+.pet-container[data-state="petting"] .pet-sprite {
+  animation: petting-content 1.5s ease-in-out;
+}
+
+@keyframes petting-content {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); filter: brightness(1.1); }
+}
+
+/* Walking (v0.3.0+) */
+.pet-container[data-state="walking"] .pet-sprite {
+  animation: walking-move 5s linear;
+}
+
+@keyframes walking-move {
+  0% { transform: translateX(-50px); }
+  100% { transform: translateX(50px); }
+}
 ```
 
 ---
 
-## 2.8 Security Patterns
+### 2.4 Security Patterns
 
 **Responsibility:** Protect against common web vulnerabilities
 
@@ -570,8 +828,8 @@ export class PetStateMachine {
 ```typescript
 // src/views/PetView.ts
 private getAssetPath(assetFileName: string): string {
-  const manifest = this.app.plugins.manifests['vault-pal'];
-  const pluginDir = manifest?.dir || '.obsidian/plugins/vault-pal';
+  const manifest = this.app.plugins.manifests['obsidian-pets'];
+  const pluginDir = manifest?.dir || '.obsidian/plugins/obsidian-pets';
 
   // Validate path doesn't contain traversal sequences
   if (
@@ -600,7 +858,7 @@ private getAssetPath(assetFileName: string): string {
 private updateDataAttribute(state: PetState): void {
   if (this.containerDiv) {
     const validStates: PetState[] = [
-      'idle', 'greeting', 'talking', 'listening',
+      'idle', 'greeting', 'walking',
       'small-celebration', 'big-celebration', 'petting',
     ];
 
@@ -630,7 +888,7 @@ declare const __DEV__: boolean;
 // Only in development builds
 if (__DEV__) {
   console.debug(`Asset path resolved to: ${assetPath}`);
-  window.vaultPalDebug = { /* debug commands */ };
+  window.obsidianPetsDebug = { /* debug commands */ };
 }
 ```
 
@@ -641,7 +899,7 @@ if (__DEV__) {
 
 ---
 
-## 2.9 Mobile Support
+### 2.5 Mobile Support
 
 **Responsibility:** Provide seamless experience on mobile devices
 
@@ -674,6 +932,9 @@ function handleTouchEnd(event: TouchEvent): void {
 .pet-sprite-wrapper {
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
 }
 ```
 
@@ -687,28 +948,54 @@ function handleTouchEnd(event: TouchEvent): void {
 ## 3. Data Persistence
 
 ### Storage Location
-- Vault-specific: `.obsidian/plugins/vault-pal/data.json`
+- Vault-specific: `.obsidian/plugins/obsidian-pets/data.json`
 - All data is local, no network calls
 
 ### Data Schema
 
 ```typescript
 /**
- * VaultPal Plugin Settings
+ * Obsidian Pets Plugin Settings
  */
-interface VaultPalSettings {
+interface ObsidianPetsSettings {
   /** Name of the pet companion */
   petName: string;
+
   /** Name of the user (what pet calls them) */
   userName: string;
+
   /** Whether the welcome modal has been shown */
   hasCompletedWelcome: boolean;
+
+  /** Celebration Settings (v0.2.0+) */
+  celebrations: {
+    dailyNoteEnabled: boolean;
+    noteCreationEnabled: boolean;
+    taskCompletionEnabled: boolean;
+    linkAdditionEnabled: boolean;
+    wordMilestonesEnabled: boolean;
+  };
+
+  /** Word count milestones to celebrate */
+  wordMilestones: number[]; // Default: [100, 250, 500, 1000]
+
+  /** Sound effects enabled (v0.2.0+) */
+  celebrationSoundsEnabled: boolean;
 }
 
-const DEFAULT_SETTINGS: VaultPalSettings = {
+const DEFAULT_SETTINGS: ObsidianPetsSettings = {
   petName: 'Kit',
   userName: '',
   hasCompletedWelcome: false,
+  celebrations: {
+    dailyNoteEnabled: true,
+    noteCreationEnabled: true,
+    taskCompletionEnabled: true,
+    linkAdditionEnabled: true,
+    wordMilestonesEnabled: true,
+  },
+  wordMilestones: [100, 250, 500, 1000],
+  celebrationSoundsEnabled: false, // Default OFF (respects user preferences)
 };
 
 /**
@@ -734,17 +1021,21 @@ const VALIDATION_RULES = {
 - Pet name is required (min 1 character)
 - User name is optional (min 0 characters)
 - Both restricted to alphanumeric + spaces for security
-- Daily Notes folder and template are auto-detected, not stored
+- Celebration settings allow users to customize which events trigger celebrations
+- Word milestones are user-configurable
+- Sound effects default to OFF
 
 ### Data Access Pattern
 
 ```typescript
 // main.ts
-export default class VaultPalPlugin extends Plugin {
-  settings: VaultPalSettings = DEFAULT_SETTINGS;
+export default class ObsidianPetsPlugin extends Plugin {
+  settings: ObsidianPetsSettings = DEFAULT_SETTINGS;
 
   async onload() {
     await this.loadSettings();
+
+    // Register views, commands, etc.
   }
 
   async loadSettings() {
@@ -763,20 +1054,20 @@ export default class VaultPalPlugin extends Plugin {
 
 ### Welcome Modal Pattern
 
-Vault Pal uses a **modal-based settings approach** instead of a traditional settings tab. This provides a better first-run experience and keeps the settings simple and focused.
+Obsidian Pets uses a **modal-based settings approach** for initial setup, with a settings tab for celebration customization.
 
-#### Implementation
+#### Welcome Modal (First Run)
 
 ```typescript
 // src/modals/WelcomeModal.ts
 export class WelcomeModal extends Modal {
-  private plugin: VaultPalPlugin;
+  private plugin: ObsidianPetsPlugin;
   private petNameInput: TextComponent;
   private userNameInput: TextComponent;
   private petNameError: HTMLElement;
   private userNameError: HTMLElement;
 
-  constructor(plugin: VaultPalPlugin) {
+  constructor(plugin: ObsidianPetsPlugin) {
     super(plugin.app);
     this.plugin = plugin;
   }
@@ -786,15 +1077,9 @@ export class WelcomeModal extends Modal {
     contentEl.empty();
 
     // Title and description
-    contentEl.createEl('h2', { text: 'Welcome to Vault Pal! 🦊' });
+    contentEl.createEl('h2', { text: 'Welcome to Obsidian Pets! 🦊' });
     contentEl.createEl('p', {
-      text: 'Let\'s set up your pet companion. You can change these settings anytime.'
-    });
-
-    // Info box about Daily Notes requirement
-    const infoBox = contentEl.createDiv({ cls: 'vault-pal-info-box' });
-    infoBox.createEl('p', {
-      text: 'ℹ️  Requires enabling the Daily Notes core plugin for full functionality'
+      text: 'Your vault companion that celebrates you. Let\'s set up your pet!'
     });
 
     // Pet name setting with validation
@@ -834,52 +1119,11 @@ export class WelcomeModal extends Modal {
     // Save button
     new Setting(contentEl)
       .addButton(btn => btn
-        .setButtonText('Save and Start')
+        .setButtonText("Let's Go!")
         .setCta()
         .onClick(async () => {
           await this.saveSettings();
         }));
-  }
-
-  // Real-time validation with error display
-  private validatePetName(value: string): boolean {
-    const trimmed = value.trim();
-    const rules = VALIDATION_RULES.petName;
-
-    if (trimmed.length < rules.minLength || trimmed.length > rules.maxLength) {
-      this.petNameError.setText(rules.errorMessage);
-      this.petNameError.style.display = 'block';
-      return false;
-    }
-
-    if (!rules.pattern.test(trimmed)) {
-      this.petNameError.setText(rules.errorMessage);
-      this.petNameError.style.display = 'block';
-      return false;
-    }
-
-    this.petNameError.style.display = 'none';
-    return true;
-  }
-
-  private validateUserName(value: string): boolean {
-    const trimmed = value.trim();
-    const rules = VALIDATION_RULES.userName;
-
-    if (trimmed.length > rules.maxLength) {
-      this.userNameError.setText(rules.errorMessage);
-      this.userNameError.style.display = 'block';
-      return false;
-    }
-
-    if (!rules.pattern.test(trimmed)) {
-      this.userNameError.setText(rules.errorMessage);
-      this.userNameError.style.display = 'block';
-      return false;
-    }
-
-    this.userNameError.style.display = 'none';
-    return true;
   }
 
   private async saveSettings() {
@@ -900,67 +1144,135 @@ export class WelcomeModal extends Modal {
     this.plugin.settings.hasCompletedWelcome = true;
     await this.plugin.saveSettings();
 
-    // Refresh pet view to apply new names
-    const petView = this.app.workspace.getLeavesOfType(PET_VIEW_TYPE)[0];
-    if (petView?.view instanceof PetView) {
-      petView.view.updatePetNames(petName, userName);
-    }
-
     this.close();
   }
 }
 ```
 
-#### Trigger Logic
-
-The welcome modal appears automatically on **first view open** (not on plugin enable):
+#### Settings Tab (Celebration Customization - v0.2.0+)
 
 ```typescript
-// src/views/PetView.ts
-async onOpen() {
-  const container = this.containerEl.children[1];
-  container.empty();
+// src/settings/SettingsTab.ts
+export class ObsidianPetsSettingsTab extends PluginSettingTab {
+  plugin: ObsidianPetsPlugin;
 
-  // Show welcome modal on first run
-  const plugin = this.app.plugins.plugins['vault-pal'] as VaultPalPlugin;
-  if (plugin && !plugin.settings.hasCompletedWelcome) {
-    new WelcomeModal(plugin).open();
+  constructor(app: App, plugin: ObsidianPetsPlugin) {
+    super(app, plugin);
+    this.plugin = plugin;
   }
 
-  // ... continue with view initialization
-}
-```
+  display(): void {
+    const { containerEl } = this;
+    containerEl.empty();
 
-This approach is less intrusive than showing the modal immediately when the plugin loads, as it waits until the user actively opens the pet view.
+    // Pet Settings Section
+    containerEl.createEl('h2', { text: 'Pet Settings' });
 
-#### Command Palette Integration
+    new Setting(containerEl)
+      .setName('Pet name')
+      .setDesc('Your companion\'s name')
+      .addText(text => text
+        .setPlaceholder('Kit')
+        .setValue(this.plugin.settings.petName)
+        .onChange(async (value) => {
+          this.plugin.settings.petName = value;
+          await this.plugin.saveSettings();
+        }));
 
-Users can reopen the settings modal at any time:
+    new Setting(containerEl)
+      .setName('Your name')
+      .setDesc('What your pet calls you (optional)')
+      .addText(text => text
+        .setPlaceholder('Leave empty')
+        .setValue(this.plugin.settings.userName)
+        .onChange(async (value) => {
+          this.plugin.settings.userName = value;
+          await this.plugin.saveSettings();
+        }));
 
-```typescript
-// src/main.ts
-this.addCommand({
-  id: 'edit-pet-settings',
-  name: 'Edit Pet Settings',
-  callback: () => {
-    new WelcomeModal(this).open();
+    // Celebration Settings Section
+    containerEl.createEl('h2', { text: 'Celebration Triggers' });
+
+    new Setting(containerEl)
+      .setName('Celebrate daily notes')
+      .setDesc('Celebrate when you create a daily note')
+      .addToggle(toggle => toggle
+        .setValue(this.plugin.settings.celebrations.dailyNoteEnabled)
+        .onChange(async (value) => {
+          this.plugin.settings.celebrations.dailyNoteEnabled = value;
+          await this.plugin.saveSettings();
+        }));
+
+    new Setting(containerEl)
+      .setName('Celebrate new notes')
+      .setDesc('Celebrate when you create any note')
+      .addToggle(toggle => toggle
+        .setValue(this.plugin.settings.celebrations.noteCreationEnabled)
+        .onChange(async (value) => {
+          this.plugin.settings.celebrations.noteCreationEnabled = value;
+          await this.plugin.saveSettings();
+        }));
+
+    new Setting(containerEl)
+      .setName('Celebrate task completion')
+      .setDesc('Celebrate when you check off a task')
+      .addToggle(toggle => toggle
+        .setValue(this.plugin.settings.celebrations.taskCompletionEnabled)
+        .onChange(async (value) => {
+          this.plugin.settings.celebrations.taskCompletionEnabled = value;
+          await this.plugin.saveSettings();
+        }));
+
+    new Setting(containerEl)
+      .setName('Celebrate links')
+      .setDesc('Celebrate when you add a link between notes')
+      .addToggle(toggle => toggle
+        .setValue(this.plugin.settings.celebrations.linkAdditionEnabled)
+        .onChange(async (value) => {
+          this.plugin.settings.celebrations.linkAdditionEnabled = value;
+          await this.plugin.saveSettings();
+        }));
+
+    new Setting(containerEl)
+      .setName('Celebrate word milestones')
+      .setDesc('Celebrate when you reach word count milestones')
+      .addToggle(toggle => toggle
+        .setValue(this.plugin.settings.celebrations.wordMilestonesEnabled)
+        .onChange(async (value) => {
+          this.plugin.settings.celebrations.wordMilestonesEnabled = value;
+          await this.plugin.saveSettings();
+        }));
+
+    new Setting(containerEl)
+      .setName('Word milestones')
+      .setDesc('Word counts to celebrate (comma-separated)')
+      .addText(text => text
+        .setPlaceholder('100, 250, 500, 1000')
+        .setValue(this.plugin.settings.wordMilestones.join(', '))
+        .onChange(async (value) => {
+          const milestones = value.split(',').map(m => parseInt(m.trim())).filter(m => !isNaN(m));
+          this.plugin.settings.wordMilestones = milestones;
+          await this.plugin.saveSettings();
+        }));
+
+    // Sound Settings Section
+    containerEl.createEl('h2', { text: 'Sound Effects' });
+
+    new Setting(containerEl)
+      .setName('Enable celebration sounds')
+      .setDesc('Play sound effects during celebrations')
+      .addToggle(toggle => toggle
+        .setValue(this.plugin.settings.celebrationSoundsEnabled)
+        .onChange(async (value) => {
+          this.plugin.settings.celebrationSoundsEnabled = value;
+          await this.plugin.saveSettings();
+
+          // Reload celebration engine to apply sound changes
+          this.plugin.reloadCelebrationEngine();
+        }));
   }
-});
-```
-
-#### Settings Persistence
-
-Settings are saved to `.obsidian/plugins/vault-pal/data.json`:
-
-```json
-{
-  "petName": "Kit",
-  "userName": "Alice",
-  "hasCompletedWelcome": true
 }
 ```
-
-The `hasCompletedWelcome` flag ensures the modal only appears once automatically.
 
 ---
 
@@ -970,37 +1282,51 @@ The `hasCompletedWelcome` flag ensures the modal only appears once automatically
 
 ```json
 {
-  "name": "vault-pal",
-  "version": "1.0.0",
-  "description": "Interactive pet companion for Obsidian daily notes",
+  "name": "obsidian-pets",
+  "version": "0.1.0",
+  "description": "Your vault companion that celebrates you",
   "main": "main.js",
   "scripts": {
     "dev": "node esbuild.config.mjs",
-    "build": "tsc -noEmit && node esbuild.config.mjs production",
-    "lint": "eslint src --ext .ts,.svelte"
+    "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
+    "version": "node version-bump.mjs && git add manifest.json versions.json",
+    "lint": "eslint src --ext .ts,.svelte",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage"
   },
   "keywords": [
     "obsidian",
     "obsidian-plugin",
-    "daily-notes",
-    "gamification"
+    "pet",
+    "companion",
+    "celebration",
+    "vault-awareness"
   ],
-  "author": "Your Name",
+  "author": "Terri Yeh",
   "license": "MIT",
   "devDependencies": {
-    "@tsconfig/svelte": "^5.0.0",
-    "@types/node": "^20.0.0",
-    "@typescript-eslint/eslint-plugin": "^6.0.0",
-    "@typescript-eslint/parser": "^6.0.0",
-    "esbuild": "^0.20.0",
-    "esbuild-svelte": "^0.8.0",
-    "eslint": "^8.0.0",
-    "obsidian": "latest",
-    "obsidian-daily-notes-interface": "latest",
-    "svelte": "^4.0.0",
-    "svelte-preprocess": "^5.0.0",
-    "tslib": "^2.6.0",
-    "typescript": "^5.0.0"
+    "@testing-library/svelte": "^5.3.1",
+    "@tsconfig/svelte": "^5.0.4",
+    "@types/node": "^20.11.19",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
+    "@vitest/coverage-v8": "^4.0.18",
+    "@vitest/ui": "^4.0.18",
+    "esbuild": "^0.27.2",
+    "esbuild-svelte": "0.8.0",
+    "eslint": "^8.56.0",
+    "eslint-plugin-svelte": "^3.14.0",
+    "happy-dom": "^20.5.0",
+    "jsdom": "^28.0.0",
+    "obsidian": "^1.5.0",
+    "svelte": "^4.2.12",
+    "svelte-eslint-parser": "^1.4.1",
+    "svelte-preprocess": "^5.1.3",
+    "tslib": "^2.6.2",
+    "typescript": "^5.3.3",
+    "vitest": "^4.0.18"
   }
 }
 ```
@@ -1011,7 +1337,6 @@ The `hasCompletedWelcome` flag ensures the modal only appears once automatically
 import esbuild from "esbuild";
 import sveltePlugin from "esbuild-svelte";
 import sveltePreprocess from "svelte-preprocess";
-import fs from "fs";
 
 const production = process.argv[2] === "production";
 
@@ -1030,6 +1355,9 @@ const context = await esbuild.context({
   sourcemap: production ? false : "inline",
   treeShaking: true,
   outfile: "main.js",
+  define: {
+    '__DEV__': production ? 'false' : 'true',
+  },
   plugins: [
     sveltePlugin({
       preprocess: sveltePreprocess(),
@@ -1050,79 +1378,31 @@ if (production) {
 }
 ```
 
-### tsconfig.json
-
-```json
-{
-  "extends": "@tsconfig/svelte/tsconfig.json",
-  "compilerOptions": {
-    "target": "ES6",
-    "module": "ESNext",
-    "lib": ["ES2022", "DOM"],
-    "moduleResolution": "Bundler",
-    "allowSyntheticDefaultImports": true,
-    "resolveJsonModule": true,
-    "strict": true,
-    "skipLibCheck": true,
-    "outDir": ".",
-    "inlineSourceMap": true,
-    "inlineSources": true,
-    "types": ["node", "svelte"]
-  },
-  "include": ["src/**/*.ts", "src/**/*.svelte"]
-}
-```
-
 ---
 
 ## 6. Key Integration Points
 
-### 6.1 Daily Notes Plugin Integration
+### 6.1 Obsidian Workspace API
 
-**Using obsidian-daily-notes-interface:**
+**Event Listening:**
 
 ```typescript
-import {
-  createDailyNote,
-  getDailyNote,
-  getAllDailyNotes,
-  appHasDailyNotesPluginLoaded,
-  getDailyNoteSettings
-} from 'obsidian-daily-notes-interface';
+// Vault events
+this.app.vault.on('create', callback);
+this.app.vault.on('modify', callback);
+this.app.vault.on('delete', callback);
 
-// Check if Daily Notes is available
-if (!appHasDailyNotesPluginLoaded()) {
-  new Notice('Please enable Daily Notes plugin');
-  return;
-}
+// Workspace events
+this.app.workspace.on('file-open', callback);
+this.app.workspace.on('editor-change', callback);
 
-// Get user's Daily Notes settings
-const settings = getDailyNoteSettings();
-// Returns: { format: string, folder: string, template: string }
+// Metadata cache
+this.app.metadataCache.on('resolved', callback);
 ```
 
-**Important Considerations:**
-- Respect user's existing Daily Notes configuration
-- Use their date format and folder settings
-- VaultPal template path is separate from Daily Notes template
-- Handle case where user has Periodic Notes plugin
+### 6.2 View Registration
 
-### 6.2 Templater Compatibility
-
-**Potential Conflict:**
-- User's template may contain Templater syntax (`<% %>`)
-- Templater processes templates on file creation
-- VaultPal processes templates during conversation
-
-**Solution:**
-- VaultPal only looks for `vaultpal` code blocks
-- Ignore all other code blocks
-- Let Templater process its own syntax
-- Ensure VaultPal runs after Templater completes
-
-### 6.3 Workspace Management
-
-**View Registration:**
+**Workspace Management:**
 
 ```typescript
 // main.ts
@@ -1133,41 +1413,29 @@ async onload() {
     (leaf) => new PetView(leaf, this)
   );
 
-  // Register Calendar View
-  this.registerView(
-    VIEW_TYPE_CALENDAR,
-    (leaf) => new CalendarView(leaf, this)
-  );
-
   // Add ribbon icon
-  this.addRibbonIcon("heart", "Open Vault Pal", () => {
-    this.activateView(VIEW_TYPE_PET);
+  this.addRibbonIcon("heart", "Open Obsidian Pets", () => {
+    this.activateView();
   });
 
-  // Add commands
+  // Add command
   this.addCommand({
-    id: "open-vault-pal",
-    name: "Open Vault Pal",
-    callback: () => this.activateView(VIEW_TYPE_PET)
-  });
-
-  this.addCommand({
-    id: "open-calendar-view",
-    name: "Open Calendar View",
-    callback: () => this.activateView(VIEW_TYPE_CALENDAR)
+    id: "open-obsidian-pets",
+    name: "Open Obsidian Pets",
+    callback: () => this.activateView()
   });
 }
 
-async activateView(viewType: string) {
+async activateView() {
   const { workspace } = this.app;
 
   // Detach existing leaves of this type
-  workspace.detachLeavesOfType(viewType);
+  workspace.detachLeavesOfType(VIEW_TYPE_PET);
 
   // Create new leaf in right sidebar
   const leaf = workspace.getRightLeaf(false);
   await leaf.setViewState({
-    type: viewType,
+    type: VIEW_TYPE_PET,
     active: true
   });
 
@@ -1183,8 +1451,8 @@ async activateView(viewType: string) {
 
 ```bash
 # Clone repository
-git clone https://github.com/terriyeh/vault-pal
-cd vault-pal
+git clone https://github.com/terriyeh/obsidian-pets
+cd obsidian-pets
 
 # Install dependencies
 npm install
@@ -1199,10 +1467,10 @@ npm run dev
 2. Create symlink to plugin directory:
    ```bash
    # Windows
-   mklink /D "C:\path\to\test-vault\.obsidian\plugins\vault-pal" "D:\vault-pal"
+   mklink /D "C:\path\to\test-vault\.obsidian\plugins\obsidian-pets" "D:\obsidian-pets"
 
    # macOS/Linux
-   ln -s /path/to/vault-pal /path/to/test-vault/.obsidian/plugins/vault-pal
+   ln -s /path/to/obsidian-pets /path/to/test-vault/.obsidian/plugins/obsidian-pets
    ```
 3. Enable the plugin in Obsidian settings
 4. Install Hot-Reload plugin for automatic reloading
@@ -1228,27 +1496,35 @@ This creates:
 | View initialization | < 200ms |
 | Animation frame rate | 60 FPS |
 | State transition | < 300ms |
-| Template parsing | < 50ms |
-| Note creation | < 500ms |
+| Event detection latency | < 100ms |
+| Emoji bubble render | < 50ms |
 | Memory usage | < 10MB |
-| SVG asset size (total) | < 150KB |
+| Sprite asset size | < 150KB |
+| Sound effects (total) | < 500KB |
 
 ---
 
 ## 9. Future Considerations
 
-### Phase 2 Features (Post-MVP)
-- Voice input (local Whisper)
-- Journey progression system
-- Paid asset packs
+### v0.3.0+ Features
+- Custom celebration messages (user-entered text)
+- Celebration banner UI (toast notifications)
+- Immersion behaviors (pets react to each other)
+- Relationships (multiple pets interact like VS Code Pets friends)
+- Adventures (background changes)
+- Walking animation (ambient presence)
+
+### v0.4.0+ Features
 - Multiple pet types
-- Advanced customization
+- Custom celebration packs (community-contributed)
+- Seasonal celebration themes ($1.99)
+- Premium backgrounds ($1.99)
 
 ### Scalability
-- Asset loading optimization
-- State persistence strategies
+- Asset loading optimization (lazy loading)
+- Efficient event debouncing
 - Plugin settings migration
-- Cross-vault sync (if needed)
+- Cross-vault celebration stats (optional)
 
 ---
 
@@ -1256,40 +1532,41 @@ This creates:
 
 | Risk | Mitigation |
 |------|------------|
-| User has existing Daily Notes setup | Integrate with daily-notes-interface to respect settings |
-| Template conflicts with other plugins | Use unique `vaultpal` code block syntax |
-| Performance in large vaults | Lazy load assets, optimize sprite sheets |
+| Performance impact on large vaults | Efficient event debouncing, cooldowns prevent spam |
 | Mobile compatibility | Touch event handling, mobile-optimized CSS, tested on mobile app |
 | Breaking changes in Obsidian API | Follow official API docs, test with latest versions |
 | Path traversal attacks | Validate all asset paths, reject suspicious patterns |
 | DOM-based XSS attacks | Validate state values before setting DOM attributes |
 | Debug code in production | Use `__DEV__` flag with tree-shaking to exclude debug code |
 | Resource leaks on errors | Proper cleanup in error handlers, hide loading states |
+| Event listener memory leaks | Proper cleanup on view close, unregister all listeners |
+| Sound autoplay restrictions | Respect browser autoplay policies, default to OFF |
 
 ---
 
 ## Conclusion
 
-This architecture provides a solid foundation for Vault Pal's MVP features:
-- ✅ Pet view with 7 animation states
-- ✅ Calendar view for navigation
-- ✅ Template-based conversation flow
-- ✅ Daily note integration
-- ✅ XP and progression system
+This architecture provides a solid foundation for Obsidian Pets' celebration-focused experience:
+- ✅ Pet view with 6 animation states (simplified from 7)
+- ✅ Vault-aware celebration system
+- ✅ User-configurable triggers
+- ✅ Emoji speech bubbles
+- ✅ Optional sound effects (tied to animations)
 - ✅ Fully local and private
+- ✅ Mobile support with touch interactions
 
-The modular design allows for easy extension and future feature additions while maintaining clean separation of concerns.
+The modular design allows for easy extension and future feature additions (custom messages, banner UI, immersion behaviors, relationships, adventures) while maintaining clean separation of concerns and respecting the core philosophy: **"Feeling the plugin, not thinking about it."**
 
 ---
 
-**Next Steps:**
-1. Set up project repository
-2. Implement core plugin structure
-3. Create SVG assets
-4. Develop animation system
-5. Build conversation flow
-6. Integrate with Daily Notes
-7. Implement progression system
-8. Add calendar view
-9. Testing and polish
-10. Submit to Obsidian community plugins
+**Next Steps (v0.2.0 Development):**
+1. Implement CelebrationEngine core orchestration
+2. Create VaultEventListeners for vault activity detection
+3. Add EmojiRenderer for speech bubbles
+4. Implement MilestoneTracker for cooldowns
+5. Add SoundEffects system (optional, default OFF)
+6. Create settings tab for celebration customization
+7. Update PetView to integrate celebration system
+8. Remove conversation-related code (archive to `archive/` folder)
+9. Comprehensive testing of celebration triggers
+10. Polish animations and timing

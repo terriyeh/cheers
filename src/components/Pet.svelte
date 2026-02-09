@@ -83,13 +83,10 @@
    */
   function getStateText(currentState: PetState): string {
     const greeting = userName ? `Hello ${userName}!` : 'Hello there!';
-    const talking = userName ? `How was your day, ${userName}?` : 'How was your day?';
 
     const stateTexts: Record<PetState, string> = {
       idle: 'Just hanging out...',
       greeting: greeting,
-      talking: talking,
-      listening: 'I\'m listening...',
       'small-celebration': 'Great job!',
       'big-celebration': 'Amazing! You did it!',
       petting: 'That feels nice!',
@@ -256,26 +253,6 @@
   @keyframes sprite-greeting {
     from { background-position: 0 -64px; }
     to { background-position: -896px -64px; } /* 14 frames × 64px */
-  }
-
-  /* Row 3 (y=128): Talking - 8 frames */
-  .pet-sprite-container[data-state='talking'] .pet-sprite {
-    animation: sprite-talking 0.8s steps(8) infinite;
-  }
-
-  @keyframes sprite-talking {
-    from { background-position: 0 -128px; }
-    to { background-position: -512px -128px; } /* 8 frames × 64px */
-  }
-
-  /* Row 4 (y=192): Listening - 11 frames */
-  .pet-sprite-container[data-state='listening'] .pet-sprite {
-    animation: sprite-listening 1.1s steps(11) infinite;
-  }
-
-  @keyframes sprite-listening {
-    from { background-position: 0 -192px; }
-    to { background-position: -704px -192px; } /* 11 frames × 64px */
   }
 
   /* Row 5 (y=256): Small celebration - 5 frames */

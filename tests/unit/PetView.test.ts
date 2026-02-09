@@ -236,10 +236,10 @@ describe('PetView', () => {
     it('should update Svelte component when state changes', async () => {
       await petView.onOpen();
 
-      petView.transitionState('talking');
+      petView.transitionState('small-celebration');
 
       const component = petView.containerEl.querySelector('.pet-sprite-container');
-      expect(component?.getAttribute('data-state')).toBe('talking');
+      expect(component?.getAttribute('data-state')).toBe('small-celebration');
     });
 
     it('should handle state transitions through all states', async () => {
@@ -247,8 +247,6 @@ describe('PetView', () => {
 
       const states: PetState[] = [
         'greeting',
-        'talking',
-        'listening',
         'small-celebration',
         'big-celebration',
         'petting',
@@ -311,7 +309,7 @@ describe('PetView', () => {
     it('should keep data attribute and component state in sync', async () => {
       await petView.onOpen();
 
-      const states: PetState[] = ['greeting', 'talking', 'listening', 'petting'];
+      const states: PetState[] = ['greeting', 'small-celebration', 'petting'];
 
       for (const state of states) {
         petView.transitionState(state);
@@ -343,15 +341,15 @@ describe('PetView', () => {
       await petView.onOpen();
 
       petView.transitionState('greeting');
-      petView.transitionState('talking');
-      petView.transitionState('listening');
+      petView.transitionState('small-celebration');
+      petView.transitionState('petting');
 
       const container = petView.containerEl.querySelector('.vault-pal-container');
       const component = petView.containerEl.querySelector('.pet-sprite-container');
 
-      expect(container?.getAttribute('data-pet-state')).toBe('listening');
-      expect(component?.getAttribute('data-state')).toBe('listening');
-      expect(petView.getCurrentState()).toBe('listening');
+      expect(container?.getAttribute('data-pet-state')).toBe('petting');
+      expect(component?.getAttribute('data-state')).toBe('petting');
+      expect(petView.getCurrentState()).toBe('petting');
     });
   });
 
@@ -410,7 +408,7 @@ describe('PetView', () => {
       const closePromise = petView.onClose();
 
       // Try to transition during close
-      const result = petView.transitionState('talking');
+      const result = petView.transitionState('petting');
 
       await closePromise;
 
@@ -504,20 +502,20 @@ describe('PetView', () => {
       // Start in idle state
       expect(petView.getCurrentState()).toBe('idle');
 
-      // Transition to talking state
-      petView.transitionState('talking');
-      expect(petView.getCurrentState()).toBe('talking');
+      // Transition to greeting state
+      petView.transitionState('greeting');
+      expect(petView.getCurrentState()).toBe('greeting');
 
       // Simulate petting event from Pet.svelte component
       // (In real scenario, this would be triggered by clicking the pet sprite)
       // Since we can't easily dispatch custom events from the Svelte component in this test,
       // we verify the state machine's returnTarget functionality instead
-      petView.transitionState('petting', 'talking');
+      petView.transitionState('petting', 'greeting');
       expect(petView.getCurrentState()).toBe('petting');
 
-      // After petting duration, should return to 'talking'
+      // After petting duration, should return to 'greeting'
       vi.advanceTimersByTime(2000);
-      expect(petView.getCurrentState()).toBe('talking');
+      expect(petView.getCurrentState()).toBe('greeting');
     });
 
     it('should remove pet event listener on close', async () => {

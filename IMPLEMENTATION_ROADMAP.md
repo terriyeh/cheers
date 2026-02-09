@@ -1,483 +1,597 @@
-# Vault Pal - Implementation Roadmap
+# Obsidian Pets - Implementation Roadmap
 
-**Version:** 1.0
-**Last Updated:** 2026-02-04
-**Estimated Timeline:** 8-12 weeks for MVP
+**Version:** 2.0 (Post-Pivot)
+**Last Updated:** 2026-02-09
+**Estimated Timeline:** 4-6 weeks for MVP
+
+---
+
+## Strategic Direction
+
+**Core Philosophy:** "Feeling the plugin, not thinking about it"
+
+**What We're Building:**
+- Vault-aware celebration companion
+- Ambient emotional support (not active chat)
+- Proactive joy moments (not reactive Q&A)
+- Zero cognitive load (no decisions, no input required)
+
+**What We're NOT Building:**
+- ❌ Conversation/chat systems (use Obsidian Copilot for that)
+- ❌ XP progression/gamification (use RPG Stat Tracker for that)
+- ❌ Calendar views
+- ❌ Template parsing for prompts
 
 ---
 
 ## Overview
 
-This roadmap breaks down Vault Pal development into manageable phases, with clear priorities and dependencies. Each phase includes specific deliverables, acceptance criteria, and technical tasks.
+This roadmap reflects the strategic pivot from conversation-based journaling to celebration-focused vault companion.
+
+**Key Changes:**
+- Removed: Phases 4-6 (Conversation Flow, Progression System, Calendar View)
+- Added: Phase 3 (Celebration System)
+- Simplified: Phase 4 (User Configuration)
+- Reduced timeline: 12 weeks → 4-6 weeks
 
 ---
 
-## Phase 1: Foundation & Setup (Week 1-2)
+## Phase 1: Foundation & Setup ✅ COMPLETED
 
-**Goal:** Establish project infrastructure and development environment
+**Status:** Completed (Week 1-2, Feb 2026)
 
-### 1.1 Repository Setup
-- [x] Initialize git repository
-- [x] Connect to GitHub remote (https://github.com/terriyeh/vault-pal)
-- [ ] Create project structure (folders, files)
-- [ ] Set up .gitignore
-- [ ] Create initial README.md
+### Deliverables
+- ✅ Repository setup with Git/GitHub
+- ✅ TypeScript + esbuild configuration
+- ✅ Svelte integration
+- ✅ Basic plugin structure (main.ts, settings)
+- ✅ Package.json scripts (dev, build, test)
+- ✅ Vitest testing framework
+- ✅ Manifest.json
 
-### 1.2 Development Environment
-- [ ] Configure TypeScript
-  - [ ] Create tsconfig.json
-  - [ ] Set up Svelte TypeScript support
-  - [ ] Configure path aliases
-- [ ] Configure esbuild
-  - [ ] Install esbuild and esbuild-svelte
-  - [ ] Create esbuild.config.mjs
-  - [ ] Test build pipeline
-- [ ] Set up package.json
-  - [ ] Add all dependencies
-  - [ ] Configure scripts (dev, build, lint)
-- [ ] Create manifest.json
-  - [ ] Define plugin metadata
-  - [ ] Set minimum Obsidian version
+**Completion Date:** 2026-02-04
 
-### 1.3 Basic Plugin Structure
-- [ ] Create main.ts plugin class
-  - [ ] Implement onload/onunload
-  - [ ] Add basic logging
-  - [ ] Test plugin loads in Obsidian
-- [ ] Create settings.ts
-  - [ ] Implement PluginSettingTab
-  - [ ] Add basic settings structure
-- [ ] Create types/index.ts
-  - [ ] Define core interfaces
-  - [ ] Document type structure
+---
 
-**Deliverable:** Minimal working plugin that loads in Obsidian with basic settings tab
+## Phase 2: Pet View & Animation System ✅ COMPLETED
+
+**Status:** Completed (Week 3-4, Feb 2026)
+
+### Deliverables
+- ✅ PetView.ts (ItemView implementation)
+- ✅ Pet.svelte component
+- ✅ PetStateMachine.ts (7 animation states)
+- ✅ Sprite-based animation system
+- ✅ CSS animations (idle, greeting, talking, listening, celebration, petting)
+- ✅ Mobile touch support
+- ✅ Welcome modal (pet name, user name)
+- ✅ Settings persistence
+- ✅ 120 comprehensive tests
+
+**Completion Date:** 2026-02-06
+
+**Animations:**
+- Idle: Breathing loop
+- Greeting: Wave on panel open
+- Talking: Bounce animation (reserved for future)
+- Listening: Tilt animation (reserved for future)
+- Small Celebration: Brief cheer
+- Big Celebration: Enthusiastic spin
+- Petting: Happy reaction (click/tap anytime)
+
+---
+
+## Phase 3: Celebration System 🚧 IN PROGRESS
+
+**Goal:** Implement vault-aware celebrations that trigger on user activities
+
+**Estimated Duration:** 2-3 weeks
+
+### 3.1 Vault Event Listeners
+
+**Goal:** Hook into Obsidian API events to detect vault activities
+
+**Tasks:**
+- [ ] Create `celebration/VaultEventListeners.ts`
+  - [ ] Listen to `vault.on('create')` for new notes
+  - [ ] Listen to `workspace.on('file-open')` for daily note detection
+  - [ ] Listen to `workspace.on('editor-change')` for word count tracking
+  - [ ] Listen to `workspace.on('editor-change')` for checkbox detection
+  - [ ] Listen to `metadataCache.on('resolved')` for link detection
+- [ ] Implement event debouncing (prevent spam)
+- [ ] Add error handling and cleanup
+- [ ] Write unit tests for each listener
+
+**Technical Approach:**
+```typescript
+// Example: Daily note creation listener
+this.registerEvent(
+  this.app.workspace.on('file-open', (file) => {
+    if (this.isDailyNote(file)) {
+      this.celebrationEngine.triggerCelebration('daily-note');
+    }
+  })
+);
+```
 
 **Acceptance Criteria:**
-- ✅ Plugin appears in Obsidian community plugins list
-- ✅ Plugin can be enabled/disabled
-- ✅ Settings tab is accessible and functional
-- ✅ `npm run dev` watches for changes
-- ✅ `npm run build` produces main.js
+- ✅ Detects new note creation
+- ✅ Identifies daily notes vs. regular notes
+- ✅ Tracks word count milestones
+- ✅ Detects checkbox state changes
+- ✅ Identifies new link creation
+- ✅ Events don't fire more than once per cooldown period
 
 ---
 
-## Phase 2: Pet View & Animation System (Week 3-4)
+### 3.2 Celebration Engine
 
-**Goal:** Create the core pet panel with animation states
+**Goal:** Core logic for triggering and managing celebrations
 
-### 2.1 Pet View ItemView
-- [ ] Create views/PetView.ts
-  - [ ] Extend ItemView class
-  - [ ] Implement getViewType/getDisplayText
-  - [ ] Add basic HTML structure
-  - [ ] Register view in main.ts
-- [ ] Add ribbon icon for opening pet view
-- [ ] Add command for opening pet view
-- [ ] Test view opens in right sidebar
-- [ ] Verify view can be moved/docked
+**Tasks:**
+- [ ] Create `celebration/CelebrationEngine.ts`
+  - [ ] `triggerCelebration(type: CelebrationType)`
+  - [ ] Cooldown tracking (prevent spam)
+  - [ ] Check if celebration type is enabled
+  - [ ] Trigger animation via PetStateMachine
+  - [ ] Queue celebrations if pet is busy
+- [ ] Define `CelebrationType` enum
+  - `'daily-note'`, `'new-note'`, `'link'`, `'checkbox'`, `'word-milestone'`
+- [ ] Implement cooldown system
+- [ ] Add celebration queue (max 3 pending)
+- [ ] Write comprehensive tests
 
-### 2.2 Placeholder SVG Assets
-- [ ] Create assets/pet/states/ folder structure
-- [ ] Create 7 placeholder SVG files:
-  - [ ] idle.svg
-  - [ ] greeting.svg
-  - [ ] talking.svg
-  - [ ] listening.svg
-  - [ ] small-celebration.svg
-  - [ ] big-celebration.svg
-  - [ ] petting.svg
-- [ ] Ensure consistent viewBox (200x200)
-- [ ] Test SVGs display correctly
-- [ ] Optimize file sizes with SVGO
+**Data Structures:**
+```typescript
+enum CelebrationType {
+  DailyNote = 'daily-note',
+  NewNote = 'new-note',
+  Link = 'link',
+  Checkbox = 'checkbox',
+  WordMilestone = 'word-milestone'
+}
 
-### 2.3 Animation State Machine
-- [ ] Create animations/PetStateMachine.ts
-  - [ ] Define PetState type
-  - [ ] Define StateTransition interface
-  - [ ] Implement transition validation
-  - [ ] Add lifecycle hooks (onEnter, onExit)
-  - [ ] Add transition queue handling
-- [ ] Test state transitions
-- [ ] Add logging for debugging
-
-### 2.4 SVG Layer System
-- [ ] Create animations/LayerManager.ts
-  - [ ] Implement background layer switching
-  - [ ] Implement pet layer switching
-  - [ ] Implement accessory layer switching
-  - [ ] Add CSS variable management
-- [ ] Create sprite sheet structure
-- [ ] Build SVG symbol definitions
-- [ ] Test layer compositing
-
-### 2.5 CSS Animations
-- [ ] Create styles.css
-- [ ] Implement keyframe animations for each state:
-  - [ ] idle-breathe
-  - [ ] greeting-wave
-  - [ ] talking-bounce
-  - [ ] listening-tilt
-  - [ ] small-celebration-jump
-  - [ ] big-celebration-spin
-  - [ ] petting-happy
-- [ ] Add transition effects
-- [ ] Test performance (60 FPS target)
-
-### 2.6 Svelte Pet Component
-- [ ] Create components/Pet.svelte
-  - [ ] Accept state prop
-  - [ ] Render SVG layers
-  - [ ] Bind to state machine
-  - [ ] Handle click events
-- [ ] Mount Pet component in PetView
-- [ ] Test reactivity (state changes trigger animations)
-
-**Deliverable:** Working pet panel with all 7 animation states
+interface CelebrationConfig {
+  type: CelebrationType;
+  enabled: boolean;
+  animation: 'small' | 'big';
+  cooldown: number; // milliseconds
+}
+```
 
 **Acceptance Criteria:**
-- ✅ Pet displays in sidebar panel
-- ✅ All 7 animations play correctly
-- ✅ Smooth transitions between states
-- ✅ Click triggers petting animation
-- ✅ Idle animation loops continuously
-- ✅ No performance issues (60 FPS)
+- ✅ Triggers correct animation for celebration type
+- ✅ Respects cooldown periods
+- ✅ Checks user settings (enabled/disabled)
+- ✅ Handles queue gracefully (no spam)
+- ✅ Recovers from errors without crashing
 
 ---
 
-## Phase 3: Template Parsing & Daily Note Integration (Week 5-6)
+### 3.3 Milestone Tracker
 
-**Goal:** Enable reading templates and creating daily notes
+**Goal:** Track word count milestones and other metrics
 
-### 3.1 Template Parser
-- [ ] Create core/TemplateParser.ts
-  - [ ] Implement parseTemplate method
-  - [ ] Regex for `vaultpal` code blocks
-  - [ ] Extract prompt text
-  - [ ] Track question positions
-  - [ ] Handle edge cases (malformed blocks)
-- [ ] Add error handling
+**Tasks:**
+- [ ] Create `celebration/MilestoneTracker.ts`
+  - [ ] Track word counts per file
+  - [ ] Detect when milestones are crossed
+  - [ ] Persist milestone state (avoid duplicate celebrations)
+  - [ ] Implement `checkWordCount(file: TFile, wordCount: number)`
+- [ ] Define default milestones: [100, 500, 1000, 5000]
+- [ ] Store last known word count per file
+- [ ] Clear stale data (files older than 30 days)
 - [ ] Write unit tests
-- [ ] Test with sample templates
 
-### 3.2 Daily Notes Integration
-- [ ] Install obsidian-daily-notes-interface
-- [ ] Create core/NoteCreator.ts
-  - [ ] Implement createOrOpenDailyNote
-  - [ ] Check if note exists
-  - [ ] Handle existing content
-  - [ ] Implement insertResponse
-  - [ ] Preserve non-VaultPal content
-- [ ] Test with Daily Notes plugin
-- [ ] Test with Periodic Notes plugin
-- [ ] Verify Templater compatibility
-
-### 3.3 Settings for Template Configuration
-- [ ] Add template path setting
-  - [ ] File picker or text input
-  - [ ] Validation
-  - [ ] Default value
-- [ ] Add notes folder setting
-- [ ] Add date format setting
-- [ ] Add "strip VP blocks" toggle
-- [ ] Test settings save/load
-
-### 3.4 Template Validation
-- [ ] Validate template file exists
-- [ ] Validate template has vaultpal blocks
-- [ ] Show helpful error messages
-- [ ] Add template preview (optional)
-
-**Deliverable:** Plugin can parse templates and create daily notes
+**Technical Approach:**
+```typescript
+interface MilestoneState {
+  [filePath: string]: {
+    wordCount: number;
+    lastMilestone: number;
+    lastUpdated: Date;
+  }
+}
+```
 
 **Acceptance Criteria:**
-- ✅ Parses vaultpal code blocks from template
-- ✅ Creates daily note using user's settings
-- ✅ Respects Daily Notes plugin configuration
-- ✅ Handles existing notes correctly
-- ✅ Does not break Templater/DataView
-- ✅ Clear error messages for invalid templates
+- ✅ Detects word count milestones accurately
+- ✅ Doesn't trigger same milestone twice
+- ✅ Handles rapid typing (debounced)
+- ✅ Cleans up old data
+- ✅ Persists state across sessions
 
 ---
 
-## Phase 4: Conversation Flow (Week 7-8)
+### 3.4 State Remapping
 
-**Goal:** Implement the Q&A chat interface
+**Goal:** Remove text messages and simplify animation states
 
-### 4.1 Chat UI Component
-- [ ] Create components/Chat.svelte
-  - [ ] Message display area (scrollable)
-  - [ ] Text input field
-  - [ ] Send button
-  - [ ] Message bubbles (pet vs user)
-  - [ ] Typing indicator
-- [ ] Style chat interface
-- [ ] Test responsiveness
-- [ ] Add keyboard shortcuts (Enter to send)
+**Tasks:**
+- [ ] Remove greeting text ("Hello [userName]!")
+- [ ] Remove "talking" state (not needed for emoji celebrations)
+- [ ] Remove "listening" state (not needed for emoji celebrations)
+- [ ] Update state machine to remove deprecated states
+- [ ] Update Pet.svelte to remove text rendering
+- [ ] Keep: idle, greeting, walking, celebration (small/big), petting
+- [ ] Update tests to match new state machine
 
-### 4.2 Conversation Manager
-- [ ] Create core/ConversationManager.ts
-  - [ ] Implement startConversation
-  - [ ] Implement askNextQuestion
-  - [ ] Implement submitResponse
-  - [ ] Implement completeConversation
-  - [ ] Add error recovery
-- [ ] Coordinate with state machine
-- [ ] Handle empty responses
-- [ ] Add response validation (optional)
-
-### 4.3 "Share my day" Button
-- [ ] Add button to pet view
-- [ ] Style button
-- [ ] Disable during conversation
-- [ ] Re-enable after completion
-- [ ] Add loading state
-
-### 4.4 Response Insertion Logic
-- [ ] Implement precise response insertion
-  - [ ] Find vaultpal block in note
-  - [ ] Insert response after block
-  - [ ] Maintain markdown formatting
-  - [ ] Handle line breaks correctly
-- [ ] Test with various template structures
-- [ ] Verify no data loss
-
-### 4.5 Conversation State Management
-- [ ] Track conversation progress
-- [ ] Allow pausing/resuming (optional)
-- [ ] Handle view closure mid-conversation
-- [ ] Persist conversation state (optional)
-
-**Deliverable:** Fully functional conversation flow
+**Rationale:**
+- Emoji speech bubbles only (v0.2.0)
+- Custom text messages moved to v0.3.0+
+- Simpler state machine = less complexity
 
 **Acceptance Criteria:**
-- ✅ User can click "Share my day" to start
-- ✅ Pet presents questions one by one
-- ✅ User can type and submit responses
-- ✅ Responses saved to daily note correctly
-- ✅ Pet shows appropriate animations during flow
-- ✅ Completion message displayed
-- ✅ Can handle conversation interruption
+- ✅ No text messages rendered
+- ✅ "talking"/"listening" states removed
+- ✅ State machine updated and tested
+- ✅ All existing functionality preserved
 
 ---
 
-## Phase 5: Progression System (Week 9)
+### 3.5 Celebration Animations
 
-**Goal:** Implement XP, streaks, and milestones
+**Goal:** Add emoji speech bubbles for celebrations
 
-### 5.1 Progression Data Structure
-- [ ] Add progression settings to plugin
-- [ ] Implement data initialization
-- [ ] Add migration for existing users (future)
+**Tasks:**
+- [ ] Design celebration animation sprites
+  - [ ] Fireworks (big celebration)
+  - [ ] Hearts (new note)
+  - [ ] Confetti (checkbox)
+  - [ ] Sparkles (link)
+- [ ] Implement emoji speech bubbles
+  - [ ] 🎉 for daily note
+  - [ ] ❤️ for new note
+  - [ ] 🎊 for checkbox
+  - [ ] ✨ for link
+  - [ ] 🎆 for word milestone
+- [ ] Update Pet.svelte with speech bubble component
+- [ ] Add CSS keyframes for each animation
+- [ ] Test animations on mobile
+- [ ] Ensure 60 FPS performance
 
-### 5.2 Progression System Logic
-- [ ] Create core/ProgressionSystem.ts
-  - [ ] Implement completeNote
-  - [ ] Calculate XP awards
-  - [ ] Update streak logic
-  - [ ] Check milestones
-  - [ ] Unlock rewards
-- [ ] Test streak calculations
-- [ ] Test milestone detection
-- [ ] Handle edge cases (date changes, timezones)
-
-### 5.3 Progress Display
-- [ ] Create components/ProgressBar.svelte
-  - [ ] XP bar with fill animation
-  - [ ] Streak counter
-  - [ ] Level display (optional)
-- [ ] Add progress display to pet view
-- [ ] Update reactively after note completion
-
-### 5.4 Milestone Celebrations
-- [ ] Define milestone rewards
-- [ ] Implement unlock notifications
-- [ ] Trigger big-celebration animation
-- [ ] Show milestone achievement message
-
-### 5.5 Settings Display
-- [ ] Add progress summary to settings tab
-  - [ ] Total XP
-  - [ ] Current streak
-  - [ ] Longest streak
-  - [ ] Completed notes count
-  - [ ] Unlocked milestones
-- [ ] Add reset progress button
-- [ ] Add confirmation dialog
-
-**Deliverable:** Complete gamification system
+**Animation Specs:**
+- **Fireworks**: 2-second animation, particle effects
+- **Hearts**: 1.5-second float-up animation
+- **Confetti**: 2-second fall animation
+- **Sparkles**: 1-second shimmer effect
+- **Speech bubbles**: 1.5-second fade-in/out with emoji
 
 **Acceptance Criteria:**
-- ✅ XP awarded on note completion
-- ✅ Streak tracked correctly (consecutive days)
-- ✅ Milestones detected and celebrated
-- ✅ Progress displays update in real-time
-- ✅ Progression data persists correctly
-- ✅ Reset button works safely
+- ✅ All animations play smoothly
+- ✅ Emoji speech bubbles display correctly
+- ✅ Animations don't block interaction
+- ✅ Mobile performance acceptable
+- ✅ Returns to idle after celebration
 
 ---
 
-## Phase 6: Calendar View (Week 10)
+### 3.6 Integration with PetView
 
-**Goal:** Add calendar navigation for daily notes
+**Goal:** Connect celebration system to pet view
 
-### 6.1 Calendar View ItemView
-- [ ] Create views/CalendarView.ts
-  - [ ] Extend ItemView
-  - [ ] Register view type
-  - [ ] Add command to open
-- [ ] Create components/Calendar.svelte
-  - [ ] Month view grid
-  - [ ] Day cells with click handlers
-  - [ ] Navigation (prev/next month)
-  - [ ] Today indicator
-
-### 6.2 Calendar Data Integration
-- [ ] Load all daily notes
-- [ ] Mark completed days
-- [ ] Show streak visualization
-- [ ] Highlight today
-- [ ] Indicate VaultPal completion status
-
-### 6.3 Calendar Interactions
-- [ ] Click day to open/create note
-- [ ] Click day to start conversation
-- [ ] Show tooltip on hover (XP, notes)
-- [ ] Navigate months/weeks
-
-### 6.4 View Switching
-- [ ] Add toggle between Pet View and Calendar View
-- [ ] Persist last viewed mode
-- [ ] Smooth transitions
-
-**Deliverable:** Functional calendar view
+**Tasks:**
+- [ ] Update PetView.ts
+  - [ ] Initialize CelebrationEngine
+  - [ ] Register VaultEventListeners
+  - [ ] Handle celebration callbacks
+  - [ ] Cleanup on view close
+- [ ] Remove old conversation methods:
+  - [ ] Remove `startConversation()`
+  - [ ] Simplify `handleDailyNoteButton()` → `celebrateDailyNote()`
+  - [ ] Remove template validation logic
+- [ ] Update state machine integration
+- [ ] Add debug logging (gated by `__DEV__`)
+- [ ] Write integration tests
 
 **Acceptance Criteria:**
-- ✅ Calendar displays current month
-- ✅ Completed days visually indicated
-- ✅ Clicking day opens/creates note
-- ✅ Streak visualization clear
-- ✅ Can navigate months
-- ✅ Can switch between Pet and Calendar views
+- ✅ Celebrations trigger from vault events
+- ✅ Pet animates correctly
+- ✅ No memory leaks
+- ✅ Cleanup on view close
+- ✅ Works with existing pet interactions (petting)
 
 ---
 
-## Phase 7: Polish & Testing (Week 11)
+### Phase 3 Deliverable
 
-**Goal:** Refine UX, fix bugs, optimize performance
+**Functional celebration system:**
+- Vault events trigger celebrations
+- 5 celebration types implemented
+- User can see celebrations in action
+- No configuration UI yet (hardcoded defaults)
 
-### 7.1 Visual Polish
-- [ ] Refine pet animations
-- [ ] Polish chat interface
+**Timeline:** 2-3 weeks
+**Priority:** P0 (Core feature)
+
+---
+
+## Phase 4: User Configuration 📅 PLANNED
+
+**Goal:** Settings UI for celebration customization
+
+**Estimated Duration:** 1 week
+
+### 4.1 Celebration Settings Data Structure
+
+**Tasks:**
+- [ ] Define `CelebrationSettings` interface
+- [ ] Extend plugin settings with celebration config
+- [ ] Add default settings
+- [ ] Migration logic (if needed)
+
+```typescript
+interface CelebrationSettings {
+  celebrations: {
+    [key in CelebrationType]: {
+      enabled: boolean;
+      cooldown: number;
+    }
+  };
+  wordCountMilestones: number[]; // [100, 500, 1000, 5000]
+}
+```
+
+---
+
+### 4.2 Settings Modal
+
+**Tasks:**
+- [ ] Create `modals/CelebrationSettingsModal.ts`
+- [ ] Toggle switches for each celebration type
+- [ ] Cooldown sliders (1s - 60s)
+- [ ] Word count milestone editor
+  - [ ] Add milestone button
+  - [ ] Remove milestone button
+  - [ ] Validation (positive integers)
+- [ ] Preview button (test celebrations)
+- [ ] Save/Cancel buttons
+
+**UI Design:**
+```
+Celebration Settings
+━━━━━━━━━━━━━━━━━━━━
+□ Daily Note Creation    [Cooldown: 5s]
+□ New Note Creation      [Cooldown: 2s]
+□ Link Creation          [Cooldown: 1s]
+□ Checkbox Completion    [Cooldown: 1s]
+□ Word Count Milestones  [Cooldown: 10s]
+
+Word Count Milestones:
+[100] [500] [1000] [5000] [+ Add]
+
+[Test Celebration] [Save] [Cancel]
+```
+
+---
+
+### 4.3 Settings Integration
+
+**Tasks:**
+- [ ] Add command: "Configure Celebrations"
+- [ ] Load settings on plugin load
+- [ ] Pass settings to CelebrationEngine
+- [ ] Persist settings changes
+- [ ] Validate settings before save
+
+**Acceptance Criteria:**
+- ✅ User can enable/disable celebrations
+- ✅ User can adjust cooldowns
+- ✅ User can customize word milestones
+- ✅ Settings persist across restarts
+- ✅ Preview button works
+
+---
+
+### Phase 4 Deliverable
+
+**Functional settings UI:**
+- User can customize all celebration triggers
+- Changes take effect immediately
+- Settings are persisted
+
+**Timeline:** 1 week
+**Priority:** P1 (Important for user control)
+
+---
+
+## Phase 5: Polish & Testing 📅 PLANNED
+
+**Goal:** Refine UX, optimize performance, ensure quality
+
+**Estimated Duration:** 1 week
+
+### 5.1 Performance Optimization
+
+**Tasks:**
+- [ ] Profile celebration system performance
+- [ ] Optimize event listeners (debounce, throttle)
+- [ ] Reduce animation memory footprint
+- [ ] Test in large vaults (10,000+ notes)
+- [ ] Mobile battery testing
+
+**Targets:**
+- [ ] < 1% CPU usage when idle
+- [ ] < 50MB memory footprint
+- [ ] No frame drops during celebrations
+
+---
+
+### 5.2 Visual Polish
+
+**Tasks:**
+- [ ] Refine celebration animations
+- [ ] Add sound effects (optional, off by default)
 - [ ] Improve transitions
-- [ ] Add micro-interactions
-- [ ] Ensure consistent theming (light/dark)
+- [ ] Ensure theme compatibility (light/dark)
+- [ ] Add celebration particle effects (if performance allows)
 
-### 7.2 Error Handling
-- [ ] Graceful handling of missing files
+---
+
+### 5.3 Error Handling
+
+**Tasks:**
+- [ ] Graceful handling of missing sprites
+- [ ] Recovery from celebration failures
 - [ ] Clear error messages
-- [ ] Recovery from failures
-- [ ] Validation feedback
+- [ ] Logging for debugging
+- [ ] Fallback animations if custom ones fail
 
-### 7.3 Performance Optimization
-- [ ] Profile animation performance
-- [ ] Optimize SVG file sizes
-- [ ] Lazy load assets
-- [ ] Reduce memory footprint
-- [ ] Test in large vaults
+---
 
-### 7.4 Accessibility
-- [ ] Keyboard navigation
+### 5.4 Accessibility
+
+**Tasks:**
+- [ ] Keyboard navigation for settings
 - [ ] Screen reader support (basic)
 - [ ] Focus management
-- [ ] High contrast mode
-
-### 7.5 Testing
-- [ ] Test on Windows
-- [ ] Test on macOS
-- [ ] Test on Linux
-- [ ] Test mobile compatibility
-- [ ] Test with various themes
-- [ ] Test with other plugins enabled
-
-### 7.6 Documentation
-- [ ] Write user-facing README
-- [ ] Create installation instructions
-- [ ] Document template syntax
-- [ ] Add troubleshooting guide
-- [ ] Create demo vault
-
-**Deliverable:** Production-ready plugin
-
-**Acceptance Criteria:**
-- ✅ No critical bugs
-- ✅ Smooth performance on all platforms
-- ✅ Clear user documentation
-- ✅ Handles edge cases gracefully
-- ✅ Works with popular plugins
-- ✅ Passes Obsidian plugin guidelines
+- [ ] Reduce motion option (respect OS preference)
 
 ---
 
-## Phase 8: Release Preparation (Week 12)
+### 5.5 Testing
+
+**Test Matrix:**
+- [ ] Windows (Desktop + Mobile)
+- [ ] macOS (Desktop + Mobile)
+- [ ] Linux (Desktop)
+- [ ] iOS/iPadOS
+- [ ] Android
+
+**Plugin Compatibility:**
+- [ ] Daily Notes core plugin
+- [ ] Templater
+- [ ] Dataview
+- [ ] Calendar
+- [ ] Hot Reload (dev only)
+
+---
+
+### 5.6 Documentation
+
+**Tasks:**
+- [ ] Update README with celebration features
+- [ ] Create usage guide (wiki)
+- [ ] Add troubleshooting section
+- [ ] Document celebration customization
+- [ ] Create demo GIFs/videos
+
+---
+
+### Phase 5 Deliverable
+
+**Production-ready plugin:**
+- Smooth performance on all platforms
+- Clear documentation
+- No critical bugs
+- Works with popular plugins
+
+**Timeline:** 1 week
+**Priority:** P0 (Required for release)
+
+---
+
+## Phase 6: Release Preparation 📅 PLANNED
 
 **Goal:** Prepare for Obsidian community plugin release
 
-### 8.1 Final Art Assets
-- [ ] Replace placeholder SVGs with final art
-- [ ] Ensure Korean kawaii style
-- [ ] Optimize all assets
-- [ ] Create asset variants (optional)
+**Estimated Duration:** 3-5 days
 
-### 8.2 Plugin Submission Requirements
-- [ ] Create comprehensive README
-- [ ] Add screenshots/GIFs
-- [ ] Write clear description
-- [ ] Add license (MIT recommended)
-- [ ] Create release notes
-- [ ] Tag version 1.0.0
+### 6.1 Final Assets
 
-### 8.3 Submit to Obsidian
-- [ ] Fork obsidian-releases repository
-- [ ] Add plugin to community-plugins.json
-- [ ] Create PR with required files:
-  - [ ] manifest.json
-  - [ ] README.md
-  - [ ] main.js
-  - [ ] styles.css
-- [ ] Respond to reviewer feedback
-- [ ] Address any required changes
+**Tasks:**
+- [ ] Finalize pet sprites
+- [ ] Create celebration particle effects
+- [ ] Optimize all assets (size, format)
+- [ ] Create plugin icon (128x128)
+- [ ] Create banner image
 
-### 8.4 Marketing & Community
-- [ ] Post in Obsidian forums
+---
+
+### 6.2 Plugin Submission
+
+**Requirements:**
+- [ ] Comprehensive README
+- [ ] Screenshots/GIFs showing celebrations
+- [ ] Clear description (< 250 chars)
+- [ ] MIT License
+- [ ] Release notes (CHANGELOG.md)
+- [ ] Tag version 0.2.0
+
+**Files Required:**
+- manifest.json
+- README.md
+- main.js (built)
+- styles.css
+
+---
+
+### 6.3 Community Plugin Submission
+
+**Process:**
+1. Fork obsidian-releases repository
+2. Add plugin to community-plugins.json
+3. Create PR with required files
+4. Respond to reviewer feedback
+5. Address any changes
+6. Approval & publication
+
+---
+
+### 6.4 Marketing & Community
+
+**Tasks:**
+- [ ] Post in Obsidian forum
 - [ ] Share on Reddit r/ObsidianMD
 - [ ] Tweet announcement
 - [ ] Create demo video (optional)
 - [ ] Set up GitHub Discussions
 
-**Deliverable:** Published plugin
-
-**Acceptance Criteria:**
-- ✅ Plugin approved by Obsidian team
-- ✅ Listed in community plugins
-- ✅ Users can install via Obsidian
-- ✅ GitHub repository well-documented
-- ✅ Clear contribution guidelines
+**Messaging:**
+- "Your vault celebrates you"
+- Focus on ambient emotional support
+- Show celebration animations in action
+- Emphasize zero cognitive load
 
 ---
 
-## Post-MVP: Phase 9+ (Future)
+### Phase 6 Deliverable
 
-### Planned Enhancements
-- [ ] Voice input (local Whisper)
-- [ ] Multiple pet types
-- [ ] Journey progression system
-- [ ] Paid asset packs
-- [ ] Advanced customization
-- [ ] Habit tracking integration
-- [ ] AI conversation mode (BYOK)
-- [ ] Custom greeting lists
-- [ ] Pet emotes system
+**Published plugin:**
+- Live in Obsidian community plugins
+- Users can install via Obsidian
+- Clear documentation
+- Active community presence
+
+**Timeline:** 3-5 days
+**Priority:** P0 (Release milestone)
+
+---
+
+## Post-MVP: Future Enhancements
+
+### v0.3.0 - Enhanced Experience
+- [ ] Custom celebration messages (user-entered text)
+- [ ] Celebration banner UI (toast notifications with custom messages)
+- [ ] Pet walks across panel (ambient movement)
+- [ ] Background themes
+- [ ] Celebration sound effects (optional)
+
+### v0.4.0+ - Immersion & Relationships
+- [ ] Immersion behaviors (pets react to each other - discovery needed)
+- [ ] Relationships (multiple pets interact like VS Code Pets friends)
+- [ ] Adventures (background changes, no narrative)
+- [ ] Multiple pet types (cat, dog, bunny, etc.)
+- [ ] Seasonal celebration packs ($1.99)
+- [ ] Premium backgrounds ($1.99)
+- [ ] Community-contributed pets
+
+### v0.5.0+ - Advanced Features
+- [ ] Custom celebration triggers (advanced users)
+- [ ] Integration with other plugins (Calendar, Tasks)
+- [ ] Research RPG Stats Tracker milestones (future work)
+- [ ] Celebration history log (optional)
+- [ ] Celebration statistics (optional, local only)
 
 ---
 
@@ -491,25 +605,25 @@ This roadmap breaks down Vault Pal development into manageable phases, with clea
 - Prefer composition over inheritance
 
 ### Testing Strategy
-- Manual testing in Obsidian
-- Test with real daily note templates
-- Test with various plugin combinations
-- Test across operating systems
-- Use console logging for debugging
+- Unit tests for all celebration logic
+- Integration tests for vault event listeners
+- Manual testing in real vaults
+- Test with various vault sizes
+- Test mobile thoroughly
 
 ### Performance Guidelines
 - Target 60 FPS for animations
-- Lazy load assets when possible
+- Debounce/throttle event listeners
 - Minimize DOM manipulations
 - Use CSS transforms for animations
 - Profile with Chrome DevTools
 
 ### User Experience
-- Keep UI simple and intuitive
-- Provide helpful error messages
-- Never lose user data
-- Make setup easy
-- Respect Obsidian conventions
+- Zero cognitive load (no decisions)
+- Ambient presence (not intrusive)
+- Respect user preferences (configurable)
+- Never lose or corrupt data
+- Graceful error recovery
 
 ---
 
@@ -517,12 +631,11 @@ This roadmap breaks down Vault Pal development into manageable phases, with clea
 
 | Risk | Impact | Likelihood | Mitigation |
 |------|--------|------------|------------|
-| Animation performance issues | High | Medium | Profile early, optimize SVGs, use GPU transforms |
-| Daily Notes conflicts | High | Medium | Use official API, extensive testing |
-| Templater compatibility | Medium | Medium | Clear documentation, escape mechanisms |
-| Template parsing edge cases | Medium | High | Comprehensive testing, validation |
-| Mobile compatibility issues | Medium | Low | Responsive design, mobile testing |
-| Art asset delays | Low | Medium | Use placeholders, iterate on art |
+| Event listener performance | High | Medium | Debounce, throttle, profile early |
+| Mobile battery drain | Medium | Medium | Optimize animations, test battery impact |
+| Plugin conflicts | Medium | Low | Test with popular plugins, use Obsidian API correctly |
+| Celebration spam | Low | High | Implement cooldown system, user configuration |
+| Animation jank | Medium | Low | CSS GPU acceleration, 60 FPS testing |
 
 ---
 
@@ -530,97 +643,85 @@ This roadmap breaks down Vault Pal development into manageable phases, with clea
 
 - **Downloads:** 1,000+ installations
 - **Rating:** 4+ stars
-- **GitHub Stars:** 50+
+- **GitHub Stars:** 100+ (2x Pixel Pets)
 - **Active Users:** 500+ weekly
-- **Bug Reports:** < 10 critical bugs
+- **Bug Reports:** < 5 critical bugs
 - **Community Engagement:** Regular forum discussions
-
----
-
-## Team & Responsibilities
-
-**Developer (You):**
-- Core plugin development
-- TypeScript/Svelte implementation
-- Testing and debugging
-- Documentation
-- GitHub management
-
-**AI Coding Agents:**
-- Code generation
-- Bug fixing
-- Refactoring
-- Research
-- Code review
-
-**Artist (TBD):**
-- Fox character design
-- Animation states (7 variations)
-- Background assets
-- Accessory designs
+- **Differentiation:** Clear positioning vs. Pixel Pets/Vault Pets
 
 ---
 
 ## Timeline Summary
 
 ```
-Week 1-2:   Foundation & Setup
-Week 3-4:   Pet View & Animations
-Week 5-6:   Template & Daily Notes
-Week 7-8:   Conversation Flow
-Week 9:     Progression System
-Week 10:    Calendar View
-Week 11:    Polish & Testing
-Week 12:    Release Preparation
+Week 1-2:   Foundation & Setup               ✅ COMPLETE
+Week 3-4:   Pet View & Animations            ✅ COMPLETE
+Week 5-7:   Celebration System               🚧 IN PROGRESS
+Week 8:     User Configuration               📅 PLANNED
+Week 9:     Polish & Testing                 📅 PLANNED
+Week 10:    Release Preparation              📅 PLANNED
 
-Total: 12 weeks for MVP
+Total: 10 weeks from start
+Remaining: 6 weeks from now (Feb 9, 2026)
+Target Release: Late March 2026
 ```
 
 **Critical Path:**
-Foundation → Pet View → Template Parsing → Conversation Flow → Progression → Release
+Foundation → Pet View → Celebration System → Polish → Release
 
 **Parallel Tracks:**
-- Art asset creation (ongoing)
 - Documentation (ongoing)
 - Testing (ongoing)
+- Community building (post-release)
 
 ---
 
-## Next Immediate Steps
+## Next Immediate Steps (Feb 9, 2026)
 
-1. **Set up project structure** (Phase 1.1)
-   - Create all folders
-   - Initialize package.json
-   - Configure TypeScript and esbuild
+1. **Archive deprecated code** (Phase 2 Cleanup)
+   - Create `archive/` folder structure
+   - Move conversation system files
+   - Remove template parsing
+   - Clean up PetView.ts
 
-2. **Create basic plugin** (Phase 1.3)
-   - Implement main.ts
-   - Test in Obsidian
-   - Verify hot reload works
+2. **Start Phase 3.1: Vault Event Listeners**
+   - Create `src/celebration/` folder
+   - Implement `VaultEventListeners.ts`
+   - Hook into Obsidian API events
+   - Add debouncing logic
 
-3. **Start pet view** (Phase 2.1)
-   - Create PetView.ts
-   - Register view
-   - Display "Hello World"
+3. **Close outdated issues**
+   - #10, #12, #14, #55, #46 (conversation features)
+   - Document strategic pivot
 
-4. **Commission placeholder art** (Phase 2.2)
-   - Brief artist on requirements
-   - Get 7 SVG placeholders
-   - Set up asset pipeline
+4. **Update issue #47**
+   - Simplify scope (daily note → celebration trigger)
+   - Note icon update needed
 
 ---
 
 ## Questions to Resolve
 
-- [ ] Who will create the final SVG assets?
-- [ ] What's the process for art asset iteration?
-- [ ] Should we support custom greetings in MVP?
-- [ ] Do we need a "skip question" feature?
-- [ ] Should streak reset be harsh or gentle?
-- [ ] What XP amounts for different actions?
+- [ ] What word count milestones should be default? (100, 500, 1000, 5000?)
+- [ ] Should celebrations have sound? (opt-in, off by default) - **Delayed to v0.3.0**
+- [ ] How long should cooldowns be? (1s? 5s? user-configurable?)
+- [ ] What emoji for what trigger? (consistent mapping):
+  - Daily note: 🎉
+  - New note: ❤️
+  - Checkbox: 🎊
+  - Link: ✨
+  - Word milestone: 🎆
+
+## Decisions Made
+
+- ✅ v0.2.0: Emoji-only celebrations (no custom text)
+- ✅ v0.3.0+: Custom messages, banner UI
+- ✅ State remapping: Remove "talking"/"listening" states
+- ✅ Companion music: **REMOVED** - Recommend Soundscapes plugin instead
+- ✅ RPG Stats Tracker research: Future work (not urgent)
 
 ---
 
-**Document Status:** Living document, update as project progresses
-**Last Review:** 2026-02-04
-**Next Review:** When Phase 1 completes
+**Document Status:** Living document, updated post-pivot
+**Last Review:** 2026-02-09
+**Next Review:** When Phase 3 completes

@@ -66,24 +66,6 @@ describe('PetDisplay Integration', () => {
       expect(sprite?.getAttribute('aria-label')).toBe('Pet is greeting');
     });
 
-    it('should update visual state when transitioning to talking', async () => {
-      await petView.onOpen();
-
-      petView.transitionState('talking');
-
-      const stateText = petView.containerEl.querySelector('.pet-state-text');
-      expect(stateText?.textContent).toBe('How was your day?');
-    });
-
-    it('should update visual state when transitioning to listening', async () => {
-      await petView.onOpen();
-
-      petView.transitionState('listening');
-
-      const stateText = petView.containerEl.querySelector('.pet-state-text');
-      expect(stateText?.textContent).toBe("I'm listening...");
-    });
-
     it('should update visual state when transitioning to small-celebration', async () => {
       await petView.onOpen();
 
@@ -163,26 +145,6 @@ describe('PetDisplay Integration', () => {
       vi.advanceTimersByTime(1);
       expect(petView.getCurrentState()).toBe('idle');
     });
-
-    it('should NOT auto-return from talking state', async () => {
-      await petView.onOpen();
-
-      petView.transitionState('talking');
-
-      vi.advanceTimersByTime(10000);
-
-      expect(petView.getCurrentState()).toBe('talking');
-    });
-
-    it('should NOT auto-return from listening state', async () => {
-      await petView.onOpen();
-
-      petView.transitionState('listening');
-
-      vi.advanceTimersByTime(10000);
-
-      expect(petView.getCurrentState()).toBe('listening');
-    });
   });
 
   describe('complex interaction sequences', () => {
@@ -202,28 +164,6 @@ describe('PetDisplay Integration', () => {
       expect(petView.getCurrentState()).toBe('idle');
       const idleText = petView.containerEl.querySelector('.pet-state-text');
       expect(idleText?.textContent).toBe('Just hanging out...');
-    });
-
-    it('should handle pet asks question, user types response', async () => {
-      await petView.onOpen();
-
-      // Pet asks a question
-      petView.transitionState('talking');
-      expect(petView.getCurrentState()).toBe('talking');
-
-      const talkingText = petView.containerEl.querySelector('.pet-state-text');
-      expect(talkingText?.textContent).toBe('How was your day?');
-
-      // User starts typing
-      petView.transitionState('listening');
-      expect(petView.getCurrentState()).toBe('listening');
-
-      const listeningText = petView.containerEl.querySelector('.pet-state-text');
-      expect(listeningText?.textContent).toBe("I'm listening...");
-
-      // Should stay in listening state
-      vi.advanceTimersByTime(5000);
-      expect(petView.getCurrentState()).toBe('listening');
     });
 
     it('should handle user completes task, celebrates, returns to idle', async () => {
@@ -321,15 +261,15 @@ describe('PetDisplay Integration', () => {
 
       petView.transitionState('greeting');
 
-      // Transition to talking right before greeting would complete
+      // Transition to small-celebration right before greeting would complete
       vi.advanceTimersByTime(1999);
-      petView.transitionState('talking');
+      petView.transitionState('small-celebration');
 
       // Advance past where greeting would have completed
       vi.advanceTimersByTime(1000);
 
-      // Should still be in talking state
-      expect(petView.getCurrentState()).toBe('talking');
+      // Should still be in small-celebration state
+      expect(petView.getCurrentState()).toBe('small-celebration');
     });
   });
 
@@ -342,18 +282,6 @@ describe('PetDisplay Integration', () => {
       // Pet greets user
       petView.transitionState('greeting');
       vi.advanceTimersByTime(2000);
-      expect(petView.getCurrentState()).toBe('idle');
-
-      // Pet asks a question
-      petView.transitionState('talking');
-      expect(petView.getCurrentState()).toBe('talking');
-
-      // User responds
-      petView.transitionState('listening');
-      expect(petView.getCurrentState()).toBe('listening');
-
-      // User finishes response, pet returns to idle
-      petView.transitionState('idle');
       expect(petView.getCurrentState()).toBe('idle');
 
       // User completes first task
@@ -395,8 +323,6 @@ describe('PetDisplay Integration', () => {
 
       const testStates: PetState[] = [
         'greeting',
-        'talking',
-        'listening',
         'small-celebration',
         'big-celebration',
         'petting',
@@ -452,8 +378,6 @@ describe('PetDisplay Integration', () => {
       const states: PetState[] = [
         'idle',
         'greeting',
-        'talking',
-        'listening',
         'small-celebration',
         'big-celebration',
         'petting',
@@ -476,8 +400,6 @@ describe('PetDisplay Integration', () => {
       const expectedTexts: Record<PetState, string> = {
         idle: 'Just hanging out...',
         greeting: 'Hello there!',
-        talking: 'How was your day?',
-        listening: "I'm listening...",
         'small-celebration': 'Great job!',
         'big-celebration': 'Amazing! You did it!',
         petting: 'That feels nice!',
@@ -548,8 +470,8 @@ describe('PetDisplay Integration', () => {
 
       // Transition multiple times to potentially add multiple listeners
       petView.transitionState('greeting');
-      petView.transitionState('talking');
-      petView.transitionState('listening');
+      petView.transitionState('small-celebration');
+      petView.transitionState('petting');
 
       await petView.onClose();
 

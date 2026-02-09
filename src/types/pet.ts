@@ -5,20 +5,16 @@
 /**
  * All possible states for the pet companion
  *
- * States are triggered by user actions:
+ * States are triggered by vault activities and user actions:
  * - idle: Default breathing animation (loops indefinitely)
- * - greeting: When user opens daily note
- * - talking: When pet asks a question
- * - listening: When user is typing/answering
- * - small-celebration: When user completes daily note (3s duration)
- * - big-celebration: When user hits milestone streak (5s duration)
- * - petting: When user clicks the pet (2s duration)
+ * - greeting: When pet view opens
+ * - small-celebration: When celebrating vault activities (3s duration)
+ * - big-celebration: When celebrating major milestones (5s duration)
+ * - petting: When user clicks/taps the pet (2s duration)
  */
 export type PetState =
   | 'idle'
   | 'greeting'
-  | 'talking'
-  | 'listening'
   | 'small-celebration'
   | 'big-celebration'
   | 'petting';

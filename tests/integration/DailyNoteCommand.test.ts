@@ -369,7 +369,8 @@ describe('Daily Note Command Integration', () => {
 
       // Assert: Error notice shown
       expect(Notice).toHaveBeenCalledWith(
-        'Daily Notes plugin is not enabled. Please enable it in Settings → Core Plugins.'
+        'Daily Notes plugin is not enabled. Please enable it in Settings → Core Plugins.',
+        8000
       );
     });
 

@@ -43,9 +43,9 @@ describe('Pet.svelte Component', () => {
     });
 
     it('should apply correct data-state attribute', () => {
-      const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'talking' } });
+      const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'small-celebration' } });
       const spriteContainer = container.querySelector('.pet-sprite-container');
-      expect(spriteContainer?.getAttribute('data-state')).toBe('talking');
+      expect(spriteContainer?.getAttribute('data-state')).toBe('small-celebration');
       component.$destroy();
     });
 
@@ -88,8 +88,8 @@ describe('Pet.svelte Component', () => {
       component.$destroy();
     });
 
-    it('should be non-interactive during talking state', () => {
-      const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'talking' } });
+    it('should be non-interactive during small-celebration state', () => {
+      const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'small-celebration' } });
       const wrapper = container.querySelector('.pet-sprite-wrapper') as HTMLElement;
       expect(wrapper.getAttribute('tabindex')).toBe('-1');
       expect(wrapper.getAttribute('aria-disabled')).toBe('true');
@@ -97,8 +97,8 @@ describe('Pet.svelte Component', () => {
       component.$destroy();
     });
 
-    it('should be non-interactive during listening state', () => {
-      const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'listening' } });
+    it('should be non-interactive during big-celebration state', () => {
+      const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'big-celebration' } });
       const wrapper = container.querySelector('.pet-sprite-wrapper') as HTMLElement;
       expect(wrapper.getAttribute('tabindex')).toBe('-1');
       expect(wrapper.getAttribute('aria-disabled')).toBe('true');
@@ -138,8 +138,8 @@ describe('Pet.svelte Component', () => {
       component.$destroy();
     });
 
-    it('should not emit pet event when clicked during talking state', () => {
-      const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'talking' } });
+    it('should not emit pet event when clicked during small-celebration state', () => {
+      const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'small-celebration' } });
       const wrapper = container.querySelector('.pet-sprite-wrapper') as HTMLElement;
 
       const petHandler = vi.fn();
@@ -151,8 +151,8 @@ describe('Pet.svelte Component', () => {
       component.$destroy();
     });
 
-    it('should not emit pet event when clicked during listening state', () => {
-      const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'listening' } });
+    it('should not emit pet event when clicked during big-celebration state', () => {
+      const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'big-celebration' } });
       const wrapper = container.querySelector('.pet-sprite-wrapper') as HTMLElement;
 
       const petHandler = vi.fn();
@@ -205,10 +205,10 @@ describe('Pet.svelte Component', () => {
       component.$destroy();
     });
 
-    it('should display correct text for talking state with userName', () => {
-      const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'talking', userName: 'Alice' } });
+    it('should display correct text for small-celebration state', () => {
+      const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'small-celebration' } });
       const stateText = container.querySelector('.pet-state-text');
-      expect(stateText?.textContent).toBe('How was your day, Alice?');
+      expect(stateText?.textContent).toBe('Great job!');
       component.$destroy();
     });
 
@@ -262,8 +262,8 @@ describe('Pet.svelte Component', () => {
       component.$destroy();
     });
 
-    it('should not emit pet event when Enter pressed during talking state', () => {
-      const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'talking' } });
+    it('should not emit pet event when Enter pressed during small-celebration state', () => {
+      const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'small-celebration' } });
       const wrapper = container.querySelector('.pet-sprite-wrapper') as HTMLElement;
 
       const petHandler = vi.fn();
@@ -276,8 +276,8 @@ describe('Pet.svelte Component', () => {
       component.$destroy();
     });
 
-    it('should not emit pet event when Space pressed during listening state', () => {
-      const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'listening' } });
+    it('should not emit pet event when Space pressed during big-celebration state', () => {
+      const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'big-celebration' } });
       const wrapper = container.querySelector('.pet-sprite-wrapper') as HTMLElement;
 
       const petHandler = vi.fn();
@@ -321,15 +321,15 @@ describe('Pet.svelte Component', () => {
       component.$destroy();
     });
 
-    it('should have correct ARIA label during talking state (busy)', () => {
-      const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'talking', petName: 'Kit' } });
+    it('should have correct ARIA label during small-celebration state (busy)', () => {
+      const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'small-celebration', petName: 'Kit' } });
       const wrapper = container.querySelector('.pet-sprite-wrapper') as HTMLElement;
       expect(wrapper.getAttribute('aria-label')).toBe('Pet Kit (currently busy)');
       component.$destroy();
     });
 
-    it('should have correct ARIA label during listening state (busy)', () => {
-      const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'listening', petName: 'Buddy' } });
+    it('should have correct ARIA label during big-celebration state (busy)', () => {
+      const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'big-celebration', petName: 'Buddy' } });
       const wrapper = container.querySelector('.pet-sprite-wrapper') as HTMLElement;
       expect(wrapper.getAttribute('aria-label')).toBe('Pet Buddy (currently busy)');
       component.$destroy();
@@ -357,7 +357,7 @@ describe('Pet.svelte Component', () => {
     });
 
     it('should have aria-disabled="true" when petting is not allowed', () => {
-      const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'talking' } });
+      const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'small-celebration' } });
       const wrapper = container.querySelector('.pet-sprite-wrapper') as HTMLElement;
       expect(wrapper.getAttribute('aria-disabled')).toBe('true');
       component.$destroy();
@@ -372,15 +372,15 @@ describe('Pet.svelte Component', () => {
       component.$destroy();
     });
 
-    it('should have not-allowed cursor when disabled (talking)', () => {
-      const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'talking' } });
+    it('should have not-allowed cursor when disabled (small-celebration)', () => {
+      const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'small-celebration' } });
       const wrapper = container.querySelector('.pet-sprite-wrapper') as HTMLElement;
       expect(wrapper.style.cursor).toBe('not-allowed');
       component.$destroy();
     });
 
     it('should have opacity 0.7 when aria-disabled is true', () => {
-      const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'listening' } });
+      const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'big-celebration' } });
       const wrapper = container.querySelector('.pet-sprite-wrapper') as HTMLElement;
       expect(wrapper.getAttribute('aria-disabled')).toBe('true');
       // CSS will apply opacity via attribute selector

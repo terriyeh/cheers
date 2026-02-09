@@ -1,7 +1,7 @@
 {
-  "name": "vault-pal",
-  "version": "0.0.1",
-  "description": "Interactive pet companion for gamified daily note-taking",
+  "name": "obsidian-pets",
+  "version": "0.1.0",
+  "description": "Your vault companion that celebrates you",
   "main": "main.js",
   "scripts": {
     "dev": "node esbuild.config.mjs",
@@ -16,9 +16,10 @@
   "keywords": [
     "obsidian",
     "obsidian-plugin",
-    "daily-notes",
-    "gamification",
-    "journaling"
+    "pet",
+    "companion",
+    "celebration",
+    "vault-awareness"
   ],
   "author": "Terri Yeh",
   "license": "MIT",
