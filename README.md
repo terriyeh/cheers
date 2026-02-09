@@ -2,7 +2,7 @@
 
 An interactive pet companion for Obsidian that makes daily journaling delightful through conversational prompts and gentle gamification.
 
-![Version](https://img.shields.io/badge/version-1.0.0-blue)
+![Version](https://img.shields.io/badge/version-0.0.1--dev-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Obsidian](https://img.shields.io/badge/Obsidian-1.0.0+-purple)
 
@@ -14,13 +14,13 @@ Vault Pal transforms daily note-taking from a blank page into a friendly convers
 
 ### Key Features
 
-- **Interactive Pet Companion**: Kit the Fox responds to your journaling with 7 animation states (idle, greeting, talking, listening, small celebration, big celebration, petting)
-- **Conversational Journaling**: Answer prompts from your template through a chat interface
-- **Automatic Note Creation**: Responses are written directly into your daily notes
-- **Progress Tracking**: Earn XP, build streaks, unlock milestone rewards
-- **Calendar View**: Visual overview of your journaling history with completion indicators
-- **Privacy-First**: Fully local, no network calls, no telemetry
-- **Customizable Templates**: Use vaultpal code blocks to define your own questions
+- **Interactive Pet Companion** ✅ IMPLEMENTED: Kit the Fox responds with 7 animation states (idle, greeting, talking, listening, small celebration, big celebration, petting)
+- **Conversational Journaling** 🚧 IN DEVELOPMENT (Issues #10-12): Answer prompts from your template through a chat interface
+- **Automatic Note Creation** 🚧 IN DEVELOPMENT (Issue #10): Responses are written directly into your daily notes
+- **Progress Tracking** 📅 PLANNED: Earn XP, build streaks, unlock milestone rewards
+- **Calendar View** 📅 PLANNED: Visual overview of your journaling history with completion indicators
+- **Privacy-First** ✅ IMPLEMENTED: Fully local, no network calls, no telemetry
+- **Customizable Templates** ✅ IMPLEMENTED: Use vaultpal code blocks to define your own questions
 
 ---
 
@@ -90,10 +90,11 @@ prompt: "What are you grateful for?"
 ### 4. Start Journaling
 
 1. Click the paw icon in the sidebar to open Vault Pal
-2. Click "Start Conversation" button
-3. Answer Kit's questions in the chat interface
-4. Your responses are automatically saved to today's daily note
-5. Complete all questions to earn XP and build your streak!
+2. Click "Capture Daily Note" 💬 button
+3. Plugin validates Daily Notes is enabled and template has questions
+4. Answer Kit's questions in the chat interface (coming soon - Issues #10-12)
+5. Your responses are automatically saved to today's daily note
+6. Complete all questions to earn XP and build your streak!
 
 ---
 
@@ -139,7 +140,9 @@ Kit the Fox has 7 distinct animation states:
 - **Listening**: Attentive pose while you type
 - **Small Celebration**: Brief cheer after each answer
 - **Big Celebration**: Enthusiastic celebration when completing your note
-- **Petting**: Content reaction when you click on Kit
+- **Petting**: Content reaction when you click or tap on Kit (available anytime, even during conversation)
+
+**Mobile Support**: Fully touch-enabled for phones and tablets with optimized touch interactions
 
 ### Progression System
 

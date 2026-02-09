@@ -1,9 +1,13 @@
-import { ItemView, type WorkspaceLeaf } from 'obsidian';
+import { ItemView, type WorkspaceLeaf, Notice, type TFile } from 'obsidian';
 import type { PetState, StateChangeListener } from '../types/pet';
 import { PetStateMachine } from '../pet/PetStateMachine';
 import PetComponent from '../components/Pet.svelte';
 import type VaultPalPlugin from '../main';
 import { WelcomeModal } from '../modals/WelcomeModal';
+import { parseTemplate } from '../template/parser';
+
+// Build-time constant injected by esbuild
+declare const __DEV__: boolean;
 
 /**
  * View type identifier for the pet view
@@ -18,6 +22,8 @@ export class PetView extends ItemView {
   private stateMachine: PetStateMachine | null = null;
   private containerDiv: HTMLDivElement | null = null;
   private stateChangeListener: StateChangeListener | null = null;
+  private petEventListener: ((event: CustomEvent<{ returnToState: PetState }>) => void) | null = null;
+  private conversationTimerId: NodeJS.Timeout | null = null;
 
   constructor(leaf: WorkspaceLeaf) {
     super(leaf);
@@ -84,6 +90,7 @@ export class PetView extends ItemView {
 
       // Get the sprite sheet path with validation
       const spriteSheetPath = this.getSpriteSheetPath();
+      const heartSpritePath = this.getHeartSpritePath();
 
       // Get plugin settings for pet name and user name (reuse plugin variable from above)
       const petName = plugin?.settings?.petName ?? 'Kit';
@@ -95,15 +102,29 @@ export class PetView extends ItemView {
         props: {
           state: this.stateMachine.getCurrentState(),
           spriteSheetPath: spriteSheetPath,
+          heartSpritePath: heartSpritePath,
           petName: petName,
           userName: userName,
         },
       });
 
+      // Setup pet interaction event handling
+      this.setupPetInteraction();
+
       // Hide loading state
       this.hideLoading();
+
+      // Add top-right corner action button (matches Graph view pattern)
+      this.addAction(
+        'calendar-plus',
+        'Daily Note',
+        () => this.handleDailyNoteButton()
+      );
     } catch (error) {
       console.error('Failed to mount Pet View:', error);
+
+      // Hide loading state before showing error
+      this.hideLoading();
 
       // Cleanup any partially initialized resources
       if (this.stateMachine && this.stateChangeListener) {
@@ -127,17 +148,26 @@ export class PetView extends ItemView {
    * Called when the view is closed
    */
   async onClose(): Promise<void> {
+    // Clear any pending conversation animations
+    if (this.conversationTimerId) {
+      clearTimeout(this.conversationTimerId);
+      this.conversationTimerId = null;
+    }
+
     // Remove state change listener before cleanup
     if (this.stateMachine && this.stateChangeListener) {
       this.stateMachine.removeListener(this.stateChangeListener);
       this.stateChangeListener = null;
     }
 
-    // Destroy Svelte component
+    // Destroy Svelte component (automatically cleans up all event listeners)
     if (this.petComponent) {
       this.petComponent.$destroy();
       this.petComponent = null;
     }
+
+    // Clear pet event listener reference
+    this.petEventListener = null;
 
     // Clean up state machine
     if (this.stateMachine) {
@@ -151,11 +181,46 @@ export class PetView extends ItemView {
   }
 
   /**
+   * Setup pet interaction event handling
+   * Listens for 'pet' events from the Pet component and triggers petting animation
+   */
+  private setupPetInteraction(): void {
+    if (!this.petComponent) return;
+
+    // Store listener reference for cleanup
+    this.petEventListener = (event: CustomEvent<{ returnToState: PetState }>) => {
+      const { returnToState } = event.detail;
+      if (this.stateMachine) {
+        this.stateMachine.transition('petting', returnToState);
+      }
+    };
+
+    // Add event listener to pet component
+    this.petComponent.$on('pet', this.petEventListener);
+  }
+
+  /**
    * Update the data-pet-state attribute on the container
+   * Validates state before setting to prevent DOM-based XSS
    */
   private updateDataAttribute(state: PetState): void {
     if (this.containerDiv) {
-      this.containerDiv.dataset.petState = state;
+      // Validate state against known valid states
+      const validStates: PetState[] = [
+        'idle',
+        'greeting',
+        'talking',
+        'listening',
+        'small-celebration',
+        'big-celebration',
+        'petting',
+      ];
+
+      if (validStates.includes(state)) {
+        this.containerDiv.dataset.petState = state;
+      } else {
+        console.error(`Attempted to set invalid state: ${state}`);
+      }
     }
   }
 
@@ -194,7 +259,7 @@ export class PetView extends ItemView {
       container.empty();
 
       const errorDiv = container.createDiv({
-        cls: 'vault-pal-error',
+        cls: 'vault-pal-view-error',
       });
 
       errorDiv.createEl('h3', {
@@ -203,12 +268,12 @@ export class PetView extends ItemView {
 
       errorDiv.createEl('p', {
         text: error instanceof Error ? error.message : 'Unknown error',
-        cls: 'vault-pal-error-message',
+        cls: 'vault-pal-view-error-message',
       });
 
       errorDiv.createEl('p', {
         text: 'Check the console for more details.',
-        cls: 'vault-pal-error-hint',
+        cls: 'vault-pal-view-error-hint',
       });
     } catch (containerError) {
       console.error('Failed to show error state:', containerError);
@@ -226,8 +291,8 @@ export class PetView extends ItemView {
   /**
    * Manually trigger a state transition (for external access)
    */
-  transitionState(newState: PetState): boolean {
-    return this.stateMachine?.transition(newState) ?? false;
+  transitionState(newState: PetState, returnTarget?: PetState): boolean {
+    return this.stateMachine?.transition(newState, returnTarget) ?? false;
   }
 
   /**
@@ -245,10 +310,12 @@ export class PetView extends ItemView {
   }
 
   /**
-   * Get the path to the pet sprite sheet asset with validation
-   * @returns The resource path to the sprite sheet
+   * Get the path to an asset file with validation
+   * @param assetFileName - Name of the asset file (e.g., 'pet-sprite-sheet.png')
+   * @returns The resource path to the asset
+   * @throws Error if path validation fails
    */
-  private getSpriteSheetPath(): string {
+  private getAssetPath(assetFileName: string): string {
     // @ts-expect-error - accessing plugin manifest
     const manifest = this.app.plugins.manifests['vault-pal'];
 
@@ -258,24 +325,238 @@ export class PetView extends ItemView {
 
     const pluginDir = manifest?.dir || '.obsidian/plugins/vault-pal';
 
-    // Validate path doesn't contain traversal sequences
+    // Validate path doesn't contain traversal sequences or absolute paths
     if (
       pluginDir.includes('..') ||
       pluginDir.includes('~') ||
       pluginDir.startsWith('/') ||
-      /^[a-zA-Z]:/.test(pluginDir.substring(1))
+      /^[a-zA-Z]:/.test(pluginDir) // Fixed: test from index 0, not substring(1)
     ) {
       throw new Error('Invalid plugin directory path detected');
     }
 
     // Normalize path and construct resource path
     const normalizedDir = pluginDir.replace(/\\/g, '/').replace(/\/\//g, '/');
-    const relativePath = `${normalizedDir}/assets/pet-sprite-sheet.png`;
-    const spriteSheetPath =
-      this.app.vault.adapter.getResourcePath(relativePath);
+    const relativePath = `${normalizedDir}/assets/${assetFileName}`;
+    const assetPath = this.app.vault.adapter.getResourcePath(relativePath);
 
-    console.debug(`Sprite sheet path resolved to: ${spriteSheetPath}`);
+    // Gate debug logging behind __DEV__ flag
+    if (__DEV__) {
+      console.debug(`Asset path for ${assetFileName} resolved to: ${assetPath}`);
+    }
 
-    return spriteSheetPath;
+    return assetPath;
+  }
+
+  /**
+   * Get the path to the pet sprite sheet asset
+   * @returns The resource path to the sprite sheet
+   */
+  private getSpriteSheetPath(): string {
+    return this.getAssetPath('pet-sprite-sheet.png');
+  }
+
+  /**
+   * Get the path to the heart sprite asset
+   * @returns The resource path to the heart sprite
+   */
+  private getHeartSpritePath(): string {
+    return this.getAssetPath('heart.png');
+  }
+
+  /**
+   * Create or open today's daily note
+   * Handles edge cases: plugin disabled, creation errors
+   */
+  async openDailyNote(): Promise<void> {
+    try {
+      const {
+        createDailyNote,
+        getDailyNote,
+        getAllDailyNotes,
+        appHasDailyNotesPluginLoaded
+      } = await import('obsidian-daily-notes-interface');
+
+      // Edge case: Daily Notes plugin not enabled
+      if (!appHasDailyNotesPluginLoaded()) {
+        new Notice('Daily Notes plugin is not enabled. Please enable it in Settings → Core Plugins.');
+        return;
+      }
+
+      // Get or create today's note
+      const today = window.moment();
+      let dailyNote = getDailyNote(today, getAllDailyNotes());
+
+      if (!dailyNote) {
+        dailyNote = await createDailyNote(today);
+      }
+
+      // Open in workspace
+      await this.app.workspace.getLeaf(false).openFile(dailyNote);
+
+    } catch (error) {
+      new Notice('Failed to create daily note: ' + (error as Error).message);
+      console.error('Error opening daily note:', error);
+    }
+  }
+
+  /**
+   * Handle daily note button click with validation and routing
+   * Issue #47: Implements 3-step button behavior
+   */
+  async handleDailyNoteButton(): Promise<void> {
+    try {
+      // Step 1: Validate prerequisites
+      const validation = await this.validatePrerequisites();
+      if (!validation.valid) {
+        new Notice(validation.error || 'Unknown validation error', 8000);
+        return;
+      }
+
+      // Step 2: Check if today's note exists
+      const {
+        getDailyNote,
+        getAllDailyNotes,
+        createDailyNote
+      } = await import('obsidian-daily-notes-interface');
+
+      const today = window.moment();
+      let dailyNote = getDailyNote(today, getAllDailyNotes());
+
+      // Step 3: Route based on result
+      if (dailyNote) {
+        // Valid + note exists → Open note
+        const leaf = this.app.workspace.getLeaf(false);
+        if (leaf) {
+          await leaf.openFile(dailyNote);
+        } else {
+          new Notice('Failed to open daily note: Could not get workspace leaf', 8000);
+        }
+      } else {
+        // Valid + note doesn't exist → Create and start conversation
+        dailyNote = await createDailyNote(today);
+        await this.startConversation(dailyNote);
+      }
+    } catch (error) {
+      new Notice(
+        'Failed to open daily note: ' + (error as Error).message,
+        8000
+      );
+      console.error('Error in handleDailyNoteButton:', error);
+    }
+  }
+
+  /**
+   * Validate prerequisites for daily note button
+   * Issue #47: Step 1 validation logic
+   *
+   * @returns Validation result with error message if invalid
+   */
+  async validatePrerequisites(): Promise<{ valid: boolean; error?: string }> {
+    try {
+      // Check 1: Daily Notes plugin enabled
+      const { appHasDailyNotesPluginLoaded, getDailyNoteSettings } = await import('obsidian-daily-notes-interface');
+      if (!appHasDailyNotesPluginLoaded()) {
+        return {
+          valid: false,
+          error: 'Daily Notes plugin is not enabled. Please enable it in Settings → Core Plugins.'
+        };
+      }
+
+      // Check 2: Template configured
+      const settings = getDailyNoteSettings();
+      let templatePath = settings.template?.trim();
+
+      if (!templatePath) {
+        return {
+          valid: false,
+          error: 'No template configured. Please set a template in Settings → Core Plugins → Daily Notes.'
+        };
+      }
+
+      // Security: Validate template path to prevent path traversal and absolute paths
+      // Obsidian paths should be vault-relative (e.g., "templates/daily" not "/absolute/path")
+      if (
+        templatePath.includes('..') ||      // Path traversal (e.g., "../../etc/passwd")
+        templatePath.includes('\\') ||      // Windows-style paths and UNC paths (e.g., "C:\path", "\\server\share")
+        templatePath.startsWith('/') ||     // Absolute Unix paths (e.g., "/etc/passwd")
+        /^[a-zA-Z]:/.test(templatePath)     // Windows drive letters (e.g., "C:", "D:")
+      ) {
+        return {
+          valid: false,
+          error: 'Invalid template path. Template must be within the vault.'
+        };
+      }
+
+      // Add .md extension if not present (Obsidian stores paths without extension)
+      if (!templatePath.endsWith('.md')) {
+        templatePath = templatePath + '.md';
+      }
+
+      // Check 3: Template file exists
+      const templateFile = this.app.vault.getAbstractFileByPath(templatePath);
+
+      if (!templateFile) {
+        return {
+          valid: false,
+          error: 'Template file not found. Please check your Daily Notes template settings.'
+        };
+      }
+
+      // Check 4: Template has vaultpal blocks
+      const templateContent = await this.app.vault.read(templateFile as TFile);
+      const parseResult = parseTemplate(templateContent);
+
+      if (parseResult.questions.length === 0) {
+        return {
+          valid: false,
+          error: 'Template has no vaultpal blocks. Add ```vaultpal blocks to your template.'
+        };
+      }
+
+      return { valid: true };
+    } catch (error) {
+      return {
+        valid: false,
+        error: 'Failed to read template: ' + (error as Error).message
+      };
+    }
+  }
+
+  /**
+   * Start conversation mode for daily note
+   * Issue #47: Stub for Issue #12 implementation
+   *
+   * @param dailyNote - The daily note file to use for conversation
+   */
+  async startConversation(dailyNote: TFile): Promise<void> {
+    // Open the note
+    const leaf = this.app.workspace.getLeaf(false);
+    if (leaf) {
+      await leaf.openFile(dailyNote);
+    }
+
+    // Show coming soon notice
+    new Notice('Conversation mode coming soon! (Issue #12)', 5000);
+
+    // Trigger animation sequence: greeting → talking
+    if (this.stateMachine) {
+      // First show greeting
+      this.stateMachine.transition('greeting');
+
+      // Clear any existing timeout to prevent race conditions
+      if (this.conversationTimerId) {
+        clearTimeout(this.conversationTimerId);
+      }
+
+      // Then transition to talking after greeting duration (2 seconds)
+      // Store timeout ID for cleanup
+      this.conversationTimerId = setTimeout(() => {
+        if (this.stateMachine) {
+          this.stateMachine.transition('talking');
+        }
+        this.conversationTimerId = null;
+      }, 2000);
+    }
   }
 }

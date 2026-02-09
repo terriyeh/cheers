@@ -81,31 +81,62 @@ Legend:
 **Responsibility:** Main interactive panel with pet, chat, and controls
 
 **Key Components:**
-- Pet animation display (SVG with state machine)
-- Chat interface for questions/responses
-- Progress indicators (XP, streak)
-- "Share my day" button to initiate conversation
+- Pet animation display (sprite-based with state machine)
+- Chat interface for questions/responses (planned)
+- Progress indicators (XP, streak) (planned)
+- "Capture Daily Note" 💬 button to initiate conversation (planned)
+- "View Daily Note" 📅 button to open today's note
 
 **Implementation:**
 
 ```typescript
 // src/views/PetView.ts
 export class PetView extends ItemView {
-  private petComponent: Pet;
-  private chatComponent: Chat;
-  private stateMachine: PetStateMachine;
+  private petComponent: PetComponent | null = null;
+  private stateMachine: PetStateMachine | null = null;
+  private containerDiv: HTMLDivElement | null = null;
 
   getViewType(): string {
     return VIEW_TYPE_PET;
   }
 
   async onOpen(): Promise<void> {
-    // Mount Svelte components
+    // Show loading state
+    this.showLoading();
+
     // Initialize state machine
-    // Set up event handlers
+    this.stateMachine = new PetStateMachine();
+
+    // Get validated asset paths
+    const spriteSheetPath = this.getSpriteSheetPath();
+    const heartSpritePath = this.getHeartSpritePath();
+
+    // Mount Svelte component
+    this.petComponent = new PetComponent({
+      target: this.containerDiv,
+      props: {
+        state: this.stateMachine.getCurrentState(),
+        spriteSheetPath,
+        heartSpritePath,
+        petName: plugin?.settings?.petName ?? 'Kit',
+        userName: plugin?.settings?.userName ?? '',
+      },
+    });
+
+    // Setup event listeners
+    this.setupPetInteraction();
+
+    // Hide loading state
+    this.hideLoading();
   }
 }
 ```
+
+**Security Features:**
+- Path validation to prevent directory traversal attacks
+- State validation before DOM updates to prevent XSS
+- Centralized asset path resolution with `getAssetPath()` method
+- Error cleanup to prevent resource leaks
 
 **Svelte Component Structure:**
 
@@ -274,9 +305,10 @@ async checkExistingAnswers(note: TFile): Promise<boolean> {
 **Responsibility:** Orchestrate the Q&A flow
 
 **Flow:**
-1. User clicks "Share my day"
-2. Parse template to get questions
-3. Create/open daily note
+1. User clicks "Capture Daily Note" 💬
+2. Validate prerequisites (Daily Notes enabled, template has questions)
+3. Parse template to get questions
+4. Create/open daily note
 4. Present first question in chat
 5. User responds
 6. Save response to note
@@ -521,6 +553,134 @@ export class PetStateMachine {
 
 /* ... more states */
 ```
+
+---
+
+## 2.8 Security Patterns
+
+**Responsibility:** Protect against common web vulnerabilities
+
+**Key Security Measures:**
+
+1. **Path Validation**
+   - Prevents directory traversal attacks in asset loading
+   - Validates plugin directory paths before constructing resource URLs
+   - Rejects paths containing: `..`, `~`, absolute paths (`/` or `C:\`)
+
+```typescript
+// src/views/PetView.ts
+private getAssetPath(assetFileName: string): string {
+  const manifest = this.app.plugins.manifests['vault-pal'];
+  const pluginDir = manifest?.dir || '.obsidian/plugins/vault-pal';
+
+  // Validate path doesn't contain traversal sequences
+  if (
+    pluginDir.includes('..') ||
+    pluginDir.includes('~') ||
+    pluginDir.startsWith('/') ||
+    /^[a-zA-Z]:/.test(pluginDir) // Windows absolute paths
+  ) {
+    throw new Error('Invalid plugin directory path detected');
+  }
+
+  // Normalize and construct safe path
+  const normalizedDir = pluginDir.replace(/\\/g, '/').replace(/\/\//g, '/');
+  const relativePath = `${normalizedDir}/assets/${assetFileName}`;
+  return this.app.vault.adapter.getResourcePath(relativePath);
+}
+```
+
+2. **State Validation**
+   - Validates state values before setting DOM attributes
+   - Prevents DOM-based XSS attacks via data attributes
+   - Whitelists only known valid states
+
+```typescript
+// src/views/PetView.ts
+private updateDataAttribute(state: PetState): void {
+  if (this.containerDiv) {
+    const validStates: PetState[] = [
+      'idle', 'greeting', 'talking', 'listening',
+      'small-celebration', 'big-celebration', 'petting',
+    ];
+
+    if (validStates.includes(state)) {
+      this.containerDiv.dataset.petState = state;
+    } else {
+      console.error(`Attempted to set invalid state: ${state}`);
+    }
+  }
+}
+```
+
+3. **Input Sanitization**
+   - Settings validation with strict regex patterns
+   - Alphanumeric + spaces only for pet/user names
+   - Length limits enforced (1-30 chars for petName, 0-30 for userName)
+
+4. **Debug Code Removal**
+   - Production builds exclude debug logging and commands
+   - `__DEV__` flag gates development-only code
+   - Tree-shaking removes unreachable code in production
+
+```typescript
+// Build-time constant injected by esbuild
+declare const __DEV__: boolean;
+
+// Only in development builds
+if (__DEV__) {
+  console.debug(`Asset path resolved to: ${assetPath}`);
+  window.vaultPalDebug = { /* debug commands */ };
+}
+```
+
+5. **Error Handling**
+   - Proper cleanup of partially initialized resources
+   - Loading state hidden before error display
+   - No sensitive information in error messages
+
+---
+
+## 2.9 Mobile Support
+
+**Responsibility:** Provide seamless experience on mobile devices
+
+**Key Features:**
+
+1. **Touch Event Handling**
+   - Native touch support for pet interaction
+   - `touchend` event triggers petting animation
+   - Prevents default behavior to avoid unwanted scrolling
+
+```typescript
+// src/components/Pet.svelte
+function handleTouchEnd(event: TouchEvent): void {
+  if (!pettingEnabled) return;
+  event.preventDefault();
+
+  // Remove focus after touch to prevent visible focus ring
+  (event.currentTarget as HTMLElement)?.blur();
+
+  dispatch('pet', { returnToState: state });
+}
+```
+
+2. **Mobile-Optimized CSS**
+   - `touch-action: manipulation` - Prevents double-tap zoom
+   - `-webkit-tap-highlight-color: transparent` - Removes iOS tap highlight
+   - Responsive sizing and touch-friendly hit areas
+
+```css
+.pet-sprite-wrapper {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+```
+
+3. **Accessibility**
+   - Touch interactions work alongside keyboard/mouse
+   - Focus management for screen readers
+   - ARIA labels for interactive elements
 
 ---
 
@@ -1098,9 +1258,13 @@ This creates:
 |------|------------|
 | User has existing Daily Notes setup | Integrate with daily-notes-interface to respect settings |
 | Template conflicts with other plugins | Use unique `vaultpal` code block syntax |
-| Performance in large vaults | Lazy load assets, optimize SVG files |
-| Mobile compatibility | Use responsive CSS, test on mobile app |
+| Performance in large vaults | Lazy load assets, optimize sprite sheets |
+| Mobile compatibility | Touch event handling, mobile-optimized CSS, tested on mobile app |
 | Breaking changes in Obsidian API | Follow official API docs, test with latest versions |
+| Path traversal attacks | Validate all asset paths, reject suspicious patterns |
+| DOM-based XSS attacks | Validate state values before setting DOM attributes |
+| Debug code in production | Use `__DEV__` flag with tree-shaking to exclude debug code |
+| Resource leaks on errors | Proper cleanup in error handlers, hide loading states |
 
 ---
 

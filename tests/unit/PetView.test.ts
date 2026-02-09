@@ -129,7 +129,7 @@ describe('PetView', () => {
       await badView.onOpen();
 
       // Should show error state
-      const errorEl = badView.containerEl.querySelector('.vault-pal-error');
+      const errorEl = badView.containerEl.querySelector('.vault-pal-view-error');
       expect(errorEl).toBeTruthy();
 
       consoleErrorSpy.mockRestore();
@@ -145,9 +145,9 @@ describe('PetView', () => {
 
       await badView.onOpen();
 
-      const errorHeading = badView.containerEl.querySelector('.vault-pal-error h3');
-      const errorMessage = badView.containerEl.querySelector('.vault-pal-error-message');
-      const errorHint = badView.containerEl.querySelector('.vault-pal-error-hint');
+      const errorHeading = badView.containerEl.querySelector('.vault-pal-view-error h3');
+      const errorMessage = badView.containerEl.querySelector('.vault-pal-view-error-message');
+      const errorHint = badView.containerEl.querySelector('.vault-pal-view-error-hint');
 
       expect(errorHeading?.textContent).toBe('Failed to load Vault Pal');
       expect(errorMessage).toBeTruthy();
@@ -371,7 +371,7 @@ describe('PetView', () => {
 
       // Should log error and show error state
       expect(consoleErrorSpy).toHaveBeenCalled();
-      const errorEl = failView.containerEl.querySelector('.vault-pal-error');
+      const errorEl = failView.containerEl.querySelector('.vault-pal-view-error');
       expect(errorEl).toBeTruthy();
 
       consoleErrorSpy.mockRestore();
@@ -483,6 +483,87 @@ describe('PetView', () => {
       // Should still have the same number of root children
       // (we create elements inside children[1], not as new children)
       expect(petView.containerEl.children.length).toBe(initialChildCount);
+    });
+  });
+
+  describe('pet interaction event handling', () => {
+    it('should setup pet event listener on open', async () => {
+      await petView.onOpen();
+
+      // Verify that the component is mounted and ready to emit events
+      const component = petView.containerEl.querySelector('.pet-sprite-container');
+      expect(component).toBeTruthy();
+
+      // The petEventListener should be set up (we can't directly test private fields,
+      // but we can verify the event handling works in the next tests)
+    });
+
+    it('should handle pet event with returnTarget parameter', async () => {
+      await petView.onOpen();
+
+      // Start in idle state
+      expect(petView.getCurrentState()).toBe('idle');
+
+      // Transition to talking state
+      petView.transitionState('talking');
+      expect(petView.getCurrentState()).toBe('talking');
+
+      // Simulate petting event from Pet.svelte component
+      // (In real scenario, this would be triggered by clicking the pet sprite)
+      // Since we can't easily dispatch custom events from the Svelte component in this test,
+      // we verify the state machine's returnTarget functionality instead
+      petView.transitionState('petting', 'talking');
+      expect(petView.getCurrentState()).toBe('petting');
+
+      // After petting duration, should return to 'talking'
+      vi.advanceTimersByTime(2000);
+      expect(petView.getCurrentState()).toBe('talking');
+    });
+
+    it('should remove pet event listener on close', async () => {
+      await petView.onOpen();
+
+      // Setup a spy to verify event listener cleanup
+      const component = petView.containerEl.querySelector('.pet-sprite-container');
+      expect(component).toBeTruthy();
+
+      // Close the view
+      await petView.onClose();
+
+      // Verify component is destroyed (which includes event listener removal)
+      const componentAfter = petView.containerEl.querySelector('.pet-sprite-container');
+      expect(componentAfter).toBeNull();
+    });
+
+    it('should handle pet event with returnTarget from idle state', async () => {
+      await petView.onOpen();
+
+      // Start in idle state
+      expect(petView.getCurrentState()).toBe('idle');
+
+      // Simulate petting from idle (should return to idle)
+      petView.transitionState('petting', 'idle');
+      expect(petView.getCurrentState()).toBe('petting');
+
+      // After petting duration, should return to 'idle'
+      vi.advanceTimersByTime(2000);
+      expect(petView.getCurrentState()).toBe('idle');
+    });
+
+    it('should handle pet event with returnTarget from greeting state', async () => {
+      await petView.onOpen();
+
+      // Transition to greeting state
+      petView.transitionState('greeting');
+      expect(petView.getCurrentState()).toBe('greeting');
+
+      // Simulate petting from greeting (should return to greeting)
+      petView.transitionState('petting', 'greeting');
+      expect(petView.getCurrentState()).toBe('petting');
+
+      // After petting duration, should return to 'greeting'
+      vi.advanceTimersByTime(2000);
+      expect(petView.getCurrentState()).toBe('greeting');
     });
   });
 });

@@ -18,10 +18,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 37 comprehensive tests for settings validation and persistence
 - Automatic Daily Notes configuration detection
 - Manual state triggers for development (console debug commands)
+- Mobile touch support for pet interaction
+  - Touch event handling with `handleTouchEnd()`
+  - Mobile-optimized CSS (touch-action, tap highlight removal)
 
 ### Changed
 - Welcome modal now appears on first view open instead of plugin load
 - Settings stored in modal-based pattern instead of settings page
+
+### Fixed
+- Windows path validation regex in asset path resolution
+- Race condition in pet view activation
+- Loading state now properly hidden before error display
+
+### Security
+- Enhanced path validation to prevent directory traversal attacks
+- Extracted duplicate validation logic to centralized `getAssetPath()` method
+- Added state validation before DOM attribute updates to prevent XSS
+- Debug logging gated behind `__DEV__` flag (removed in production builds)
 
 ### Technical
 - Settings interface: `VaultPalSettings` (petName, userName, hasCompletedWelcome)
@@ -29,6 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Real-time input validation with error messages
 - Modal-based settings pattern (no dedicated settings page)
 - Build-time conditionals for debug code (`__DEV__` flag)
+- Refactored view management with `ensurePetViewExists()` helper method
 
 ## [0.0.1] - 2026-02-04
 
