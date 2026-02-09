@@ -17,7 +17,17 @@
       "Bash(npm run test:*)",
       "Bash(node --loader ts-node/esm -e:*)",
       "Skill(update-issue)",
-      "Skill(update-issue:*)"
+      "Skill(update-issue:*)",
+      "Bash(git push:*)",
+      "Bash(git remote set-url:*)",
+      "Bash(git pull:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(gh issue list:*)",
+      "Bash(gh issue view:*)",
+      "Bash(gh issue comment:*)",
+      "Bash(do)",
+      "Bash(echo:*)",
+      "Bash(npm test:*)"
     ]
   }
 }

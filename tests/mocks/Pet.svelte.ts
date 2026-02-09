@@ -176,13 +176,10 @@ export default class MockPetComponent {
 
   private getStateText(state: PetState, userName?: string): string {
     const greeting = userName ? `Hello ${userName}!` : 'Hello there!';
-    const talking = userName ? `How was your day, ${userName}?` : 'How was your day?';
 
     const stateTexts: Record<PetState, string> = {
       idle: 'Just hanging out...',
       greeting: greeting,
-      talking: talking,
-      listening: "I'm listening...",
       'small-celebration': 'Great job!',
       'big-celebration': 'Amazing! You did it!',
       petting: 'That feels nice!',

@@ -34,14 +34,6 @@ export class PetStateMachine {
         duration: 2000, // 2 seconds
         returnsToIdle: true,
       },
-      talking: {
-        duration: 0, // Stays until user responds
-        returnsToIdle: false,
-      },
-      listening: {
-        duration: 0, // Stays while user is typing
-        returnsToIdle: false,
-      },
       'small-celebration': {
         duration: 3000, // 3 seconds
         returnsToIdle: true,

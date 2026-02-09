@@ -179,7 +179,8 @@ describe('PetView.openDailyNote()', () => {
       // Assert: Notice was called with error message
       expect(Notice).toHaveBeenCalledTimes(1);
       expect(Notice).toHaveBeenCalledWith(
-        'Daily Notes plugin is not enabled. Please enable it in Settings → Core Plugins.'
+        'Daily Notes plugin is not enabled. Please enable it in Settings → Core Plugins.',
+        8000
       );
     });
 
@@ -222,7 +223,8 @@ describe('PetView.openDailyNote()', () => {
       // Assert: Notice was called with error message
       expect(Notice).toHaveBeenCalledTimes(1);
       expect(Notice).toHaveBeenCalledWith(
-        'Failed to create daily note: Failed to create daily note'
+        'Failed to create daily note: Failed to create daily note',
+        8000
       );
     });
 
@@ -278,7 +280,8 @@ describe('PetView.openDailyNote()', () => {
       // Assert: Notice was still called with appropriate message
       expect(Notice).toHaveBeenCalledTimes(1);
       expect(Notice).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to create daily note')
+        expect.stringContaining('Failed to create daily note'),
+        8000
       );
     });
   });
@@ -422,7 +425,8 @@ describe('PetView.openDailyNote()', () => {
 
       // Assert: Error message includes helpful instruction
       expect(Notice).toHaveBeenCalledWith(
-        expect.stringContaining('Core Plugins')
+        expect.stringContaining('Core Plugins'),
+        8000
       );
     });
 
@@ -439,7 +443,8 @@ describe('PetView.openDailyNote()', () => {
 
       // Assert: Error message includes the error details
       expect(Notice).toHaveBeenCalledWith(
-        'Failed to create daily note: Permission denied'
+        'Failed to create daily note: Permission denied',
+        8000
       );
     });
   });

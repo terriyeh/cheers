@@ -1,8 +1,8 @@
-# Vault Pal 🦊
+# Obsidian Pets 🦊
 
-An interactive pet companion for Obsidian that makes daily journaling delightful through conversational prompts and gentle gamification.
+Your vault companion that celebrates you.
 
-![Version](https://img.shields.io/badge/version-0.0.1--dev-blue)
+![Version](https://img.shields.io/badge/version-0.1.0--dev-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Obsidian](https://img.shields.io/badge/Obsidian-1.0.0+-purple)
 
@@ -10,17 +10,43 @@ An interactive pet companion for Obsidian that makes daily journaling delightful
 
 ## Overview
 
-Vault Pal transforms daily note-taking from a blank page into a friendly conversation with your virtual pet companion, Kit the Fox. Through guided questions, XP rewards, and streak tracking, it helps you build a sustainable journaling habit.
+Obsidian Pets transforms your vault into a delightful space by celebrating your writing journey. Your companion notices when you create notes, reach word count milestones, check off tasks, and engage with your knowledge base—responding with ambient celebrations that make your vault feel alive.
+
+**Philosophy:** *Feeling the plugin, not thinking about it.*
+
+No chat. No XP grinding. No cognitive load. Just cozy moments of recognition when you do what you love: write, think, and organize your knowledge.
+
+---
+
+## Why Obsidian Pets?
+
+### What Makes It Different
+
+**Pixel Pets:** Decorative pet + AI chat for vault queries
+**Vault Pets:** Pure decoration (VS Code Pets port)
+**Obsidian Pets:** **Your vault celebrates you** ✨
+
+We're not here to:
+- ❌ Chat about your notes (use Obsidian Copilot for that)
+- ❌ Track productivity metrics (use RPG Stat Tracker for that)
+- ❌ Demand your attention with notifications
+
+We're here to:
+- ✅ Celebrate when you create a daily note
+- ✅ Cheer when you reach word count milestones
+- ✅ Notice when you check off tasks
+- ✅ Respond to your vault activities with joy
+- ✅ Provide ambient emotional support
 
 ### Key Features
 
-- **Interactive Pet Companion** ✅ IMPLEMENTED: Kit the Fox responds with 7 animation states (idle, greeting, talking, listening, small celebration, big celebration, petting)
-- **Conversational Journaling** 🚧 IN DEVELOPMENT (Issues #10-12): Answer prompts from your template through a chat interface
-- **Automatic Note Creation** 🚧 IN DEVELOPMENT (Issue #10): Responses are written directly into your daily notes
-- **Progress Tracking** 📅 PLANNED: Earn XP, build streaks, unlock milestone rewards
-- **Calendar View** 📅 PLANNED: Visual overview of your journaling history with completion indicators
+- **Vault-Aware Celebrations** 🎉 Pet celebrates your activities (daily notes, word counts, tasks, links)
+- **Interactive Pet Companion** ✅ IMPLEMENTED: 7 animation states (idle, greeting, talking, listening, celebration, petting) [TODO: Mapping of these states need to be changed; associated messages replaced with emojis in speech bubbles]
+- **User-Configurable Triggers** 🚧 PLANNED: Choose what actions trigger celebrations
+- **Ambient Presence** 🚧 PLANNED: Pet walks across panel, exists peacefully when you're working
+- **Pets Live Their Lives Alongside Yours** 🚧 PLANNED: Your pets have emerging behaviors and relationships, and go on adventures while you work
 - **Privacy-First** ✅ IMPLEMENTED: Fully local, no network calls, no telemetry
-- **Customizable Templates** ✅ IMPLEMENTED: Use vaultpal code blocks to define your own questions
+- **Mobile Support** ✅ IMPLEMENTED: Touch-enabled for phones and tablets
 
 ---
 
@@ -29,13 +55,13 @@ Vault Pal transforms daily note-taking from a blank page into a friendly convers
 ### From Obsidian Community Plugins (Recommended)
 
 1. Open Obsidian Settings → Community plugins
-2. Browse and search for "Vault Pal"
+2. Browse and search for "Obsidian Pets"
 3. Click Install, then Enable
 
 ### Manual Installation
 
-1. Download the latest release from [GitHub Releases](https://github.com/terriyeh/vault-pal/releases)
-2. Extract the files to `.obsidian/plugins/vault-pal/` in your vault
+1. Download the latest release from [GitHub Releases](https://github.com/terriyeh/obsidian-pets/releases)
+2. Extract the files to `.obsidian/plugins/obsidian-pets/` in your vault
 3. Reload Obsidian
 4. Enable the plugin in Settings → Community plugins
 
@@ -43,15 +69,7 @@ Vault Pal transforms daily note-taking from a blank page into a friendly convers
 
 ## Quick Start
 
-### 1. Enable Daily Notes Plugin
-
-Vault Pal integrates with Obsidian's built-in Daily Notes plugin:
-
-1. Go to Settings → Core plugins
-2. Enable "Daily notes"
-3. Configure your daily notes folder and template location
-
-### 2. Configure Your Pet Companion
+### 1. Configure Your Pet Companion
 
 On first launch, you'll see a welcome modal:
 
@@ -61,70 +79,48 @@ On first launch, you'll see a welcome modal:
 
 You can change these settings later using **Command Palette → "Edit Pet Settings"**
 
-### 3. Create a Template with VaultPal Prompts
+### 2. Open Your Pet Panel
 
-Add vaultpal code blocks to your daily note template:
+1. Click the paw icon 🐾 in the sidebar ribbon
+2. Your pet appears and greets you with a wave
+3. Click or tap your pet to pet them anytime!
 
-```markdown
-# Daily Note - {{date}}
+### 3. Start Writing
 
-## What went well today?
+Your pet notices when you:
+- Create a daily note
+- Create any new note
+- Add links between notes
+- Check off task checkboxes
+- Reach word count milestones (customizable)
+- [TODO: Research what other "milestones" users like to track in plugins like RPG Stats Tracker]
 
-```vaultpal
-prompt: "What went well today?"
-```
-
-## What was challenging?
-
-```vaultpal
-prompt: "What was challenging today?"
-```
-
-## What am I grateful for?
-
-```vaultpal
-prompt: "What are you grateful for?"
-```
-```
-
-### 4. Start Journaling
-
-1. Click the paw icon in the sidebar to open Vault Pal
-2. Click "Capture Daily Note" 💬 button
-3. Plugin validates Daily Notes is enabled and template has questions
-4. Answer Kit's questions in the chat interface (coming soon - Issues #10-12)
-5. Your responses are automatically saved to today's daily note
-6. Complete all questions to earn XP and build your streak!
+Each action triggers a celebration animation—no input required from you. Just write, and your pet celebrates alongside you.
 
 ---
 
-## Template Syntax
+## Celebration Triggers
 
-Vault Pal uses special code blocks to identify questions in your template:
+### Built-in Celebrations (Coming Soon)
 
-### Basic Prompt
+| Action | Animation | Configurable |
+|--------|-----------|--------------|
+| **Create daily note** | Small celebration | ✅ On/Off |
+| **Create any note** | Hearts | ✅ On/Off |
+| **Add a link** | Sparkles | ✅ On/Off |
+| **Check off task** | Confetti | ✅ On/Off |
+| **Word count milestone** | Fireworks | ✅ Custom thresholds |
 
-```markdown
-```vaultpal
-prompt: "What's one thing you're grateful for today?"
-```
-```
+### Customization
 
-### Multi-line Prompt
+You decide what deserves celebration:
+- Toggle each celebration type on/off
+- Set your own word count milestones (e.g., 100, 500, 1000 words)
+- Adjust celebration frequency (cooldowns to prevent spam)
+- Create celebration banner UI, allow user to customize message
+- You decide how you want to celebrate each achievment (pick what animation to play, or what message to display)
 
-```markdown
-```vaultpal
-prompt: "Reflect on your day:
-- What went well?
-- What could have been better?
-- What will you focus on tomorrow?"
-```
-```
-
-### Supported Question Types
-
-- **Freeform text** (default): Open-ended questions for written responses
-- **Checkbox** (coming soon): Multiple choice options
+**Settings coming in v0.2.0**
 
 ---
 
@@ -132,31 +128,36 @@ prompt: "Reflect on your day:
 
 ### Pet Animations
 
-Kit the Fox has 7 distinct animation states:
+Your companion has 7 distinct animation states:
 
-- **Idle**: Gentle breathing animation when resting
+[TODO: needs remapping to animation]
+- **Idle**: Gentle breathing when resting
 - **Greeting**: Welcoming wave when you open the panel
-- **Talking**: Animated while presenting questions
-- **Listening**: Attentive pose while you type
-- **Small Celebration**: Brief cheer after each answer
-- **Big Celebration**: Enthusiastic celebration when completing your note
-- **Petting**: Content reaction when you click or tap on Kit (available anytime, even during conversation)
+- **Walking**: Travels across the panel (ambient presence)
+- **Small Celebration**: Brief cheer for everyday actions
+- **Big Celebration**: Enthusiastic celebration for milestones
+- **Petting**: Content reaction when you click/tap (available anytime)
+- **Listening**: Attentive pose (reserved for future features)
 
-**Mobile Support**: Fully touch-enabled for phones and tablets with optimized touch interactions
+**Mobile Support**: Fully touch-enabled with optimized interactions
 
-### Progression System
+---
 
-- **XP**: Earn 10 XP per completed daily note
-- **Streaks**: Track consecutive days of journaling
-- **Milestones**: Unlock rewards at 7, 30, 60, and 100-day streaks
-- **Cosmetic Rewards**: Unlock decorative elements for Kit's environment
+## Recommended Plugin Pairings
 
-### Calendar View
+Obsidian Pets works beautifully alongside other plugins to create your perfect workspace:
 
-- Monthly calendar display with completion indicators
-- Visual streak visualization
-- Click any date to open/create notes
-- Quick navigation between Pet View and Calendar View
+### For Ambient Music
+**[Soundscapes](https://github.com/andrewmcgivery/obsidian-soundscapes)** - Adds ambient background music to Obsidian
+- Curated lo-fi, nature sounds, and ambient tracks
+- Toggle on/off easily
+- Perfect companion for focused writing sessions
+- Pairs naturally with pet celebrations
+
+### For Productivity
+- **Daily Notes** (Core plugin) - Creates daily notes that your pet celebrates
+- **Tasks** - Track checkboxes that trigger celebrations
+- **Calendar** - Visual overview of your writing journey
 
 ---
 
@@ -164,12 +165,10 @@ Kit the Fox has 7 distinct animation states:
 
 ### Pet Personalization
 
-Vault Pal uses a welcome modal for configuration instead of a traditional settings page.
-
 **First Run:**
 - Welcome modal appears automatically when you first open the Pet View
 - Configure your pet's name and your own name
-- Settings are saved to `.obsidian/plugins/vault-pal/data.json`
+- Settings are saved to `.obsidian/plugins/obsidian-pets/data.json`
 
 **Changing Settings Later:**
 - Open Command Palette (Ctrl/Cmd + P)
@@ -183,10 +182,14 @@ Vault Pal uses a welcome modal for configuration instead of a traditional settin
 | Pet name | Your companion's name | Kit | 1-30 characters, alphanumeric + spaces only |
 | Your name | What your pet calls you | (optional) | 0-30 characters, alphanumeric + spaces only |
 
-**Daily Notes Configuration:**
-Vault Pal automatically detects your Daily Notes folder and template from Obsidian's Daily Notes core plugin settings. No additional configuration needed!
+### Celebration Settings (Coming Soon)
 
-**Note:** The welcome modal includes a reminder that enabling the Daily Notes core plugin is required for full functionality.
+Configure which actions trigger celebrations, and what celebrations they each trigger:
+- Daily note creation
+- Any note creation
+- Link creation
+- Task completion
+- Word count milestones (custom thresholds)
 
 ---
 
@@ -202,8 +205,8 @@ Vault Pal automatically detects your Daily Notes folder and template from Obsidi
 
 ```bash
 # Clone the repository
-git clone https://github.com/terriyeh/vault-pal
-cd vault-pal
+git clone https://github.com/terriyeh/obsidian-pets
+cd obsidian-pets
 
 # Install dependencies
 npm install
@@ -222,10 +225,10 @@ npm run build
 
 ```bash
 # Windows
-mklink /D "C:\path\to\test-vault\.obsidian\plugins\vault-pal" "D:\vault-pal"
+mklink /D "C:\path\to\test-vault\.obsidian\plugins\obsidian-pets" "D:\obsidian-pets"
 
 # macOS/Linux
-ln -s /path/to/vault-pal /path/to/test-vault/.obsidian/plugins/vault-pal
+ln -s /path/to/obsidian-pets /path/to/test-vault/.obsidian/plugins/obsidian-pets
 ```
 
 3. Enable the plugin in your test vault
@@ -236,33 +239,33 @@ ln -s /path/to/vault-pal /path/to/test-vault/.obsidian/plugins/vault-pal
 - **Language**: TypeScript
 - **UI Framework**: Svelte 4 (compiled to vanilla JS)
 - **Build Tool**: esbuild with esbuild-svelte
-- **Daily Notes**: obsidian-daily-notes-interface library
 - **Animation**: CSS animations + TypeScript state machine
 - **Storage**: Obsidian Plugin API (local JSON)
 
 ### Project Structure
 
 ```
-vault-pal/
+obsidian-pets/
 ├── src/
 │   ├── main.ts                    # Main plugin class
-│   ├── settings.ts                # Settings tab
+│   ├── modals/
+│   │   └── WelcomeModal.ts       # Settings modal
 │   ├── views/
-│   │   ├── PetView.ts            # Main pet panel
-│   │   └── CalendarView.ts       # Calendar navigation
+│   │   └── PetView.ts            # Main pet panel
 │   ├── components/               # Svelte components
-│   │   ├── Pet.svelte
-│   │   ├── Chat.svelte
-│   │   ├── ProgressBar.svelte
-│   │   └── Calendar.svelte
-│   ├── core/
-│   │   ├── TemplateParser.ts
-│   │   ├── ConversationManager.ts
-│   │   └── ProgressionSystem.ts
+│   │   └── Pet.svelte
+│   ├── pet/
+│   │   └── PetStateMachine.ts   # Animation state machine
+│   ├── celebration/              # Celebration system (coming soon)
+│   │   ├── CelebrationEngine.ts
+│   │   ├── VaultEventListeners.ts
+│   │   └── MilestoneTracker.ts
 │   └── types/
-│       └── index.ts
+│       ├── pet.ts
+│       └── settings.ts
 ├── assets/
-│   └── pet/                      # Pet sprites
+│   ├── pet-sprite-sheet.png
+│   └── heart.png
 ├── styles.css
 ├── manifest.json
 └── package.json
@@ -272,31 +275,41 @@ vault-pal/
 
 ## Roadmap
 
-### Current Version (1.0 - MVP)
+### Current Version (0.1.0 - Foundation)
 
 - ✅ Pet companion with 7 animation states
-- ✅ Conversational daily note capture
-- ✅ XP and streak tracking
-- ✅ Milestone celebrations
-- ✅ Calendar view with completion indicators
+- ✅ Petting interaction (click/tap anytime)
+- ✅ Welcome modal and settings
+- ✅ Mobile touch support
 
-### Planned Features (Post-MVP)
+### v0.2.0 - Celebration System (Next)
 
-- **Voice Input**: Local Whisper transcription for verbal responses
-- **Journey Progression**: Environment transitions as you complete more notes
-- **Multiple Pets**: Additional pet companions with unique animations
-- **Paid Asset Packs**: Seasonal backgrounds, pet emotes, and decorations
-- **AI Conversations**: Chat with Kit about your notes (BYOK)
-- **Habit Tracking**: Integrated habit checkboxes in daily flow
-- **Custom Greetings**: User-configurable greeting messages
+- 🚧 Vault event listeners (note creation, tasks, links)
+- 🚧 Celebration animations (fireworks, hearts, confetti)
+- 🚧 User-configurable triggers
+- 🚧 Word count milestone tracking
+- 🚧 Cooldown system (prevent spam)
+
+### v0.3.0 - Enhanced Experience
+
+- 📅 Optional companion music (user-provided URLs)
+- 📅 Pet walks across panel (ambient movement)
+- 📅 Background themes
+- 📅 Celebration sound effects (optional)
+
+### v0.4.0+ - Community & Customization
+
+- 📅 Multiple pet types
+- 📅 Custom celebration animations
+- 📅 Seasonal celebration packs ($1.99)
+- 📅 Premium backgrounds ($1.99)
+- 📅 Community-contributed pets
 
 ---
 
 ## Command Palette Commands
 
-Vault Pal provides these commands accessible via Command Palette (Ctrl/Cmd + P):
-
-- **Open Vault Pal** - Opens the pet view in the sidebar
+- **Open Obsidian Pets** - Opens the pet view in the sidebar
 - **Edit Pet Settings** - Reopens the welcome modal to change pet/user names
 
 ---
@@ -304,28 +317,23 @@ Vault Pal provides these commands accessible via Command Palette (Ctrl/Cmd + P):
 ## Troubleshooting
 
 ### Plugin won't load
-- Ensure Daily Notes core plugin is enabled
 - Check that you're using Obsidian 1.0.0 or higher
 - Try disabling and re-enabling the plugin
+- Check Developer Console (Ctrl+Shift+I) for errors
 
-### No questions appear
-- Verify your template has `vaultpal` code blocks with `prompt:` fields
-- Check Settings → Daily notes for correct template path
-- Make sure code blocks use triple backticks with "vaultpal" language
+### Pet doesn't animate
+- Verify sprite assets exist in `assets/` folder
+- Check that animations aren't disabled by another plugin
+- Look for CSS conflicts with theme
 
-### Responses not saving
-- Check file permissions on your vault folder
-- Verify Daily Notes folder exists and is writable
-- Look for errors in Developer Console (Ctrl+Shift+I)
-
-### Calendar not showing completions
-- Ensure responses are written below vaultpal code blocks
-- Wait a moment for the calendar to refresh
-- Try switching views and back to calendar
+### Celebrations not triggering (v0.2.0+)
+- Check Settings → Obsidian Pets to verify triggers are enabled
+- Some celebrations have cooldowns to prevent spam
+- Restart Obsidian if celebrations stop working
 
 ### Welcome modal doesn't appear
-- Welcome modal only appears on first view open, not plugin load
-- If you want to see it again, use Command Palette → "Edit Pet Settings"
+- Welcome modal only appears on first view open
+- Use Command Palette → "Edit Pet Settings" to reopen
 - Check that `hasCompletedWelcome` is false in `data.json`
 
 ### Settings validation errors
@@ -346,13 +354,12 @@ All pull requests are automatically reviewed by Claude AI using the official [An
 - **Automatic**: Runs on every PR, no @claude mention needed
 - **Comprehensive**: Reviews code quality, security, and testing
 - **Interactive**: Comment `@claude` on PRs/issues for assistance
-- **Sticky Comments**: Updates same comment on new pushes
 
 See [`.github/workflows/README.md`](.github/workflows/README.md) for details.
 
 ### Reporting Issues
 
-Found a bug or have a feature request? [Open an issue](https://github.com/terriyeh/vault-pal/issues) on GitHub.
+Found a bug or have a feature request? [Open an issue](https://github.com/terriyeh/obsidian-pets/issues) on GitHub.
 
 ---
 
@@ -365,18 +372,20 @@ MIT License - see [LICENSE](LICENSE) file for details.
 ## Acknowledgments
 
 - Built with the [Obsidian Plugin API](https://github.com/obsidianmd/obsidian-api)
-- Inspired by [Finch](https://finchcare.com/), [Forest](https://www.forestapp.cc/), and [Habitica](https://habitica.com/)
-- Calendar implementation adapted from [obsidian-calendar-plugin](https://github.com/liamcain/obsidian-calendar-plugin) (MIT)
-- Uses [obsidian-daily-notes-interface](https://github.com/liamcain/obsidian-daily-notes-interface) for Daily Notes integration
+- Inspired by [VS Code Pets](https://github.com/tonybaloney/vscode-pets) (2.26M installs, emotion > features)
+- Research: [Pixel Pets](https://github.com/LucasHJin/obsidian-pets) and vault companion landscape
+- Animation patterns from sprite-based web games
 
 ---
 
 ## Support
 
-- **Documentation**: [GitHub Wiki](https://github.com/terriyeh/vault-pal/wiki)
+- **Documentation**: [GitHub Wiki](https://github.com/terriyeh/obsidian-pets/wiki)
 - **Community**: [Obsidian Forum](https://forum.obsidian.md/)
-- **Issues**: [GitHub Issues](https://github.com/terriyeh/vault-pal/issues)
+- **Issues**: [GitHub Issues](https://github.com/terriyeh/obsidian-pets/issues)
 
 ---
 
-Made with 💙 for the Obsidian community
+**Made with 💙 for the Obsidian community**
+
+*"Your vault celebrates you."*

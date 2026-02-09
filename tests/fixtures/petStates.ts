@@ -11,8 +11,6 @@ import type { PetState, StateChangeEvent } from '../../src/types/pet';
 export const ALL_PET_STATES: PetState[] = [
   'idle',
   'greeting',
-  'talking',
-  'listening',
   'small-celebration',
   'big-celebration',
   'petting',
@@ -31,7 +29,7 @@ export const TEMPORARY_STATES: PetState[] = [
 /**
  * States that do not auto-return to idle
  */
-export const PERMANENT_STATES: PetState[] = ['idle', 'talking', 'listening'];
+export const PERMANENT_STATES: PetState[] = ['idle'];
 
 /**
  * State durations in milliseconds
@@ -39,8 +37,6 @@ export const PERMANENT_STATES: PetState[] = ['idle', 'talking', 'listening'];
 export const STATE_DURATIONS: Record<PetState, number> = {
   idle: 0,
   greeting: 2000,
-  talking: 0,
-  listening: 0,
   'small-celebration': 3000,
   'big-celebration': 5000,
   petting: 2000,
@@ -52,8 +48,6 @@ export const STATE_DURATIONS: Record<PetState, number> = {
 export const STATE_TEXT_MAP: Record<PetState, string> = {
   idle: 'Just hanging out...',
   greeting: 'Hello there!',
-  talking: 'How was your day?',
-  listening: "I'm listening...",
   'small-celebration': 'Great job!',
   'big-celebration': 'Amazing! You did it!',
   petting: 'That feels nice!',
@@ -116,8 +110,6 @@ export function createUserInteractionSequence(): {
 }[] {
   return [
     { state: 'greeting', duration: 2000, description: 'Pet greets user' },
-    { state: 'talking', duration: 0, description: 'Pet asks a question' },
-    { state: 'listening', duration: 0, description: 'User types response' },
     { state: 'idle', duration: 0, description: 'Return to idle' },
     {
       state: 'small-celebration',
