@@ -16,6 +16,7 @@ interface VaultPalDebug {
 	transitionState: (state: PetState) => void;
 	getCurrentState: () => PetState | null;
 	reset: () => void;
+	setSpeed: (speed: number) => void;
 	help: () => void;
 }
 
@@ -120,8 +121,17 @@ export default class VaultPalPlugin extends Plugin {
 				reset: () => {
 					const view = this.getActivePetView();
 					if (view) {
-						view.transitionState('idle');
-						console.log('🦊 Reset to idle');
+						view.transitionState('walking');
+						console.log('🦊 Reset to walking');
+					} else {
+						console.error('🦊 No active pet view. Open Vault Pal first.');
+					}
+				},
+				setSpeed: (speed: number) => {
+					const view = this.getActivePetView();
+					if (view?.petComponent) {
+						view.petComponent.$set({ movementSpeed: speed });
+						console.log(`🦊 Movement speed set to: ${speed}%`);
 					} else {
 						console.error('🦊 No active pet view. Open Vault Pal first.');
 					}
@@ -131,15 +141,17 @@ export default class VaultPalPlugin extends Plugin {
 🦊 Vault Pal Debug Commands:
   vaultPalDebug.transitionState('state') - Transition to a state
   vaultPalDebug.getCurrentState()        - Get current state
-  vaultPalDebug.reset()                  - Reset to idle
+  vaultPalDebug.reset()                  - Reset to walking
+  vaultPalDebug.setSpeed(50)             - Set movement speed (0-100)
   vaultPalDebug.help()                   - Show this help
 
 Available states:
-  - idle
+  - walking
+  - running
   - greeting
-  - small-celebration
-  - big-celebration
+  - celebration
   - petting
+  - sleeping
 					`);
 				}
 			};

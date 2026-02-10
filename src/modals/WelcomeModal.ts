@@ -1,6 +1,7 @@
 import { Modal, Setting } from 'obsidian';
 import type VaultPalPlugin from '../main';
 import { VALIDATION_RULES } from '../types/settings';
+import { VIEW_TYPE_PET, PetView } from '../views/PetView';
 
 /**
  * Welcome Modal shown on first run
@@ -66,6 +67,30 @@ export class WelcomeModal extends Modal {
 			cls: 'vault-pal-error-message setting-item-description',
 		});
 		this.userNameError.style.display = 'none';
+
+		// Movement Speed Setting
+		new Setting(contentEl)
+			.setName('Movement speed')
+			.setDesc('Control how fast your pet moves (0 = slowest walk, 100 = fastest run)')
+			.addSlider((slider) =>
+				slider
+					.setLimits(0, 100, 1)
+					.setValue(this.plugin.settings.movementSpeed)
+					.setDynamicTooltip()
+					.onChange(async (value) => {
+						this.plugin.settings.movementSpeed = value;
+						await this.plugin.saveSettings();
+
+						// Update live pet if view is open
+						const leaves = this.plugin.app.workspace.getLeavesOfType(VIEW_TYPE_PET);
+						if (leaves.length > 0) {
+							const view = leaves[0].view as PetView;
+							if (view.petComponent) {
+								view.petComponent.$set({ movementSpeed: value });
+							}
+						}
+					})
+			);
 
 		// Daily Notes info
 		contentEl.createEl('div', {

@@ -5,7 +5,7 @@
   /**
    * Current state of the pet
    */
-  export let state: PetState = 'idle';
+  export let state: PetState = 'walking';
 
   /**
    * Path to the sprite sheet (passed from PetView)
@@ -27,15 +27,30 @@
    */
   export let userName: string = '';
 
+  /**
+   * Movement speed (0-100) from settings
+   */
+  export let movementSpeed: number = 50;
+
   // Event dispatcher for 'pet' event
   const dispatch = createEventDispatcher<{ pet: { returnToState: PetState } }>();
 
   /**
+   * Calculate animation duration based on movement speed
+   * Walking (0-60%): 2s to 1s
+   * Running (61-100%): 1s to 0.4s
+   */
+  $: isRunning = movementSpeed > 60;
+  $: animationDuration = isRunning
+    ? 1 - ((movementSpeed - 60) / 40) * 0.6 // 1s to 0.4s
+    : 2 - (movementSpeed / 60); // 2s to 1s
+
+  /**
    * Check if petting interaction is allowed in the current state
-   * Only idle and greeting states allow petting
+   * Walking, running, and greeting states allow petting
    */
   function isPettingAllowed(currentState: PetState): boolean {
-    return currentState === 'idle' || currentState === 'greeting';
+    return currentState === 'walking' || currentState === 'running' || currentState === 'greeting';
   }
 
   /**
@@ -85,30 +100,31 @@
     const greeting = userName ? `Hello ${userName}!` : 'Hello there!';
 
     const stateTexts: Record<PetState, string> = {
-      idle: 'Just hanging out...',
+      walking: 'On the move...',
+      running: 'Zooming!',
       greeting: greeting,
-      'small-celebration': 'Great job!',
-      'big-celebration': 'Amazing! You did it!',
-      petting: 'That feels nice!',
+      celebration: 'Great job!',
+      petting: 'Amazing! You did it!',
+      sleeping: 'Zzz...',
     };
     return stateTexts[currentState];
   }
 
   // Reactive declarations for conditional interactivity
   $: pettingEnabled = isPettingAllowed(state);
-  $: cursorStyle = (pettingEnabled || state === 'petting') ? 'pointer' : 'not-allowed';
+  $: cursorStyle = (pettingEnabled || state === 'sleeping') ? 'pointer' : 'not-allowed';
   $: ariaLabel = pettingEnabled
     ? `Pet ${petName}`
-    : state === 'petting'
+    : state === 'sleeping'
     ? `Pet ${petName}`
     : `Pet ${petName} (currently busy)`;
-  $: showHeart = state === 'petting';
+  $: showHeart = state === 'sleeping';
 
   // Sprite sheet is now handled entirely by CSS
   // No need for emoji fallback once sprite sheet is placed in assets/
 </script>
 
-<div class="pet-sprite-container" data-state={state}>
+<div class="pet-sprite-container" data-state={state} style:--animation-duration="{animationDuration}s">
   <!-- Interactive pet sprite with keyboard and touch accessibility -->
   <div
     class="pet-sprite-wrapper"
@@ -178,8 +194,8 @@
     border-radius: 4px;
   }
 
-  /* Disabled state appearance - but not during petting */
-  .pet-sprite-container:not([data-state='petting']) .pet-sprite-wrapper[aria-disabled="true"] {
+  /* Disabled state appearance - but not during sleeping */
+  .pet-sprite-container:not([data-state='sleeping']) .pet-sprite-wrapper[aria-disabled="true"] {
     opacity: 0.7;
   }
 
@@ -234,20 +250,20 @@
 
   /* Sprite animations for each state */
   /* Note: All positions are 2x scale (64px instead of 32px) */
+  /* Ordered by sprite row (top to bottom) for easier debugging */
 
-  /* Row 1 (y=0): Idle - 5 frames */
-  .pet-sprite-container[data-state='idle'] .pet-sprite {
+  /* Row 1 (y=0): Idle - 5 frames (UNUSED - kept for reference) */
+  /* .pet-sprite-container[data-state='idle'] .pet-sprite {
     animation: sprite-idle 1s steps(5) infinite;
   }
-
   @keyframes sprite-idle {
     from { background-position: 0 0; }
-    to { background-position: -320px 0; } /* 5 frames × 64px */
-  }
+    to { background-position: -320px 0; }
+  } */
 
-  /* Row 2 (y=64): Greeting - 14 frames */
+  /* Row 2 (y=-64px): Greeting - 14 frames */
   .pet-sprite-container[data-state='greeting'] .pet-sprite {
-    animation: sprite-greeting 1.4s steps(14) 1; /* Play once */
+    animation: sprite-greeting 1.4s steps(14) 1;
   }
 
   @keyframes sprite-greeting {
@@ -255,33 +271,75 @@
     to { background-position: -896px -64px; } /* 14 frames × 64px */
   }
 
-  /* Row 5 (y=256): Small celebration - 5 frames */
-  .pet-sprite-container[data-state='small-celebration'] .pet-sprite {
-    animation: sprite-small-celebration 0.5s steps(5) 1;
+  /* Row 3 (y=-128px): Walking - 8 frames (placeholder) */
+  .pet-sprite-container[data-state='walking'] .pet-sprite {
+    animation: sprite-walking var(--animation-duration, 1.5s) steps(8) infinite,
+               move-horizontal 5s linear infinite alternate;
   }
 
-  @keyframes sprite-small-celebration {
+  @keyframes sprite-walking {
+    from { background-position: 0 -128px; }
+    to { background-position: -512px -128px; } /* 8 frames × 64px (estimated) */
+  }
+
+  /* Row 4 (y=-192px): Running - 8 frames (placeholder) */
+  .pet-sprite-container[data-state='running'] .pet-sprite {
+    animation: sprite-running var(--animation-duration, 0.7s) steps(8) infinite,
+               move-horizontal 3s linear infinite alternate;
+  }
+
+  @keyframes sprite-running {
+    from { background-position: 0 -192px; }
+    to { background-position: -512px -192px; } /* 8 frames × 64px (estimated) */
+  }
+
+  /* Row 5 (y=-256px): Celebration - 5 frames (was small-celebration) */
+  .pet-sprite-container[data-state='celebration'] .pet-sprite {
+    animation: sprite-celebration 0.5s steps(5) 1;
+  }
+
+  @keyframes sprite-celebration {
     from { background-position: 0 -256px; }
     to { background-position: -320px -256px; } /* 5 frames × 64px */
   }
 
-  /* Row 6 (y=320): Petting - 6 frames */
-  .pet-sprite-container[data-state='petting'] .pet-sprite {
-    animation: sprite-petting 0.6s steps(6) 1;
+  /* Row 6 (y=-320px): Sleeping - 6 frames (was petting) */
+  .pet-sprite-container[data-state='sleeping'] .pet-sprite {
+    animation: sprite-sleeping 0.6s steps(6) 1;
   }
 
-  @keyframes sprite-petting {
+  @keyframes sprite-sleeping {
     from { background-position: 0 -320px; }
     to { background-position: -384px -320px; } /* 6 frames × 64px */
   }
 
-  /* Row 7 (y=384): Big celebration - 7 frames */
-  .pet-sprite-container[data-state='big-celebration'] .pet-sprite {
-    animation: sprite-big-celebration 0.7s steps(7) 1;
+  /* Row 7 (y=-384px): Petting - 7 frames (was big-celebration) */
+  .pet-sprite-container[data-state='petting'] .pet-sprite {
+    animation: sprite-petting 0.7s steps(7) 1;
   }
 
-  @keyframes sprite-big-celebration {
+  @keyframes sprite-petting {
     from { background-position: 0 -384px; }
     to { background-position: -448px -384px; } /* 7 frames × 64px */
+  }
+
+  /* Horizontal movement animation (shared by walking/running states) */
+  /* Turnaround handled with scaleX flip at keyframe boundaries */
+  @keyframes move-horizontal {
+    0% {
+      transform: translateX(-50px) scaleX(1); /* Walking right */
+    }
+    49.99% {
+      transform: translateX(50px) scaleX(1);  /* Reached right boundary */
+    }
+    50% {
+      transform: translateX(50px) scaleX(-1); /* Flip to face left */
+    }
+    99.99% {
+      transform: translateX(-50px) scaleX(-1); /* Walking left */
+    }
+    100% {
+      transform: translateX(-50px) scaleX(1);  /* Flip to face right */
+    }
   }
 </style>

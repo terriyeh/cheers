@@ -84,6 +84,15 @@ export default class MockPetComponent {
       if (newProps.spriteSheetPath !== undefined) {
         this.sprite.style.backgroundImage = `url(${newProps.spriteSheetPath})`;
       }
+
+      if (newProps.movementSpeed !== undefined) {
+        // Calculate animation duration based on speed
+        const isRunning = newProps.movementSpeed > 60;
+        const animationDuration = isRunning
+          ? 1 - ((newProps.movementSpeed - 60) / 40) * 0.6 // 1s to 0.4s
+          : 2 - (newProps.movementSpeed / 60); // 2s to 1s
+        this.container.style.setProperty('--animation-duration', `${animationDuration}s`);
+      }
     };
 
     // Event handler registration
@@ -115,7 +124,7 @@ export default class MockPetComponent {
   }
 
   private isPettingAllowed(state: PetState): boolean {
-    return state === 'idle' || state === 'greeting';
+    return state === 'walking' || state === 'running' || state === 'greeting';
   }
 
   private updateInteractiveAttributes(state: PetState, petName: string): void {
@@ -132,7 +141,7 @@ export default class MockPetComponent {
   }
 
   private updateHeartOverlay(state: PetState): void {
-    const showHeart = state === 'petting';
+    const showHeart = state === 'sleeping';
 
     if (showHeart && !this.heartOverlay) {
       // Create heart overlay
@@ -178,11 +187,12 @@ export default class MockPetComponent {
     const greeting = userName ? `Hello ${userName}!` : 'Hello there!';
 
     const stateTexts: Record<PetState, string> = {
-      idle: 'Just hanging out...',
+      walking: 'On the move...',
+      running: 'Zooming!',
       greeting: greeting,
-      'small-celebration': 'Great job!',
-      'big-celebration': 'Amazing! You did it!',
-      petting: 'That feels nice!',
+      celebration: 'Great job!',
+      petting: 'Amazing! You did it!',
+      sleeping: 'Zzz...',
     };
     return stateTexts[state];
   }

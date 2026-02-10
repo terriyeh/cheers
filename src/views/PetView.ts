@@ -90,9 +90,10 @@ export class PetView extends ItemView {
       const spriteSheetPath = this.getSpriteSheetPath();
       const heartSpritePath = this.getHeartSpritePath();
 
-      // Get plugin settings for pet name and user name (reuse plugin variable from above)
+      // Get plugin settings for pet name, user name, and movement speed (reuse plugin variable from above)
       const petName = plugin?.settings?.petName ?? 'Kit';
       const userName = plugin?.settings?.userName ?? '';
+      const movementSpeed = plugin?.settings?.movementSpeed ?? 50;
 
       // Mount Svelte component with asset path and settings
       this.petComponent = new PetComponent({
@@ -103,6 +104,7 @@ export class PetView extends ItemView {
           heartSpritePath: heartSpritePath,
           petName: petName,
           userName: userName,
+          movementSpeed: movementSpeed,
         },
       });
 
@@ -199,11 +201,12 @@ export class PetView extends ItemView {
     if (this.containerDiv) {
       // Validate state against known valid states
       const validStates: PetState[] = [
-        'idle',
+        'walking',
+        'running',
         'greeting',
-        'small-celebration',
-        'big-celebration',
+        'celebration',
         'petting',
+        'sleeping',
       ];
 
       if (validStates.includes(state)) {
