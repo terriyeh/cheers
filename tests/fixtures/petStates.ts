@@ -41,8 +41,8 @@ export const STATE_DURATIONS: Record<PetState, number> = {
   running: 400, // Default for speed=100 (1 - (100-60)/40 * 0.6 = 0.4s)
   greeting: 2000,
   celebration: 3000,
-  petting: 2000,
-  sleeping: 5000,
+  petting: 2000, // Reduced from 5s - less awkward pause
+  sleeping: 2000,
 };
 
 
@@ -121,6 +121,6 @@ export function createUserInteractionSequence(): {
       description: 'User completes task',
     },
     { state: 'petting', duration: 2000, description: 'User pets companion' },
-    { state: 'sleeping', duration: 5000, description: 'Pet goes to sleep' },
+    { state: 'sleeping', duration: 2000, description: 'Pet goes to sleep' },
   ];
 }

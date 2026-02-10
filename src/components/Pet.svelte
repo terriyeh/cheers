@@ -99,6 +99,9 @@
     : `Pet ${petName} (currently busy)`;
   $: showHeart = state === 'petting';
 
+  // Check if state should pause movement (temporary states)
+  $: isPausedState = state === 'petting' || state === 'celebration' || state === 'sleeping';
+
   // Sprite sheet is now handled entirely by CSS
   // No need for emoji fallback once sprite sheet is placed in assets/
 </script>
@@ -155,7 +158,21 @@
   .pet-position-wrapper {
     position: absolute;
     top: 50%;
+    left: 0;
     transform: translateY(-50%);
+  }
+
+  /* Pause movement during temporary states to preserve position */
+  .pet-sprite-container[data-state='petting'] .pet-position-wrapper,
+  .pet-sprite-container[data-state='celebration'] .pet-position-wrapper,
+  .pet-sprite-container[data-state='sleeping'] .pet-position-wrapper {
+    animation-play-state: paused;
+  }
+
+  .pet-sprite-container[data-state='petting'] .pet-flip-wrapper,
+  .pet-sprite-container[data-state='celebration'] .pet-flip-wrapper,
+  .pet-sprite-container[data-state='sleeping'] .pet-flip-wrapper {
+    animation-play-state: paused;
   }
 
   /* Flip wrapper handles direction changes */
@@ -172,13 +189,13 @@
     -webkit-tap-highlight-color: transparent; /* Remove tap highlight on iOS */
   }
 
-  /* Hover effect when enabled */
-  .pet-sprite-wrapper:not([aria-disabled="true"]):hover {
+  /* Hover effect when enabled (but not during petting cooldown) */
+  .pet-sprite-container:not([data-state='petting']) .pet-sprite-wrapper:not([aria-disabled="true"]):hover {
     transform: scale(1.05);
   }
 
-  /* Active effect when enabled */
-  .pet-sprite-wrapper:not([aria-disabled="true"]):active {
+  /* Active effect when enabled (but not during petting cooldown) */
+  .pet-sprite-container:not([data-state='petting']) .pet-sprite-wrapper:not([aria-disabled="true"]):active {
     transform: scale(0.95);
   }
 
@@ -269,7 +286,7 @@
   }
 
   .pet-sprite-container[data-state='walking'] .pet-flip-wrapper {
-    animation: flip-horizontal 5s step-end infinite;
+    animation: flip-horizontal 5s steps(1, end) infinite alternate;
   }
 
   @keyframes sprite-walking {
@@ -287,7 +304,7 @@
   }
 
   .pet-sprite-container[data-state='running'] .pet-flip-wrapper {
-    animation: flip-horizontal 3s step-end infinite;
+    animation: flip-horizontal 3s steps(1, end) infinite alternate;
   }
 
   @keyframes sprite-running {
@@ -325,23 +342,23 @@
     to { background-position: -448px -384px; } /* 7 frames × 64px */
   }
 
-  /* Horizontal movement animation (percentage-based for adaptive width) */
+  /* Horizontal movement animation (accounts for 64px pet width + padding) */
   @keyframes move-horizontal {
     from {
-      left: 5%;
+      left: 32px; /* Start with padding from left edge */
     }
     to {
-      left: 95%;
+      left: calc(100% - 96px); /* End with padding from right edge (64px pet + 32px padding) */
     }
   }
 
-  /* Flip animation for direction changes */
+  /* Flip animation for direction changes (synced with alternate movement) */
   @keyframes flip-horizontal {
-    0%, 49.99% {
-      transform: scaleX(1); /* Facing right */
+    from {
+      transform: scaleX(1); /* Facing right when moving right */
     }
-    50%, 100% {
-      transform: scaleX(-1); /* Facing left */
+    to {
+      transform: scaleX(-1); /* Facing left when moving left */
     }
   }
 </style>

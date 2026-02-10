@@ -43,7 +43,7 @@ export class PetStateMachine {
         returnsToIdle: true, // Returns to walking
       },
       petting: {
-        duration: 5000, // 5 seconds
+        duration: 2000, // 2 seconds (reduced from 5s - less awkward pause)
         returnsToIdle: true, // Returns to walking
       },
       sleeping: {
