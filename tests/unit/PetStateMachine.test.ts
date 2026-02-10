@@ -450,7 +450,7 @@ describe('PetStateMachine', () => {
 
     it('should have correct duration for petting state', () => {
       stateMachine.transition('petting');
-      vi.advanceTimersByTime(1999);
+      vi.advanceTimersByTime(4999);
       expect(stateMachine.getCurrentState()).toBe('petting');
 
       vi.advanceTimersByTime(1);
@@ -459,7 +459,7 @@ describe('PetStateMachine', () => {
 
     it('should have correct duration for sleeping state', () => {
       stateMachine.transition('sleeping');
-      vi.advanceTimersByTime(4999);
+      vi.advanceTimersByTime(1999);
       expect(stateMachine.getCurrentState()).toBe('sleeping');
 
       vi.advanceTimersByTime(1);
@@ -484,8 +484,8 @@ describe('PetStateMachine', () => {
       stateMachine.transition('petting', 'greeting');
       expect(stateMachine.getCurrentState()).toBe('petting');
 
-      // After petting duration (2s), should return to 'greeting'
-      vi.advanceTimersByTime(2000);
+      // After petting duration (5s), should return to 'greeting'
+      vi.advanceTimersByTime(5000);
       expect(stateMachine.getCurrentState()).toBe('greeting');
     });
 
@@ -497,8 +497,8 @@ describe('PetStateMachine', () => {
       stateMachine.transition('petting', 'greeting');
       expect(stateMachine.getCurrentState()).toBe('petting');
 
-      // After petting duration (2s), should return to 'greeting'
-      vi.advanceTimersByTime(2000);
+      // After petting duration (5s), should return to 'greeting'
+      vi.advanceTimersByTime(5000);
       expect(stateMachine.getCurrentState()).toBe('greeting');
     });
 
@@ -510,8 +510,8 @@ describe('PetStateMachine', () => {
       stateMachine.transition('petting');
       expect(stateMachine.getCurrentState()).toBe('petting');
 
-      // After petting duration (2s), should return to 'walking' (default)
-      vi.advanceTimersByTime(2000);
+      // After petting duration (5s), should return to 'walking' (default)
+      vi.advanceTimersByTime(5000);
       expect(stateMachine.getCurrentState()).toBe('walking');
     });
 
