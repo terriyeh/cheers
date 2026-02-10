@@ -56,10 +56,7 @@
    * Calculate movement range for adaptive edge-to-edge movement
    */
   function updateMovementRange(): void {
-    if (!containerEl) {
-      console.warn('[Pet] updateMovementRange called but containerEl is null');
-      return;
-    }
+    if (!containerEl) return;
 
     const containerWidth = containerEl.offsetWidth;
 
@@ -70,8 +67,6 @@
     // Set CSS custom properties for keyframes
     containerEl.style.setProperty('--container-width', `${containerWidth}px`);
     containerEl.style.setProperty('--max-left', `${maxLeft}px`);
-
-    console.log(`[Pet] Movement range updated: container=${containerWidth}px, maxLeft=${maxLeft}px, state=${state}`);
   }
 
   /**
