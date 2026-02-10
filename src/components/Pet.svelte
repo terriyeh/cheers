@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
+  import { createEventDispatcher, onMount, onDestroy } from 'svelte';
   import type { PetState } from '../types/pet';
 
   /**
@@ -30,6 +30,10 @@
   // Event dispatcher for 'pet' event
   const dispatch = createEventDispatcher<{ pet: { returnToState: PetState } }>();
 
+  // Container element for resize observation
+  let containerEl: HTMLElement;
+  let resizeObserver: ResizeObserver;
+
   /**
    * Calculate animation duration based on movement speed
    * Walking (0-60%): 2s to 1s
@@ -39,6 +43,24 @@
   $: animationDuration = isRunning
     ? 1 - ((movementSpeed - 60) / 40) * 0.6 // 1s to 0.4s
     : 2 - (movementSpeed / 60); // 2s to 1s
+
+  /**
+   * Calculate movement range for adaptive edge-to-edge movement
+   */
+  function updateMovementRange(): void {
+    if (!containerEl) return;
+
+    const containerWidth = containerEl.offsetWidth;
+    const petWidth = 64; // px - sprite width
+
+    // Maximum left position (container width - pet width)
+    // This gives true edge-to-edge movement
+    const maxLeft = containerWidth - petWidth;
+
+    // Set CSS custom properties for keyframes
+    containerEl.style.setProperty('--container-width', `${containerWidth}px`);
+    containerEl.style.setProperty('--max-left', `${maxLeft}px`);
+  }
 
   /**
    * Check if petting interaction is allowed in the current state
@@ -99,14 +121,26 @@
     : `Pet ${petName} (currently busy)`;
   $: showHeart = state === 'petting';
 
-  // Check if state should pause movement (temporary states)
-  $: isPausedState = state === 'petting' || state === 'celebration' || state === 'sleeping';
+  onMount(() => {
+    updateMovementRange();
+
+    // Watch for container resize (window resize, panel resize, etc.)
+    resizeObserver = new ResizeObserver(() => {
+      updateMovementRange();
+    });
+
+    resizeObserver.observe(containerEl);
+  });
+
+  onDestroy(() => {
+    resizeObserver?.disconnect();
+  });
 
   // Sprite sheet is now handled entirely by CSS
   // No need for emoji fallback once sprite sheet is placed in assets/
 </script>
 
-<div class="pet-sprite-container" data-state={state} style:--animation-duration="{animationDuration}s">
+<div class="pet-sprite-container" data-state={state} style:--animation-duration="{animationDuration}s" bind:this={containerEl}>
   <!-- Position wrapper handles horizontal movement -->
   <div class="pet-position-wrapper">
     <!-- Flip wrapper handles direction changes -->
@@ -283,10 +317,12 @@
 
   .pet-sprite-container[data-state='walking'] .pet-position-wrapper {
     animation: move-horizontal 5s linear infinite alternate;
+    animation-delay: -2.5s; /* Start at 50% progress (center) to avoid backing out */
   }
 
   .pet-sprite-container[data-state='walking'] .pet-flip-wrapper {
     animation: flip-horizontal 5s steps(1, end) infinite alternate;
+    animation-delay: -2.5s; /* Sync with position animation */
   }
 
   @keyframes sprite-walking {
@@ -301,10 +337,12 @@
 
   .pet-sprite-container[data-state='running'] .pet-position-wrapper {
     animation: move-horizontal 3s linear infinite alternate;
+    animation-delay: -1.5s; /* Start at 50% progress (center) to avoid backing out */
   }
 
   .pet-sprite-container[data-state='running'] .pet-flip-wrapper {
     animation: flip-horizontal 3s steps(1, end) infinite alternate;
+    animation-delay: -1.5s; /* Sync with position animation */
   }
 
   @keyframes sprite-running {
@@ -342,13 +380,13 @@
     to { background-position: -448px -384px; } /* 7 frames × 64px */
   }
 
-  /* Horizontal movement animation (accounts for 64px pet width + padding) */
+  /* Horizontal movement animation (adaptive edge-to-edge) */
   @keyframes move-horizontal {
     from {
-      left: 32px; /* Start with padding from left edge */
+      left: 0px; /* Start at left edge */
     }
     to {
-      left: calc(100% - 96px); /* End with padding from right edge (64px pet + 32px padding) */
+      left: var(--max-left, calc(100% - 64px)); /* End at right edge (fallback for initial render) */
     }
   }
 
