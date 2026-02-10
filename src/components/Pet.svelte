@@ -23,11 +23,6 @@
   export let petName: string = 'Kit';
 
   /**
-   * User's name (from settings, optional)
-   */
-  export let userName: string = '';
-
-  /**
    * Movement speed (0-100) from settings
    */
   export let movementSpeed: number = 50;
@@ -93,68 +88,54 @@
     dispatch('pet', { returnToState: state });
   }
 
-  /**
-   * Get display text for current state
-   */
-  function getStateText(currentState: PetState): string {
-    const greeting = userName ? `Hello ${userName}!` : 'Hello there!';
-
-    const stateTexts: Record<PetState, string> = {
-      walking: 'On the move...',
-      running: 'Zooming!',
-      greeting: greeting,
-      celebration: 'Great job!',
-      petting: 'Amazing! You did it!',
-      sleeping: 'Zzz...',
-    };
-    return stateTexts[currentState];
-  }
-
   // Reactive declarations for conditional interactivity
   $: pettingEnabled = isPettingAllowed(state);
-  $: cursorStyle = (pettingEnabled || state === 'sleeping') ? 'pointer' : 'not-allowed';
+  // Keep cursor as pointer during petting state (cooldown period)
+  $: cursorStyle = (pettingEnabled || state === 'petting') ? 'pointer' : 'not-allowed';
+  // Keep aria-disabled false during petting to prevent dimming
+  $: ariaDisabled = !pettingEnabled && state !== 'petting';
   $: ariaLabel = pettingEnabled
     ? `Pet ${petName}`
-    : state === 'sleeping'
-    ? `Pet ${petName}`
     : `Pet ${petName} (currently busy)`;
-  $: showHeart = state === 'sleeping';
+  $: showHeart = state === 'petting';
 
   // Sprite sheet is now handled entirely by CSS
   // No need for emoji fallback once sprite sheet is placed in assets/
 </script>
 
 <div class="pet-sprite-container" data-state={state} style:--animation-duration="{animationDuration}s">
-  <!-- Interactive pet sprite with keyboard and touch accessibility -->
-  <div
-    class="pet-sprite-wrapper"
-    role="button"
-    tabindex={pettingEnabled ? 0 : -1}
-    aria-label={ariaLabel}
-    aria-disabled={!pettingEnabled}
-    style:cursor={cursorStyle}
-    on:click={handlePetInteraction}
-    on:keydown={handleKeyDown}
-    on:touchend={handleTouchEnd}>
-    <!-- Sprite sheet animation -->
-    <div
-      class="pet-sprite"
-      role="img"
-      aria-label={`Pet is ${state}`}
-      style:background-image="url({spriteSheetPath})">
-      <!-- Sprite background set dynamically via style attribute -->
-    </div>
+  <!-- Position wrapper handles horizontal movement -->
+  <div class="pet-position-wrapper">
+    <!-- Flip wrapper handles direction changes -->
+    <div class="pet-flip-wrapper">
+      <!-- Interactive pet sprite with keyboard and touch accessibility -->
+      <div
+        class="pet-sprite-wrapper"
+        role="button"
+        tabindex={pettingEnabled ? 0 : -1}
+        aria-label={ariaLabel}
+        aria-disabled={ariaDisabled}
+        style:cursor={cursorStyle}
+        on:click={handlePetInteraction}
+        on:keydown={handleKeyDown}
+        on:touchend={handleTouchEnd}>
+        <!-- Sprite sheet animation -->
+        <div
+          class="pet-sprite"
+          role="img"
+          aria-label={`Pet is ${state}`}
+          style:background-image="url({spriteSheetPath})">
+          <!-- Sprite background set dynamically via style attribute -->
+        </div>
 
-    <!-- Heart overlay during petting state -->
-    {#if showHeart}
-      <div class="heart-overlay" aria-hidden="true">
-        <img src={heartSpritePath} alt="" />
+        <!-- Heart overlay during petting state -->
+        {#if showHeart}
+          <div class="heart-overlay" aria-hidden="true">
+            <img src={heartSpritePath} alt="" />
+          </div>
+        {/if}
       </div>
-    {/if}
-  </div>
-
-  <div class="pet-state-text">
-    {getStateText(state)}
+    </div>
   </div>
 </div>
 
@@ -166,12 +147,26 @@
     justify-content: center;
     padding: 2rem;
     height: 100%;
+    position: relative;
+    overflow: hidden; /* Contain pet within view */
+  }
+
+  /* Position wrapper handles horizontal movement */
+  .pet-position-wrapper {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  /* Flip wrapper handles direction changes */
+  .pet-flip-wrapper {
+    position: relative;
   }
 
   /* Interactive wrapper for pet sprite */
   .pet-sprite-wrapper {
     position: relative;
-    transition: transform 0.1s ease, opacity 0.2s ease;
+    transition: transform 0.1s ease;
     outline: none; /* Use focus-visible for keyboard focus only */
     touch-action: manipulation; /* Prevent double-tap zoom on mobile */
     -webkit-tap-highlight-color: transparent; /* Remove tap highlight on iOS */
@@ -241,13 +236,6 @@
     }
   }
 
-  .pet-state-text {
-    font-size: 0.9rem;
-    color: var(--text-muted);
-    text-align: center;
-    font-style: italic;
-  }
-
   /* Sprite animations for each state */
   /* Note: All positions are 2x scale (64px instead of 32px) */
   /* Ordered by sprite row (top to bottom) for easier debugging */
@@ -273,8 +261,15 @@
 
   /* Row 3 (y=-128px): Walking - 8 frames (placeholder) */
   .pet-sprite-container[data-state='walking'] .pet-sprite {
-    animation: sprite-walking var(--animation-duration, 1.5s) steps(8) infinite,
-               move-horizontal 5s linear infinite alternate;
+    animation: sprite-walking var(--animation-duration, 1.5s) steps(8) infinite;
+  }
+
+  .pet-sprite-container[data-state='walking'] .pet-position-wrapper {
+    animation: move-horizontal 5s linear infinite alternate;
+  }
+
+  .pet-sprite-container[data-state='walking'] .pet-flip-wrapper {
+    animation: flip-horizontal 5s step-end infinite;
   }
 
   @keyframes sprite-walking {
@@ -284,8 +279,15 @@
 
   /* Row 4 (y=-192px): Running - 8 frames (placeholder) */
   .pet-sprite-container[data-state='running'] .pet-sprite {
-    animation: sprite-running var(--animation-duration, 0.7s) steps(8) infinite,
-               move-horizontal 3s linear infinite alternate;
+    animation: sprite-running var(--animation-duration, 0.7s) steps(8) infinite;
+  }
+
+  .pet-sprite-container[data-state='running'] .pet-position-wrapper {
+    animation: move-horizontal 3s linear infinite alternate;
+  }
+
+  .pet-sprite-container[data-state='running'] .pet-flip-wrapper {
+    animation: flip-horizontal 3s step-end infinite;
   }
 
   @keyframes sprite-running {
@@ -323,23 +325,23 @@
     to { background-position: -448px -384px; } /* 7 frames × 64px */
   }
 
-  /* Horizontal movement animation (shared by walking/running states) */
-  /* Turnaround handled with scaleX flip at keyframe boundaries */
+  /* Horizontal movement animation (percentage-based for adaptive width) */
   @keyframes move-horizontal {
-    0% {
-      transform: translateX(-50px) scaleX(1); /* Walking right */
+    from {
+      left: 5%;
     }
-    49.99% {
-      transform: translateX(50px) scaleX(1);  /* Reached right boundary */
+    to {
+      left: 95%;
     }
-    50% {
-      transform: translateX(50px) scaleX(-1); /* Flip to face left */
+  }
+
+  /* Flip animation for direction changes */
+  @keyframes flip-horizontal {
+    0%, 49.99% {
+      transform: scaleX(1); /* Facing right */
     }
-    99.99% {
-      transform: translateX(-50px) scaleX(-1); /* Walking left */
-    }
-    100% {
-      transform: translateX(-50px) scaleX(1);  /* Flip to face right */
+    50%, 100% {
+      transform: scaleX(-1); /* Facing left */
     }
   }
 </style>

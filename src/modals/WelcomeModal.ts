@@ -92,12 +92,6 @@ export class WelcomeModal extends Modal {
 					})
 			);
 
-		// Daily Notes info
-		contentEl.createEl('div', {
-			cls: 'vault-pal-info-box',
-			text: 'ℹ️  Requires enabling the Daily Notes core plugin for full functionality',
-		});
-
 		// Buttons
 		const buttonContainer = contentEl.createDiv({
 			cls: 'vault-pal-button-container',

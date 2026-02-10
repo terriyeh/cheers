@@ -17,7 +17,6 @@ export default class MockPetComponent {
   private container!: HTMLElement;
   private wrapper!: HTMLElement;
   private sprite!: HTMLElement;
-  private stateText!: HTMLElement;
   private heartOverlay: HTMLElement | null = null;
 
   constructor(options: { target: HTMLElement; props: any }) {
@@ -46,15 +45,9 @@ export default class MockPetComponent {
     this.sprite.setAttribute('aria-label', `Pet is ${options.props.state}`);
     this.sprite.style.backgroundImage = `url(${options.props.spriteSheetPath})`;
 
-    // State text
-    this.stateText = document.createElement('div');
-    this.stateText.className = 'pet-state-text';
-    this.stateText.textContent = this.getStateText(options.props.state, options.props.userName);
-
     // Assemble structure
     this.wrapper.appendChild(this.sprite);
     this.container.appendChild(this.wrapper);
-    this.container.appendChild(this.stateText);
     this.target.appendChild(this.container);
 
     // Add heart overlay if in petting state
@@ -68,17 +61,12 @@ export default class MockPetComponent {
       if (newProps.state !== undefined) {
         this.container.dataset.state = newProps.state;
         this.sprite.setAttribute('aria-label', `Pet is ${newProps.state}`);
-        this.stateText.textContent = this.getStateText(newProps.state, this.props.userName);
         this.updateInteractiveAttributes(newProps.state, this.props.petName);
         this.updateHeartOverlay(newProps.state);
       }
 
       if (newProps.petName !== undefined) {
         this.updateInteractiveAttributes(this.props.state, newProps.petName);
-      }
-
-      if (newProps.userName !== undefined) {
-        this.stateText.textContent = this.getStateText(this.props.state, newProps.userName);
       }
 
       if (newProps.spriteSheetPath !== undefined) {
@@ -141,7 +129,7 @@ export default class MockPetComponent {
   }
 
   private updateHeartOverlay(state: PetState): void {
-    const showHeart = state === 'sleeping';
+    const showHeart = state === 'petting';
 
     if (showHeart && !this.heartOverlay) {
       // Create heart overlay
@@ -181,19 +169,5 @@ export default class MockPetComponent {
     handlers.forEach((handler) => {
       handler({ detail });
     });
-  }
-
-  private getStateText(state: PetState, userName?: string): string {
-    const greeting = userName ? `Hello ${userName}!` : 'Hello there!';
-
-    const stateTexts: Record<PetState, string> = {
-      walking: 'On the move...',
-      running: 'Zooming!',
-      greeting: greeting,
-      celebration: 'Great job!',
-      petting: 'Amazing! You did it!',
-      sleeping: 'Zzz...',
-    };
-    return stateTexts[state];
   }
 }
