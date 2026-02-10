@@ -17,7 +17,7 @@ export const VIEW_TYPE_PET = 'vault-pal-pet-view';
  * Pet View - Main ItemView for displaying the pet companion
  */
 export class PetView extends ItemView {
-  private petComponent: PetComponent | null = null;
+  public petComponent: PetComponent | null = null;
   private stateMachine: PetStateMachine | null = null;
   private containerDiv: HTMLDivElement | null = null;
   private stateChangeListener: StateChangeListener | null = null;
