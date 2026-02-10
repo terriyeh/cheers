@@ -34,15 +34,23 @@
   let containerEl: HTMLElement;
   let resizeObserver: ResizeObserver;
 
+  // Animation timing constants
+  const SPEED_THRESHOLD = 60; // Speed above which pet runs (0-60 = walk, 61-100 = run)
+  const WALKING_MAX_DURATION = 2; // seconds
+  const WALKING_MIN_DURATION = 1; // seconds
+  const RUNNING_MAX_DURATION = 1; // seconds
+  const RUNNING_MIN_DURATION = 0.4; // seconds
+  const PET_WIDTH = 64; // pixels (sprite width)
+
   /**
    * Calculate animation duration based on movement speed
    * Walking (0-60%): 2s to 1s
    * Running (61-100%): 1s to 0.4s
    */
-  $: isRunning = movementSpeed > 60;
+  $: isRunning = movementSpeed > SPEED_THRESHOLD;
   $: animationDuration = isRunning
-    ? 1 - ((movementSpeed - 60) / 40) * 0.6 // 1s to 0.4s
-    : 2 - (movementSpeed / 60); // 2s to 1s
+    ? RUNNING_MAX_DURATION - ((movementSpeed - SPEED_THRESHOLD) / (100 - SPEED_THRESHOLD)) * (RUNNING_MAX_DURATION - RUNNING_MIN_DURATION)
+    : WALKING_MAX_DURATION - (movementSpeed / SPEED_THRESHOLD) * (WALKING_MAX_DURATION - WALKING_MIN_DURATION);
 
   /**
    * Calculate movement range for adaptive edge-to-edge movement
@@ -51,11 +59,10 @@
     if (!containerEl) return;
 
     const containerWidth = containerEl.offsetWidth;
-    const petWidth = 64; // px - sprite width
 
     // Maximum left position (container width - pet width)
     // This gives true edge-to-edge movement
-    const maxLeft = containerWidth - petWidth;
+    const maxLeft = containerWidth - PET_WIDTH;
 
     // Set CSS custom properties for keyframes
     containerEl.style.setProperty('--container-width', `${containerWidth}px`);
@@ -124,16 +131,29 @@
   onMount(() => {
     updateMovementRange();
 
-    // Watch for container resize (window resize, panel resize, etc.)
-    resizeObserver = new ResizeObserver(() => {
-      updateMovementRange();
-    });
+    // Watch for container resize with fallback for older browsers
+    try {
+      resizeObserver = new ResizeObserver(() => {
+        updateMovementRange();
+      });
+      resizeObserver.observe(containerEl);
+    } catch (error) {
+      console.warn('ResizeObserver not supported, using window resize fallback', error);
+      // Fallback: Update on window resize
+      const handleResize = () => updateMovementRange();
+      window.addEventListener('resize', handleResize);
 
-    resizeObserver.observe(containerEl);
+      // Return cleanup function for fallback
+      return () => window.removeEventListener('resize', handleResize);
+    }
   });
 
   onDestroy(() => {
     resizeObserver?.disconnect();
+    // @ts-ignore - Explicit cleanup to help garbage collection
+    resizeObserver = null;
+    // @ts-ignore - Help GC with container reference
+    containerEl = null;
   });
 
   // Sprite sheet is now handled entirely by CSS
@@ -193,18 +213,15 @@
     position: absolute;
     top: 50%;
     left: 0;
-    transform: translateY(-50%);
+    margin-top: -32px; /* Half of pet height (64px) for vertical centering */
   }
 
-  /* Pause movement during temporary states to preserve position */
+  /* Pause all animations during temporary states to preserve position */
   .pet-sprite-container[data-state='petting'] .pet-position-wrapper,
-  .pet-sprite-container[data-state='celebration'] .pet-position-wrapper,
-  .pet-sprite-container[data-state='sleeping'] .pet-position-wrapper {
-    animation-play-state: paused;
-  }
-
   .pet-sprite-container[data-state='petting'] .pet-flip-wrapper,
+  .pet-sprite-container[data-state='celebration'] .pet-position-wrapper,
   .pet-sprite-container[data-state='celebration'] .pet-flip-wrapper,
+  .pet-sprite-container[data-state='sleeping'] .pet-position-wrapper,
   .pet-sprite-container[data-state='sleeping'] .pet-flip-wrapper {
     animation-play-state: paused;
   }
@@ -291,14 +308,8 @@
   /* Note: All positions are 2x scale (64px instead of 32px) */
   /* Ordered by sprite row (top to bottom) for easier debugging */
 
-  /* Row 1 (y=0): Idle - 5 frames (UNUSED - kept for reference) */
-  /* .pet-sprite-container[data-state='idle'] .pet-sprite {
-    animation: sprite-idle 1s steps(5) infinite;
-  }
-  @keyframes sprite-idle {
-    from { background-position: 0 0; }
-    to { background-position: -320px 0; }
-  } */
+  /* Row 1 (y=0): Idle - Removed in favor of walking as default state */
+  /* Original implementation preserved in git history (commit 2594122) */
 
   /* Row 2 (y=-64px): Greeting - 14 frames */
   .pet-sprite-container[data-state='greeting'] .pet-sprite {
