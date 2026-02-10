@@ -44,13 +44,23 @@
 
   /**
    * Calculate animation duration based on movement speed
-   * Walking (0-60%): 2s to 1s
-   * Running (61-100%): 1s to 0.4s
+   * Walking (0-60%): 2s to 1s (sprite animation)
+   * Running (61-100%): 1s to 0.4s (sprite animation)
    */
   $: isRunning = movementSpeed > SPEED_THRESHOLD;
   $: animationDuration = isRunning
     ? RUNNING_MAX_DURATION - ((movementSpeed - SPEED_THRESHOLD) / (100 - SPEED_THRESHOLD)) * (RUNNING_MAX_DURATION - RUNNING_MIN_DURATION)
     : WALKING_MAX_DURATION - (movementSpeed / SPEED_THRESHOLD) * (WALKING_MAX_DURATION - WALKING_MIN_DURATION);
+
+  /**
+   * Calculate horizontal movement duration based on movement speed
+   * Inverse relationship: higher speed = shorter duration = faster movement
+   * Walking (0-60%): 20s to 10s
+   * Running (61-100%): 10s to 4s
+   */
+  $: movementDuration = isRunning
+    ? 10 - ((movementSpeed - SPEED_THRESHOLD) / (100 - SPEED_THRESHOLD)) * 6  // 10s to 4s
+    : 20 - (movementSpeed / SPEED_THRESHOLD) * 10;  // 20s to 10s
 
   /**
    * Calculate movement range for adaptive edge-to-edge movement
@@ -160,7 +170,13 @@
   // No need for emoji fallback once sprite sheet is placed in assets/
 </script>
 
-<div class="pet-sprite-container" data-state={state} style:--animation-duration="{animationDuration}s" bind:this={containerEl}>
+<div
+  class="pet-sprite-container"
+  data-state={state}
+  data-movement={isRunning ? 'running' : 'walking'}
+  style:--animation-duration="{animationDuration}s"
+  style:--movement-duration="{movementDuration}s"
+  bind:this={containerEl}>
   <!-- Position wrapper handles horizontal movement -->
   <div class="pet-position-wrapper">
     <!-- Flip wrapper handles direction changes -->
@@ -317,14 +333,19 @@
     animation: sprite-walking var(--animation-duration, 1.5s) steps(8) infinite;
   }
 
-  .pet-sprite-container[data-state='walking'] .pet-position-wrapper {
-    animation: walk-back-and-forth 10s linear infinite;
-    animation-delay: -5s; /* Start at 50% progress (center) */
+  /* Apply movement animations based on data-movement (speed), not data-state (sprite) */
+  /* This keeps pet moving during temporary states (petting, celebration, sleeping) */
+  /* Use same animation for both walking and running to avoid jumps at threshold */
+  .pet-sprite-container[data-movement='walking'] .pet-position-wrapper,
+  .pet-sprite-container[data-movement='running'] .pet-position-wrapper {
+    animation: move-back-and-forth var(--movement-duration, 15s) linear infinite;
+    animation-delay: -7.5s; /* Fixed delay (midpoint of 20s-10s and 10s-4s ranges) */
   }
 
-  .pet-sprite-container[data-state='walking'] .pet-flip-wrapper {
-    animation: flip-at-edges 10s steps(2, jump-both) infinite;
-    animation-delay: -5s; /* Sync with position animation */
+  .pet-sprite-container[data-movement='walking'] .pet-flip-wrapper,
+  .pet-sprite-container[data-movement='running'] .pet-flip-wrapper {
+    animation: flip-at-edges var(--movement-duration, 15s) steps(2, jump-both) infinite;
+    animation-delay: -7.5s; /* Sync with position animation */
   }
 
   @keyframes sprite-walking {
@@ -335,16 +356,6 @@
   /* Row 4 (y=-192px): Running - 8 frames (placeholder) */
   .pet-sprite-container[data-state='running'] .pet-sprite {
     animation: sprite-running var(--animation-duration, 0.7s) steps(8) infinite;
-  }
-
-  .pet-sprite-container[data-state='running'] .pet-position-wrapper {
-    animation: run-back-and-forth 6s linear infinite;
-    animation-delay: -3s; /* Start at 50% progress (center) */
-  }
-
-  .pet-sprite-container[data-state='running'] .pet-flip-wrapper {
-    animation: flip-at-edges-fast 6s steps(2, jump-both) infinite;
-    animation-delay: -3s; /* Sync with position animation */
   }
 
   @keyframes sprite-running {
@@ -382,8 +393,8 @@
     to { background-position: -448px -384px; } /* 7 frames × 64px */
   }
 
-  /* Walking: Full cycle with direction changes at edges */
-  @keyframes walk-back-and-forth {
+  /* Movement: Full cycle with direction changes at edges (used for both walking and running) */
+  @keyframes move-back-and-forth {
     0% {
       left: 0px; /* Left edge */
     }
@@ -396,28 +407,6 @@
   }
 
   @keyframes flip-at-edges {
-    0%, 49.9% {
-      transform: scaleX(1); /* Facing right (moving 0→50%) */
-    }
-    50%, 100% {
-      transform: scaleX(-1); /* Facing left (moving 50→100%) */
-    }
-  }
-
-  /* Running: Full cycle with direction changes at edges (faster) */
-  @keyframes run-back-and-forth {
-    0% {
-      left: 0px; /* Left edge */
-    }
-    50% {
-      left: var(--max-left, calc(100% - 64px)); /* Right edge */
-    }
-    100% {
-      left: 0px; /* Back to left edge */
-    }
-  }
-
-  @keyframes flip-at-edges-fast {
     0%, 49.9% {
       transform: scaleX(1); /* Facing right (moving 0→50%) */
     }
