@@ -450,7 +450,7 @@ describe('PetStateMachine', () => {
 
     it('should have correct duration for petting state', () => {
       stateMachine.transition('petting');
-      vi.advanceTimersByTime(4999);
+      vi.advanceTimersByTime(1999);
       expect(stateMachine.getCurrentState()).toBe('petting');
 
       vi.advanceTimersByTime(1);
@@ -484,8 +484,8 @@ describe('PetStateMachine', () => {
       stateMachine.transition('petting', 'greeting');
       expect(stateMachine.getCurrentState()).toBe('petting');
 
-      // After petting duration (5s), should return to 'greeting'
-      vi.advanceTimersByTime(5000);
+      // After petting duration (2s), should return to 'greeting'
+      vi.advanceTimersByTime(2000);
       expect(stateMachine.getCurrentState()).toBe('greeting');
     });
 
@@ -497,8 +497,8 @@ describe('PetStateMachine', () => {
       stateMachine.transition('petting', 'greeting');
       expect(stateMachine.getCurrentState()).toBe('petting');
 
-      // After petting duration (5s), should return to 'greeting'
-      vi.advanceTimersByTime(5000);
+      // After petting duration (2s), should return to 'greeting'
+      vi.advanceTimersByTime(2000);
       expect(stateMachine.getCurrentState()).toBe('greeting');
     });
 

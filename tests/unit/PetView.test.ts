@@ -236,10 +236,10 @@ describe('PetView', () => {
     it('should update Svelte component when state changes', async () => {
       await petView.onOpen();
 
-      petView.transitionState('small-celebration');
+      petView.transitionState('celebration');
 
       const component = petView.containerEl.querySelector('.pet-sprite-container');
-      expect(component?.getAttribute('data-state')).toBe('small-celebration');
+      expect(component?.getAttribute('data-state')).toBe('celebration');
     });
 
     it('should handle state transitions through all states', async () => {
@@ -247,8 +247,8 @@ describe('PetView', () => {
 
       const states: PetState[] = [
         'greeting',
-        'small-celebration',
-        'big-celebration',
+        'celebration',
+        'petting',
         'petting',
       ];
 
@@ -309,7 +309,7 @@ describe('PetView', () => {
     it('should keep data attribute and component state in sync', async () => {
       await petView.onOpen();
 
-      const states: PetState[] = ['greeting', 'small-celebration', 'petting'];
+      const states: PetState[] = ['greeting', 'celebration', 'petting'];
 
       for (const state of states) {
         petView.transitionState(state);
@@ -326,7 +326,7 @@ describe('PetView', () => {
     it('should maintain sync after auto-transition', async () => {
       await petView.onOpen();
 
-      petView.transitionState('small-celebration');
+      petView.transitionState('celebration');
       vi.advanceTimersByTime(3000);
 
       const container = petView.containerEl.querySelector('.vault-pal-container');
@@ -341,7 +341,7 @@ describe('PetView', () => {
       await petView.onOpen();
 
       petView.transitionState('greeting');
-      petView.transitionState('small-celebration');
+      petView.transitionState('celebration');
       petView.transitionState('petting');
 
       const container = petView.containerEl.querySelector('.vault-pal-container');
@@ -449,8 +449,8 @@ describe('PetView', () => {
     it('should allow external code to trigger animations', async () => {
       await petView.onOpen();
 
-      petView.transitionState('big-celebration');
-      expect(petView.getCurrentState()).toBe('big-celebration');
+      petView.transitionState('petting');
+      expect(petView.getCurrentState()).toBe('petting');
 
       vi.advanceTimersByTime(5000);
       expect(petView.getCurrentState()).toBe('idle');

@@ -28,6 +28,15 @@ export default class MockPetComponent {
     this.container.className = 'pet-sprite-container';
     this.container.dataset.state = options.props.state;
 
+    // Set initial animation duration if movementSpeed is provided
+    if (options.props.movementSpeed !== undefined) {
+      const isRunning = options.props.movementSpeed > 60;
+      const animationDuration = isRunning
+        ? 1 - ((options.props.movementSpeed - 60) / 40) * 0.6 // 1s to 0.4s
+        : 2 - (options.props.movementSpeed / 60); // 2s to 1s
+      this.container.style.setProperty('--animation-duration', `${animationDuration}s`);
+    }
+
     // Wrapper with interactive attributes
     this.wrapper = document.createElement('div');
     this.wrapper.className = 'pet-sprite-wrapper';

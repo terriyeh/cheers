@@ -37,7 +37,7 @@ export interface PetStateConfig {
   /** Duration in ms (0 = continuous until interrupted) */
   duration: number;
   /** Whether this state auto-returns to walking after duration */
-  returnsToIdle: boolean; // Note: misnomer - actually returns to walking
+  returnsToWalking: boolean;
 }
 
 /**

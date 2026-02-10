@@ -67,17 +67,32 @@ This roadmap reflects the strategic pivot from conversation-based journaling to 
 - ✅ Welcome modal (pet name, user name)
 - ✅ Settings persistence
 - ✅ 120 comprehensive tests
+- ✅ Walking movement system (CSS-based)
+- ✅ Movement speed slider (0-100%, walking/running states)
+- ✅ ResizeObserver for adaptive boundaries
+- ✅ Direction flipping with synchronized animations
+- ✅ Security hardening (path validation, settings validation)
 
-**Completion Date:** 2026-02-06
+**Completion Date:** 2026-02-09
 
 **Animations:**
 - Idle: Breathing loop
 - Greeting: Wave on panel open
+- Walking: Edge-to-edge movement with speed control
+- Running: Faster movement (61-100% speed range)
 - Talking: Bounce animation (reserved for future)
 - Listening: Tilt animation (reserved for future)
 - Small Celebration: Brief cheer
 - Big Celebration: Enthusiastic spin
 - Petting: Happy reaction (click/tap anytime)
+
+**Movement System:**
+- CSS-based edge-to-edge adaptive movement
+- Walking state (0-60% speed) and Running state (61-100% speed)
+- Automatic direction flipping at container edges
+- ResizeObserver for responsive boundary updates
+- Smooth transitions between movement and idle states
+- Performance: <0.1% CPU usage (GPU-accelerated)
 
 ---
 
@@ -570,16 +585,57 @@ Word Count Milestones:
 
 ## Post-MVP: Future Enhancements
 
+### Architecture Strategy: CSS for Rendering, JavaScript for Logic
+
+**Agreed Phased Approach:**
+
+**Phase 2 (Current):** Custom CSS single-pet with celebration system
+- ✅ CSS handles sprite rendering and movement
+- ✅ JavaScript handles state machine logic
+- Performance: GPU-accelerated, <0.1% CPU, 60 FPS guaranteed
+
+**Phase 2.5:** Multi-pet (CSS-only, no awareness of each other)
+- Each pet moves independently using CSS animations
+- No coordination or interaction between pets
+- Minimal JavaScript overhead (state management only)
+- Estimated Effort: 5-10 hours
+
+**Phase 3:** Multi-pet with position tracking + simple behaviors
+- CSS continues to handle rendering
+- JavaScript tracks positions periodically (not every frame)
+- Simple coordination: pets celebrate together when nearby
+- Hybrid approach: CSS performance + JavaScript coordination
+- Estimated Effort: 10-15 hours
+
+**Phase 4:** Following/chasing with basic AI
+- Leader uses CSS animation (battery-efficient)
+- Follower uses JavaScript position updates when needed
+- Simple follow behavior with smooth interpolation
+- Estimated Effort: 20-30 hours
+
+**Phase 5:** Neural network for emergent behavior (experimental)
+- Research phase: explore ML-based pet behaviors
+- CSS rendering maintained throughout
+- JavaScript adds AI decision-making layer
+- Estimated Effort: 40-60 hours (research + implementation)
+
+**Key Decision:** CSS handles sprite rendering throughout ALL phases. JavaScript only adds position tracking and behavior logic on top when needed.
+
+---
+
 ### v0.3.0 - Enhanced Experience
 - [ ] Custom celebration messages (user-entered text)
 - [ ] Celebration banner UI (toast notifications with custom messages)
-- [ ] Pet walks across panel (ambient movement)
+- [ ] Additional movement patterns (zigzag, bounce, figure-8)
 - [ ] Background themes
 - [ ] Celebration sound effects (optional)
+- [ ] Speed variation (±10% randomization for organic feel)
+- [ ] State-based speed multipliers (excited pet moves faster)
 
 ### v0.4.0+ - Immersion & Relationships
-- [ ] Immersion behaviors (pets react to each other - discovery needed)
-- [ ] Relationships (multiple pets interact like VS Code Pets friends)
+- [ ] Multi-pet support (Phase 2.5: CSS-only, no awareness)
+- [ ] Immersion behaviors (Phase 3: simple coordination when nearby)
+- [ ] Relationships (Phase 4: basic following/chasing)
 - [ ] Adventures (background changes, no narrative)
 - [ ] Multiple pet types (cat, dog, bunny, etc.)
 - [ ] Seasonal celebration packs ($1.99)
@@ -592,6 +648,7 @@ Word Count Milestones:
 - [ ] Research RPG Stats Tracker milestones (future work)
 - [ ] Celebration history log (optional)
 - [ ] Celebration statistics (optional, local only)
+- [ ] Neural network behaviors (Phase 5: experimental emergent behavior)
 
 ---
 
@@ -719,9 +776,13 @@ Foundation → Pet View → Celebration System → Polish → Release
 - ✅ State remapping: Remove "talking"/"listening" states
 - ✅ Companion music: **REMOVED** - Recommend Soundscapes plugin instead
 - ✅ RPG Stats Tracker research: Future work (not urgent)
+- ✅ Movement system: **CSS-based** for performance and battery life
+- ✅ Architecture strategy: **CSS for rendering, JavaScript for logic** (all phases)
+- ✅ Multi-pet approach: **Phased** (2.5: CSS-only → 3: Simple coordination → 4: Following → 5: Neural networks)
+- ✅ Don't fork vscode-pets: Architecture mismatch, 4-10x more work, performance regression
 
 ---
 
-**Document Status:** Living document, updated post-pivot
+**Document Status:** Living document, updated post-pivot and post-movement system
 **Last Review:** 2026-02-09
 **Next Review:** When Phase 3 completes

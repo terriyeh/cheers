@@ -28,27 +28,27 @@ export class PetStateMachine {
     return {
       walking: {
         duration: 0, // Continuous until interrupted
-        returnsToIdle: false,
+        returnsToWalking: false,
       },
       running: {
         duration: 0, // Continuous until interrupted
-        returnsToIdle: false,
+        returnsToWalking: false,
       },
       greeting: {
         duration: 2000, // 2 seconds
-        returnsToIdle: true, // Returns to walking
+        returnsToWalking: true, // Returns to walking
       },
       celebration: {
         duration: 3000, // 3 seconds
-        returnsToIdle: true, // Returns to walking
+        returnsToWalking: true, // Returns to walking
       },
       petting: {
         duration: 2000, // 2 seconds (reduced from 5s - less awkward pause)
-        returnsToIdle: true, // Returns to walking
+        returnsToWalking: true, // Returns to walking
       },
       sleeping: {
         duration: 2000, // 2 seconds
-        returnsToIdle: true, // Returns to walking
+        returnsToWalking: true, // Returns to walking
       },
     };
   }
@@ -102,7 +102,7 @@ export class PetStateMachine {
 
     // If state has a duration and returns to walking, schedule return
     const config = this.stateConfigs[newState];
-    if (config.duration > 0 && config.returnsToIdle) {
+    if (config.duration > 0 && config.returnsToWalking) {
       const target = returnTarget || 'walking';
       this.scheduleReturnTo(config.duration, target);
     }

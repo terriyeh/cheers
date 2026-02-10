@@ -30,7 +30,9 @@
       "Bash(npm test:*)",
       "Bash(identify:*)",
       "Bash(python -c:*)",
-      "Bash(npx esbuild:*)"
+      "Bash(npx esbuild:*)",
+      "Bash(git clone:*)",
+      "Bash(cd:*)"
     ]
   }
 }

@@ -217,16 +217,6 @@
     margin-top: -32px; /* Half of pet height (64px) for vertical centering */
   }
 
-  /* Pause all animations during temporary states to preserve position */
-  .pet-sprite-container[data-state='petting'] .pet-position-wrapper,
-  .pet-sprite-container[data-state='petting'] .pet-flip-wrapper,
-  .pet-sprite-container[data-state='celebration'] .pet-position-wrapper,
-  .pet-sprite-container[data-state='celebration'] .pet-flip-wrapper,
-  .pet-sprite-container[data-state='sleeping'] .pet-position-wrapper,
-  .pet-sprite-container[data-state='sleeping'] .pet-flip-wrapper {
-    animation-play-state: paused;
-  }
-
   /* Flip wrapper handles direction changes */
   .pet-flip-wrapper {
     position: relative;
@@ -328,13 +318,13 @@
   }
 
   .pet-sprite-container[data-state='walking'] .pet-position-wrapper {
-    animation: move-horizontal 5s linear infinite alternate;
-    animation-delay: -2.5s; /* Start at 50% progress (center) to avoid backing out */
+    animation: walk-back-and-forth 10s linear infinite;
+    animation-delay: -5s; /* Start at 50% progress (center) */
   }
 
   .pet-sprite-container[data-state='walking'] .pet-flip-wrapper {
-    animation: flip-horizontal 5s steps(1, end) infinite alternate;
-    animation-delay: -2.5s; /* Sync with position animation */
+    animation: flip-at-edges 10s steps(2, jump-both) infinite;
+    animation-delay: -5s; /* Sync with position animation */
   }
 
   @keyframes sprite-walking {
@@ -348,13 +338,13 @@
   }
 
   .pet-sprite-container[data-state='running'] .pet-position-wrapper {
-    animation: move-horizontal 3s linear infinite alternate;
-    animation-delay: -1.5s; /* Start at 50% progress (center) to avoid backing out */
+    animation: run-back-and-forth 6s linear infinite;
+    animation-delay: -3s; /* Start at 50% progress (center) */
   }
 
   .pet-sprite-container[data-state='running'] .pet-flip-wrapper {
-    animation: flip-horizontal 3s steps(1, end) infinite alternate;
-    animation-delay: -1.5s; /* Sync with position animation */
+    animation: flip-at-edges-fast 6s steps(2, jump-both) infinite;
+    animation-delay: -3s; /* Sync with position animation */
   }
 
   @keyframes sprite-running {
@@ -392,23 +382,47 @@
     to { background-position: -448px -384px; } /* 7 frames × 64px */
   }
 
-  /* Horizontal movement animation (adaptive edge-to-edge) */
-  @keyframes move-horizontal {
-    from {
-      left: 0px; /* Start at left edge */
+  /* Walking: Full cycle with direction changes at edges */
+  @keyframes walk-back-and-forth {
+    0% {
+      left: 0px; /* Left edge */
     }
-    to {
-      left: var(--max-left, calc(100% - 64px)); /* End at right edge (fallback for initial render) */
+    50% {
+      left: var(--max-left, calc(100% - 64px)); /* Right edge */
+    }
+    100% {
+      left: 0px; /* Back to left edge */
     }
   }
 
-  /* Flip animation for direction changes (synced with alternate movement) */
-  @keyframes flip-horizontal {
-    from {
-      transform: scaleX(1); /* Facing right when moving right */
+  @keyframes flip-at-edges {
+    0%, 49.9% {
+      transform: scaleX(1); /* Facing right (moving 0→50%) */
     }
-    to {
-      transform: scaleX(-1); /* Facing left when moving left */
+    50%, 100% {
+      transform: scaleX(-1); /* Facing left (moving 50→100%) */
+    }
+  }
+
+  /* Running: Full cycle with direction changes at edges (faster) */
+  @keyframes run-back-and-forth {
+    0% {
+      left: 0px; /* Left edge */
+    }
+    50% {
+      left: var(--max-left, calc(100% - 64px)); /* Right edge */
+    }
+    100% {
+      left: 0px; /* Back to left edge */
+    }
+  }
+
+  @keyframes flip-at-edges-fast {
+    0%, 49.9% {
+      transform: scaleX(1); /* Facing right (moving 0→50%) */
+    }
+    50%, 100% {
+      transform: scaleX(-1); /* Facing left (moving 50→100%) */
     }
   }
 </style>

@@ -198,10 +198,62 @@ Available states:
 	}
 
 	/**
-	 * Load settings from disk
+	 * Validate loaded settings against validation rules
+	 * @param settings - Settings object to validate
+	 * @returns Validated settings with invalid values replaced by defaults
+	 */
+	private validateSettings(settings: VaultPalSettings): VaultPalSettings {
+		const validated = { ...settings };
+
+		// Import validation rules
+		const { VALIDATION_RULES } = require('./types/settings');
+
+		// Validate petName
+		if (
+			typeof validated.petName !== 'string' ||
+			validated.petName.length < VALIDATION_RULES.petName.minLength ||
+			validated.petName.length > VALIDATION_RULES.petName.maxLength ||
+			!VALIDATION_RULES.petName.pattern.test(validated.petName)
+		) {
+			console.warn(`Invalid petName loaded, using default: ${DEFAULT_SETTINGS.petName}`);
+			validated.petName = DEFAULT_SETTINGS.petName;
+		}
+
+		// Validate userName
+		if (
+			typeof validated.userName !== 'string' ||
+			validated.userName.length > VALIDATION_RULES.userName.maxLength ||
+			!VALIDATION_RULES.userName.pattern.test(validated.userName)
+		) {
+			console.warn(`Invalid userName loaded, using default: ${DEFAULT_SETTINGS.userName}`);
+			validated.userName = DEFAULT_SETTINGS.userName;
+		}
+
+		// Validate movementSpeed
+		if (
+			typeof validated.movementSpeed !== 'number' ||
+			validated.movementSpeed < VALIDATION_RULES.movementSpeed.min ||
+			validated.movementSpeed > VALIDATION_RULES.movementSpeed.max
+		) {
+			console.warn(`Invalid movementSpeed loaded, using default: ${DEFAULT_SETTINGS.movementSpeed}`);
+			validated.movementSpeed = DEFAULT_SETTINGS.movementSpeed;
+		}
+
+		// Validate hasCompletedWelcome
+		if (typeof validated.hasCompletedWelcome !== 'boolean') {
+			validated.hasCompletedWelcome = DEFAULT_SETTINGS.hasCompletedWelcome;
+		}
+
+		return validated;
+	}
+
+	/**
+	 * Load settings from disk with validation
 	 */
 	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+		const loadedData = await this.loadData();
+		const mergedSettings = Object.assign({}, DEFAULT_SETTINGS, loadedData);
+		this.settings = this.validateSettings(mergedSettings);
 	}
 
 	/**

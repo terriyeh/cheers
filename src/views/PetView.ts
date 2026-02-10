@@ -326,6 +326,17 @@ export class PetView extends ItemView {
       throw new Error('Invalid plugin directory path detected');
     }
 
+    // Security: Validate asset filename to prevent path traversal
+    // Only allow alphanumeric, dash, underscore, and dot for file extension
+    if (!/^[a-zA-Z0-9_-]+\.[a-zA-Z0-9]+$/.test(assetFileName)) {
+      throw new Error('Invalid asset filename: must be alphanumeric with single file extension');
+    }
+
+    // Additional check: ensure no path separators or traversal sequences
+    if (assetFileName.includes('..') || assetFileName.includes('/') || assetFileName.includes('\\')) {
+      throw new Error('Invalid asset filename: path traversal detected');
+    }
+
     // Normalize path and construct resource path
     const normalizedDir = pluginDir.replace(/\\/g, '/').replace(/\/\//g, '/');
     const relativePath = `${normalizedDir}/assets/${assetFileName}`;

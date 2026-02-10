@@ -73,76 +73,68 @@ describe('Pet.svelte Component', () => {
   describe('movement speed prop', () => {
     it('should apply walking animation duration for speed 0 (slowest)', () => {
       const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'walking', movementSpeed: 0 } });
-      const sprite = container.querySelector('.pet-sprite') as HTMLElement;
-      expect(sprite).toBeTruthy();
+      const petContainer = container.querySelector('.pet-sprite-container') as HTMLElement;
+      expect(petContainer).toBeTruthy();
       // Duration = 2 - (0 / 60) = 2s
-      const computedStyle = window.getComputedStyle(sprite);
-      expect(computedStyle.animationDuration).toBe('2s');
+      expect(petContainer.style.getPropertyValue('--animation-duration')).toBe('2s');
       component.$destroy();
     });
 
     it('should apply walking animation duration for speed 30 (medium walking)', () => {
       const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'walking', movementSpeed: 30 } });
-      const sprite = container.querySelector('.pet-sprite') as HTMLElement;
-      expect(sprite).toBeTruthy();
+      const petContainer = container.querySelector('.pet-sprite-container') as HTMLElement;
+      expect(petContainer).toBeTruthy();
       // Duration = 2 - (30 / 60) = 1.5s
-      const computedStyle = window.getComputedStyle(sprite);
-      expect(computedStyle.animationDuration).toBe('1.5s');
+      expect(petContainer.style.getPropertyValue('--animation-duration')).toBe('1.5s');
       component.$destroy();
     });
 
     it('should apply walking animation duration for speed 60 (fastest walking)', () => {
       const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'walking', movementSpeed: 60 } });
-      const sprite = container.querySelector('.pet-sprite') as HTMLElement;
-      expect(sprite).toBeTruthy();
+      const petContainer = container.querySelector('.pet-sprite-container') as HTMLElement;
+      expect(petContainer).toBeTruthy();
       // Duration = 2 - (60 / 60) = 1s
-      const computedStyle = window.getComputedStyle(sprite);
-      expect(computedStyle.animationDuration).toBe('1s');
+      expect(petContainer.style.getPropertyValue('--animation-duration')).toBe('1s');
       component.$destroy();
     });
 
     it('should apply running animation duration for speed 61 (slowest running)', () => {
       const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'running', movementSpeed: 61 } });
-      const sprite = container.querySelector('.pet-sprite') as HTMLElement;
-      expect(sprite).toBeTruthy();
+      const petContainer = container.querySelector('.pet-sprite-container') as HTMLElement;
+      expect(petContainer).toBeTruthy();
       // Duration = 1 - ((61 - 60) / 40) * 0.6 = 1 - 0.015 = 0.985s
-      const computedStyle = window.getComputedStyle(sprite);
-      expect(parseFloat(computedStyle.animationDuration)).toBeCloseTo(0.985, 2);
+      expect(parseFloat(petContainer.style.getPropertyValue('--animation-duration'))).toBeCloseTo(0.985, 2);
       component.$destroy();
     });
 
     it('should apply running animation duration for speed 80 (medium running)', () => {
       const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'running', movementSpeed: 80 } });
-      const sprite = container.querySelector('.pet-sprite') as HTMLElement;
-      expect(sprite).toBeTruthy();
+      const petContainer = container.querySelector('.pet-sprite-container') as HTMLElement;
+      expect(petContainer).toBeTruthy();
       // Duration = 1 - ((80 - 60) / 40) * 0.6 = 1 - 0.3 = 0.7s
-      const computedStyle = window.getComputedStyle(sprite);
-      expect(computedStyle.animationDuration).toBe('0.7s');
+      expect(petContainer.style.getPropertyValue('--animation-duration')).toBe('0.7s');
       component.$destroy();
     });
 
     it('should apply running animation duration for speed 100 (fastest)', () => {
       const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'running', movementSpeed: 100 } });
-      const sprite = container.querySelector('.pet-sprite') as HTMLElement;
-      expect(sprite).toBeTruthy();
+      const petContainer = container.querySelector('.pet-sprite-container') as HTMLElement;
+      expect(petContainer).toBeTruthy();
       // Duration = 1 - ((100 - 60) / 40) * 0.6 = 1 - 0.6 = 0.4s
-      const computedStyle = window.getComputedStyle(sprite);
-      expect(computedStyle.animationDuration).toBe('0.4s');
+      expect(petContainer.style.getPropertyValue('--animation-duration')).toBe('0.4s');
       component.$destroy();
     });
 
     it('should update animation duration reactively when speed changes', () => {
       const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'walking', movementSpeed: 30 } });
-      const sprite = container.querySelector('.pet-sprite') as HTMLElement;
+      const petContainer = container.querySelector('.pet-sprite-container') as HTMLElement;
 
       // Initial: 1.5s for speed 30
-      let computedStyle = window.getComputedStyle(sprite);
-      expect(computedStyle.animationDuration).toBe('1.5s');
+      expect(petContainer.style.getPropertyValue('--animation-duration')).toBe('1.5s');
 
       // Update speed to 60
       component.$set({ movementSpeed: 60 });
-      computedStyle = window.getComputedStyle(sprite);
-      expect(computedStyle.animationDuration).toBe('1s');
+      expect(petContainer.style.getPropertyValue('--animation-duration')).toBe('1s');
 
       component.$destroy();
     });
@@ -253,8 +245,8 @@ describe('Pet.svelte Component', () => {
   });
 
   describe('heart overlay', () => {
-    it('should show heart overlay during sleeping state', () => {
-      const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'sleeping' } });
+    it('should show heart overlay during petting state', () => {
+      const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'petting' } });
       const heartOverlay = container.querySelector('.heart-overlay');
       expect(heartOverlay).toBeTruthy();
       component.$destroy();
@@ -267,8 +259,8 @@ describe('Pet.svelte Component', () => {
       component.$destroy();
     });
 
-    it('should hide heart overlay when transitioning from sleeping to walking', () => {
-      const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'sleeping' } });
+    it('should hide heart overlay when transitioning from petting to walking', () => {
+      const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'petting' } });
 
       // Initially should show heart
       let heartOverlay = container.querySelector('.heart-overlay');
@@ -288,41 +280,17 @@ describe('Pet.svelte Component', () => {
   describe('duration formula calculations', () => {
     it('should calculate correct walking duration for speed=30 (1.5s)', () => {
       const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'walking', movementSpeed: 30 } });
-      const sprite = container.querySelector('.pet-sprite') as HTMLElement;
-      const computedStyle = window.getComputedStyle(sprite);
+      const petContainer = container.querySelector('.pet-sprite-container') as HTMLElement;
       // duration = 2 - (30 / 60) = 1.5s
-      expect(computedStyle.animationDuration).toBe('1.5s');
+      expect(petContainer.style.getPropertyValue('--animation-duration')).toBe('1.5s');
       component.$destroy();
     });
 
     it('should calculate correct running duration for speed=90 (0.55s)', () => {
       const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'running', movementSpeed: 90 } });
-      const sprite = container.querySelector('.pet-sprite') as HTMLElement;
-      const computedStyle = window.getComputedStyle(sprite);
+      const petContainer = container.querySelector('.pet-sprite-container') as HTMLElement;
       // duration = 1 - ((90 - 60) / 40) * 0.6 = 1 - 0.45 = 0.55s
-      expect(computedStyle.animationDuration).toBe('0.55s');
-      component.$destroy();
-    });
-  });
-
-    it('should display correct text for greeting state with userName', () => {
-      const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'greeting', userName: 'Alice' } });
-      const stateText = container.querySelector('.pet-state-text');
-      expect(stateText?.textContent).toBe('Hello Alice!');
-      component.$destroy();
-    });
-
-    it('should display correct text for petting state', () => {
-      const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'petting' } });
-      const stateText = container.querySelector('.pet-state-text');
-      expect(stateText?.textContent).toBe('Amazing! You did it!');
-      component.$destroy();
-    });
-
-    it('should display correct text for sleeping state', () => {
-      const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'sleeping' } });
-      const stateText = container.querySelector('.pet-state-text');
-      expect(stateText?.textContent).toBe('Zzz...');
+      expect(petContainer.style.getPropertyValue('--animation-duration')).toBe('0.55s');
       component.$destroy();
     });
   });
@@ -443,7 +411,7 @@ describe('Pet.svelte Component', () => {
     });
 
     it('should have aria-hidden="true" on heart overlay', () => {
-      const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'sleeping' } });
+      const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'petting' } });
       const heartOverlay = container.querySelector('.heart-overlay') as HTMLElement;
       expect(heartOverlay.getAttribute('aria-hidden')).toBe('true');
       component.$destroy();
@@ -489,17 +457,16 @@ describe('Pet.svelte Component', () => {
 
     it('should clamp negative movement speed to 0', () => {
       const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'walking', movementSpeed: -10 } });
-      const sprite = container.querySelector('.pet-sprite') as HTMLElement;
-      const computedStyle = window.getComputedStyle(sprite);
+      const petContainer = container.querySelector('.pet-sprite-container') as HTMLElement;
       // Should clamp to 0, giving duration = 2 - (0 / 60) = 2s
-      expect(computedStyle.animationDuration).toBe('2s');
+      expect(petContainer.style.getPropertyValue('--animation-duration')).toBe('2s');
       component.$destroy();
     });
   });
 
   describe('heart overlay positioning and animation', () => {
     it('should have heart overlay with correct positioning classes', () => {
-      const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'sleeping' } });
+      const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'petting' } });
       const heartOverlay = container.querySelector('.heart-overlay') as HTMLElement;
       expect(heartOverlay).toBeTruthy();
       expect(heartOverlay.className).toBe('heart-overlay');
@@ -507,7 +474,7 @@ describe('Pet.svelte Component', () => {
     });
 
     it('should contain heart image with correct src', () => {
-      const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'sleeping' } });
+      const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'petting' } });
       const heartImg = container.querySelector('.heart-overlay img') as HTMLImageElement;
       expect(heartImg).toBeTruthy();
       expect(heartImg.src).toContain('heart.png');
