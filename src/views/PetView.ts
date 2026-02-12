@@ -54,10 +54,14 @@ export class PetView extends ItemView {
   async onOpen(): Promise<void> {
     try {
       // Show welcome modal on first run
-      // @ts-expect-error - accessing internal plugin registry
-      const plugin = this.app.plugins.plugins['vault-pal'] as VaultPalPlugin;
-      if (plugin && !plugin.settings.hasCompletedWelcome) {
-        new WelcomeModal(plugin).open();
+      // Access plugin instance from internal registry (may break with Obsidian API changes)
+      const plugins = (this.app.plugins as any).plugins;
+      let plugin: VaultPalPlugin | undefined;
+      if (plugins && typeof plugins === 'object' && 'vault-pal' in plugins) {
+        plugin = plugins['vault-pal'] as VaultPalPlugin;
+        if (plugin && !plugin.settings.hasCompletedWelcome) {
+          new WelcomeModal(plugin).open();
+        }
       }
 
       // Show loading state

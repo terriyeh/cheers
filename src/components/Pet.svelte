@@ -31,8 +31,8 @@
   const dispatch = createEventDispatcher<{ pet: { returnToState: PetState } }>();
 
   // Container element for resize observation
-  let containerEl: HTMLElement;
-  let resizeObserver: ResizeObserver;
+  let containerEl: HTMLElement | null = null;
+  let resizeObserver: ResizeObserver | null = null;
 
   // Animation timing constants
   const SPEED_THRESHOLD = 60; // Speed above which pet runs (0-60 = walk, 61-100 = run)
@@ -78,6 +78,24 @@
     containerEl.style.setProperty('--container-width', `${containerWidth}px`);
     containerEl.style.setProperty('--max-left', `${maxLeft}px`);
   }
+
+  /**
+   * Debounce utility to prevent excessive calls during rapid events
+   * @param fn - Function to debounce
+   * @param delay - Delay in milliseconds
+   */
+  function debounce<T extends (...args: any[]) => any>(fn: T, delay: number): (...args: Parameters<T>) => void {
+    let timeoutId: number | undefined;
+    return (...args: Parameters<T>) => {
+      if (timeoutId !== undefined) {
+        clearTimeout(timeoutId);
+      }
+      timeoutId = setTimeout(() => fn(...args), delay) as unknown as number;
+    };
+  }
+
+  // Debounced version of updateMovementRange (150ms delay for performance)
+  const updateMovementRangeDebounced = debounce(updateMovementRange, 150);
 
   /**
    * Check if petting interaction is allowed in the current state
@@ -139,30 +157,33 @@
   $: showHeart = state === 'petting';
 
   onMount(() => {
+    // Initial update (not debounced for immediate positioning)
     updateMovementRange();
 
     // Watch for container resize with fallback for older browsers
     try {
-      resizeObserver = new ResizeObserver(() => {
-        updateMovementRange();
-      });
+      // Use debounced update for resize events to improve performance
+      resizeObserver = new ResizeObserver(updateMovementRangeDebounced);
       resizeObserver.observe(containerEl);
+
+      // Return cleanup function for ResizeObserver
+      return () => {
+        resizeObserver?.disconnect();
+        resizeObserver = null;
+      };
     } catch (error) {
       console.warn('ResizeObserver not supported, using window resize fallback', error);
-      // Fallback: Update on window resize
-      const handleResize = () => updateMovementRange();
-      window.addEventListener('resize', handleResize);
+      // Fallback: Use debounced update on window resize for performance
+      window.addEventListener('resize', updateMovementRangeDebounced);
 
       // Return cleanup function for fallback
-      return () => window.removeEventListener('resize', handleResize);
+      return () => window.removeEventListener('resize', updateMovementRangeDebounced);
     }
   });
 
   onDestroy(() => {
-    resizeObserver?.disconnect();
-    // @ts-ignore - Explicit cleanup to help garbage collection
-    resizeObserver = null;
-    // @ts-ignore - Help GC with container reference
+    // Explicit cleanup to help garbage collection
+    // ResizeObserver cleanup is handled by onMount return function
     containerEl = null;
   });
 

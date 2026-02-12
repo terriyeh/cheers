@@ -103,11 +103,11 @@ describe('PetStateMachine', () => {
       expect(stateMachine.getCurrentState()).toBe('walking');
     });
 
-    it('should return to walking after petting duration (5s)', () => {
+    it('should return to walking after petting duration (2s)', () => {
       stateMachine.transition('petting');
       expect(stateMachine.getCurrentState()).toBe('petting');
 
-      vi.advanceTimersByTime(5000);
+      vi.advanceTimersByTime(2000);
 
       expect(stateMachine.getCurrentState()).toBe('walking');
     });
