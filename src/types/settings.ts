@@ -1,7 +1,7 @@
 /**
  * VaultPal Plugin Settings
  */
-export interface VaultPalSettings {
+export interface ObsidianPetsSettings {
 	/** Name of the pet companion */
 	petName: string;
 	/** Name of the user (what pet calls them) */
@@ -15,7 +15,7 @@ export interface VaultPalSettings {
 /**
  * Default settings values
  */
-export const DEFAULT_SETTINGS: VaultPalSettings = {
+export const DEFAULT_SETTINGS: ObsidianPetsSettings = {
 	petName: 'Kit',
 	userName: '',
 	hasCompletedWelcome: false,

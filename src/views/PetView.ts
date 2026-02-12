@@ -2,7 +2,7 @@ import { ItemView, type WorkspaceLeaf, Notice } from 'obsidian';
 import type { PetState, StateChangeListener } from '../types/pet';
 import { PetStateMachine } from '../pet/PetStateMachine';
 import PetComponent from '../components/Pet.svelte';
-import type VaultPalPlugin from '../main';
+import type ObsidianPetsPlugin from '../main';
 import { WelcomeModal } from '../modals/WelcomeModal';
 
 // Build-time constant injected by esbuild
@@ -11,7 +11,7 @@ declare const __DEV__: boolean;
 /**
  * View type identifier for the pet view
  */
-export const VIEW_TYPE_PET = 'vault-pal-pet-view';
+export const VIEW_TYPE_PET = 'obsidian-pets-pet-view';
 
 /**
  * Pet View - Main ItemView for displaying the pet companion
@@ -38,7 +38,7 @@ export class PetView extends ItemView {
    * Get the display text for the view
    */
   getDisplayText(): string {
-    return 'Vault Pal';
+    return 'Obsidian Pets';
   }
 
   /**
@@ -60,9 +60,9 @@ export class PetView extends ItemView {
         plugins: { plugins: Record<string, unknown> };
       }
       const appWithPlugins = this.app as unknown as AppWithPlugins;
-      let plugin: VaultPalPlugin | undefined;
-      if (appWithPlugins.plugins?.plugins && typeof appWithPlugins.plugins.plugins === 'object' && 'vault-pal' in appWithPlugins.plugins.plugins) {
-        plugin = appWithPlugins.plugins.plugins['vault-pal'] as VaultPalPlugin;
+      let plugin: ObsidianPetsPlugin | undefined;
+      if (appWithPlugins.plugins?.plugins && typeof appWithPlugins.plugins.plugins === 'object' && 'obsidian-pets' in appWithPlugins.plugins.plugins) {
+        plugin = appWithPlugins.plugins.plugins['obsidian-pets'] as ObsidianPetsPlugin;
         if (plugin && !plugin.settings.hasCompletedWelcome) {
           new WelcomeModal(plugin).open();
         }
@@ -77,7 +77,7 @@ export class PetView extends ItemView {
       // Create container for pet component
       const contentContainer = this.getContentContainer();
       this.containerDiv = contentContainer.createDiv({
-        cls: 'vault-pal-container',
+        cls: 'obsidian-pets-container',
       });
 
       // Set initial data attribute
@@ -224,8 +224,8 @@ export class PetView extends ItemView {
       const container = this.getContentContainer();
       container.empty();
       container.createDiv({
-        cls: 'vault-pal-loading',
-        text: 'Loading Vault Pal...',
+        cls: 'obsidian-pets-loading',
+        text: 'Loading Obsidian Pets...',
       });
     } catch (error) {
       console.error('Failed to show loading state:', error);
@@ -236,7 +236,7 @@ export class PetView extends ItemView {
    * Hide loading state
    */
   private hideLoading(): void {
-    const loadingEl = this.containerEl.querySelector('.vault-pal-loading');
+    const loadingEl = this.containerEl.querySelector('.obsidian-pets-loading');
     if (loadingEl) {
       loadingEl.remove();
     }
@@ -251,21 +251,21 @@ export class PetView extends ItemView {
       container.empty();
 
       const errorDiv = container.createDiv({
-        cls: 'vault-pal-view-error',
+        cls: 'obsidian-pets-view-error',
       });
 
       errorDiv.createEl('h3', {
-        text: 'Failed to load Vault Pal',
+        text: 'Failed to load Obsidian Pets',
       });
 
       errorDiv.createEl('p', {
         text: error instanceof Error ? error.message : 'Unknown error',
-        cls: 'vault-pal-view-error-message',
+        cls: 'obsidian-pets-view-error-message',
       });
 
       errorDiv.createEl('p', {
         text: 'Check the console for more details.',
-        cls: 'vault-pal-view-error-hint',
+        cls: 'obsidian-pets-view-error-hint',
       });
     } catch (containerError) {
       console.error('Failed to show error state:', containerError);
@@ -309,10 +309,10 @@ export class PetView extends ItemView {
    */
   private getAssetPath(assetFileName: string): string {
     // @ts-expect-error - accessing plugin manifest
-    const manifest = this.app.plugins.manifests['vault-pal'];
+    const manifest = this.app.plugins.manifests['obsidian-pets'];
 
     if (!manifest) {
-      console.warn('Vault Pal manifest not found, using fallback path');
+      console.warn('Obsidian Pets manifest not found, using fallback path');
     }
 
     const pluginDir = manifest?.dir || '.obsidian/plugins/vault-pal';

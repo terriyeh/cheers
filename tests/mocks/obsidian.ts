@@ -43,12 +43,12 @@ export class App {
     };
     this.plugins = {
       manifests: {
-        'vault-pal': {
-          dir: '.obsidian/plugins/vault-pal',
+        'obsidian-pets': {
+          dir: '.obsidian/plugins/obsidian-pets',
         },
       },
       plugins: {
-        'vault-pal': {
+        'obsidian-pets': {
           settings: {
             petName: 'Kit',
             userName: '',

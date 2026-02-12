@@ -2,7 +2,7 @@ import { Plugin, Notice } from 'obsidian';
 import type { WorkspaceLeaf } from 'obsidian';
 import { PetView, VIEW_TYPE_PET } from './views/PetView';
 import type { PetState } from './types/pet';
-import type { VaultPalSettings } from './types/settings';
+import type { ObsidianPetsSettings } from './types/settings';
 import { DEFAULT_SETTINGS, VALIDATION_RULES } from './types/settings';
 import { WelcomeModal } from './modals/WelcomeModal';
 
@@ -12,7 +12,7 @@ declare const __DEV__: boolean;
 /**
  * Debug interface for manual state testing (development only)
  */
-interface VaultPalDebug {
+interface ObsidianPetsDebug {
 	transitionState: (state: PetState) => void;
 	getCurrentState: () => PetState | null;
 	reset: () => void;
@@ -22,15 +22,15 @@ interface VaultPalDebug {
 
 declare global {
 	interface Window {
-		vaultPalDebug?: VaultPalDebug;
+		obsidianPetsDebug?: ObsidianPetsDebug;
 	}
 }
 
-export default class VaultPalPlugin extends Plugin {
-	settings: VaultPalSettings = DEFAULT_SETTINGS;
+export default class ObsidianPetsPlugin extends Plugin {
+	settings: ObsidianPetsSettings = DEFAULT_SETTINGS;
 
 	async onload() {
-		console.log('🦊 Vault Pal loading...');
+		console.log('🦊 Obsidian Pets loading...');
 
 		// Load settings
 		await this.loadSettings();
@@ -67,14 +67,14 @@ export default class VaultPalPlugin extends Plugin {
 		// Expose debug commands for manual state testing (development only)
 		// This code is completely removed in production builds via tree-shaking
 		if (__DEV__) {
-			window.vaultPalDebug = {
+			window.obsidianPetsDebug = {
 				transitionState: (state: PetState) => {
 					const view = this.getActivePetView();
 					if (view) {
 						view.transitionState(state);
 						console.log(`🦊 Transitioned to: ${state}`);
 					} else {
-						console.error('🦊 No active pet view. Open Vault Pal first.');
+						console.error('🦊 No active pet view. Open Obsidian Pets first.');
 					}
 				},
 				getCurrentState: () => {
@@ -89,7 +89,7 @@ export default class VaultPalPlugin extends Plugin {
 						view.transitionState('walking');
 						console.log('🦊 Reset to walking');
 					} else {
-						console.error('🦊 No active pet view. Open Vault Pal first.');
+						console.error('🦊 No active pet view. Open Obsidian Pets first.');
 					}
 				},
 				setSpeed: (speed: number) => {
@@ -98,17 +98,17 @@ export default class VaultPalPlugin extends Plugin {
 						view.petComponent.$set({ movementSpeed: speed });
 						console.log(`🦊 Movement speed set to: ${speed}%`);
 					} else {
-						console.error('🦊 No active pet view. Open Vault Pal first.');
+						console.error('🦊 No active pet view. Open Obsidian Pets first.');
 					}
 				},
 				help: () => {
 					console.log(`
-🦊 Vault Pal Debug Commands:
-  vaultPalDebug.transitionState('state') - Transition to a state
-  vaultPalDebug.getCurrentState()        - Get current state
-  vaultPalDebug.reset()                  - Reset to walking
-  vaultPalDebug.setSpeed(50)             - Set movement speed (0-100)
-  vaultPalDebug.help()                   - Show this help
+🦊 Obsidian Pets Debug Commands:
+  obsidianPetsDebug.transitionState('state') - Transition to a state
+  obsidianPetsDebug.getCurrentState()        - Get current state
+  obsidianPetsDebug.reset()                  - Reset to walking
+  obsidianPetsDebug.setSpeed(50)             - Set movement speed (0-100)
+  obsidianPetsDebug.help()                   - Show this help
 
 Available states:
   - walking
@@ -121,16 +121,16 @@ Available states:
 				}
 			};
 
-			console.log('🦊 Debug commands available: window.vaultPalDebug.help()');
+			console.log('🦊 Debug commands available: window.obsidianPetsDebug.help()');
 		}
 	}
 
 	onunload() {
-		console.log('🦊 Vault Pal unloaded');
+		console.log('🦊 Obsidian Pets unloaded');
 
 		// Clean up debug interface (development only)
-		if (__DEV__ && window.vaultPalDebug) {
-			delete window.vaultPalDebug;
+		if (__DEV__ && window.obsidianPetsDebug) {
+			delete window.obsidianPetsDebug;
 		}
 
 		// Detach all pet views
@@ -202,7 +202,7 @@ Available states:
 	 * @param settings - Settings object to validate
 	 * @returns Validated settings with invalid values replaced by defaults
 	 */
-	private validateSettings(settings: VaultPalSettings): VaultPalSettings {
+	private validateSettings(settings: ObsidianPetsSettings): ObsidianPetsSettings {
 		const validated = { ...settings };
 
 		// Validate petName

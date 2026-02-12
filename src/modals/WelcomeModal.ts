@@ -1,5 +1,5 @@
 import { Modal, Setting } from 'obsidian';
-import type VaultPalPlugin from '../main';
+import type ObsidianPetsPlugin from '../main';
 import { VALIDATION_RULES } from '../types/settings';
 import { VIEW_TYPE_PET, PetView } from '../views/PetView';
 
@@ -8,13 +8,13 @@ import { VIEW_TYPE_PET, PetView } from '../views/PetView';
  * Collects pet name and user name from the user
  */
 export class WelcomeModal extends Modal {
-	private plugin: VaultPalPlugin;
+	private plugin: ObsidianPetsPlugin;
 	private petNameInput: HTMLInputElement | null = null;
 	private userNameInput: HTMLInputElement | null = null;
 	private petNameError: HTMLElement | null = null;
 	private userNameError: HTMLElement | null = null;
 
-	constructor(plugin: VaultPalPlugin) {
+	constructor(plugin: ObsidianPetsPlugin) {
 		super(plugin.app);
 		this.plugin = plugin;
 	}
@@ -22,14 +22,14 @@ export class WelcomeModal extends Modal {
 	onOpen() {
 		const { contentEl } = this;
 		contentEl.empty();
-		contentEl.addClass('vault-pal-welcome-modal');
+		contentEl.addClass('obsidian-pets-welcome-modal');
 
 		// Header
-		contentEl.createEl('h2', { text: '🦊 Welcome to Vault Pal!' });
+		contentEl.createEl('h2', { text: '🦊 Welcome to Obsidian Pets!' });
 
 		contentEl.createEl('p', {
 			text: 'Let\'s get your companion set up!',
-			cls: 'vault-pal-welcome-subtitle',
+			cls: 'obsidian-pets-welcome-subtitle',
 		});
 
 		// Pet Name Setting
@@ -46,7 +46,7 @@ export class WelcomeModal extends Modal {
 
 		// Pet name error message container
 		this.petNameError = contentEl.createDiv({
-			cls: 'vault-pal-error-message setting-item-description',
+			cls: 'obsidian-pets-error-message setting-item-description',
 		});
 		this.petNameError.style.display = 'none';
 
@@ -64,7 +64,7 @@ export class WelcomeModal extends Modal {
 
 		// User name error message container
 		this.userNameError = contentEl.createDiv({
-			cls: 'vault-pal-error-message setting-item-description',
+			cls: 'obsidian-pets-error-message setting-item-description',
 		});
 		this.userNameError.style.display = 'none';
 
@@ -94,7 +94,7 @@ export class WelcomeModal extends Modal {
 
 		// Buttons
 		const buttonContainer = contentEl.createDiv({
-			cls: 'vault-pal-button-container',
+			cls: 'obsidian-pets-button-container',
 		});
 
 		// Skip button

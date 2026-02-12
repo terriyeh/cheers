@@ -30,7 +30,7 @@ describe('PetView', () => {
     });
 
     it('should return correct display text', () => {
-      expect(petView.getDisplayText()).toBe('Vault Pal');
+      expect(petView.getDisplayText()).toBe('Obsidian Pets');
     });
 
     it('should return correct icon', () => {
@@ -38,7 +38,7 @@ describe('PetView', () => {
     });
 
     it('should export VIEW_TYPE_PET constant', () => {
-      expect(VIEW_TYPE_PET).toBe('vault-pal-pet-view');
+      expect(VIEW_TYPE_PET).toBe('obsidian-pets-pet-view');
     });
   });
 
@@ -54,25 +54,25 @@ describe('PetView', () => {
       await petView.onOpen();
 
       // After initialization, loading should be hidden
-      const loadingEl = petView.containerEl.querySelector('.vault-pal-loading');
+      const loadingEl = petView.containerEl.querySelector('.obsidian-pets-loading');
       expect(loadingEl).toBeNull();
 
       // And the pet container should be visible
-      const container = petView.containerEl.querySelector('.vault-pal-container');
+      const container = petView.containerEl.querySelector('.obsidian-pets-container');
       expect(container).toBeTruthy();
     });
 
     it('should hide loading state after initialization', async () => {
       await petView.onOpen();
 
-      const loadingEl = petView.containerEl.querySelector('.vault-pal-loading');
+      const loadingEl = petView.containerEl.querySelector('.obsidian-pets-loading');
       expect(loadingEl).toBeNull();
     });
 
     it('should create container div with correct class', async () => {
       await petView.onOpen();
 
-      const container = petView.containerEl.querySelector('.vault-pal-container');
+      const container = petView.containerEl.querySelector('.obsidian-pets-container');
       expect(container).toBeTruthy();
     });
 
@@ -93,7 +93,7 @@ describe('PetView', () => {
     it('should set initial data-pet-state attribute', async () => {
       await petView.onOpen();
 
-      const container = petView.containerEl.querySelector('.vault-pal-container');
+      const container = petView.containerEl.querySelector('.obsidian-pets-container');
       expect(container?.getAttribute('data-pet-state')).toBe('walking');
     });
 
@@ -109,7 +109,7 @@ describe('PetView', () => {
 
       // The path should be generated using app.vault.adapter.getResourcePath
       // which in our mock returns app://local/{path}
-      const expectedPath = 'app://local/.obsidian/plugins/vault-pal/assets/pet-sprite-sheet.png';
+      const expectedPath = 'app://local/.obsidian/plugins/obsidian-pets/assets/pet-sprite-sheet.png';
 
       // We can't directly access the spriteSheetPath prop, but we can verify
       // the component was mounted successfully which means the path was provided
@@ -129,7 +129,7 @@ describe('PetView', () => {
       await badView.onOpen();
 
       // Should show error state
-      const errorEl = badView.containerEl.querySelector('.vault-pal-view-error');
+      const errorEl = badView.containerEl.querySelector('.obsidian-pets-view-error');
       expect(errorEl).toBeTruthy();
 
       consoleErrorSpy.mockRestore();
@@ -145,11 +145,11 @@ describe('PetView', () => {
 
       await badView.onOpen();
 
-      const errorHeading = badView.containerEl.querySelector('.vault-pal-view-error h3');
-      const errorMessage = badView.containerEl.querySelector('.vault-pal-view-error-message');
-      const errorHint = badView.containerEl.querySelector('.vault-pal-view-error-hint');
+      const errorHeading = badView.containerEl.querySelector('.obsidian-pets-view-error h3');
+      const errorMessage = badView.containerEl.querySelector('.obsidian-pets-view-error-message');
+      const errorHint = badView.containerEl.querySelector('.obsidian-pets-view-error-hint');
 
-      expect(errorHeading?.textContent).toBe('Failed to load Vault Pal');
+      expect(errorHeading?.textContent).toBe('Failed to load Obsidian Pets');
       expect(errorMessage).toBeTruthy();
       expect(errorHint?.textContent).toBe('Check the console for more details.');
 
@@ -189,14 +189,14 @@ describe('PetView', () => {
       const initialChildCount = petView.containerEl.children.length;
       expect(initialChildCount).toBeGreaterThan(0);
 
-      // Find the vault-pal-container that was created
-      const vaultPalContainer = petView.containerEl.querySelector('.vault-pal-container');
+      // Find the obsidian-pets-container that was created
+      const vaultPalContainer = petView.containerEl.querySelector('.obsidian-pets-container');
       expect(vaultPalContainer).toBeTruthy();
 
       await petView.onClose();
 
-      // After close, the vault-pal-container should be removed
-      const vaultPalContainerAfter = petView.containerEl.querySelector('.vault-pal-container');
+      // After close, the obsidian-pets-container should be removed
+      const vaultPalContainerAfter = petView.containerEl.querySelector('.obsidian-pets-container');
       expect(vaultPalContainerAfter).toBeNull();
     });
 
@@ -229,7 +229,7 @@ describe('PetView', () => {
 
       petView.transitionState('greeting');
 
-      const container = petView.containerEl.querySelector('.vault-pal-container');
+      const container = petView.containerEl.querySelector('.obsidian-pets-container');
       expect(container?.getAttribute('data-pet-state')).toBe('greeting');
     });
 
@@ -256,7 +256,7 @@ describe('PetView', () => {
         petView.transitionState(state);
         expect(petView.getCurrentState()).toBe(state);
 
-        const container = petView.containerEl.querySelector('.vault-pal-container');
+        const container = petView.containerEl.querySelector('.obsidian-pets-container');
         expect(container?.getAttribute('data-pet-state')).toBe(state);
       }
     });
@@ -270,7 +270,7 @@ describe('PetView', () => {
       vi.advanceTimersByTime(2000);
 
       expect(petView.getCurrentState()).toBe('walking');
-      const container = petView.containerEl.querySelector('.vault-pal-container');
+      const container = petView.containerEl.querySelector('.obsidian-pets-container');
       expect(container?.getAttribute('data-pet-state')).toBe('walking');
     });
 
@@ -314,7 +314,7 @@ describe('PetView', () => {
       for (const state of states) {
         petView.transitionState(state);
 
-        const container = petView.containerEl.querySelector('.vault-pal-container');
+        const container = petView.containerEl.querySelector('.obsidian-pets-container');
         const component = petView.containerEl.querySelector('.pet-sprite-container');
 
         expect(container?.getAttribute('data-pet-state')).toBe(state);
@@ -329,7 +329,7 @@ describe('PetView', () => {
       petView.transitionState('celebration');
       vi.advanceTimersByTime(3000);
 
-      const container = petView.containerEl.querySelector('.vault-pal-container');
+      const container = petView.containerEl.querySelector('.obsidian-pets-container');
       const component = petView.containerEl.querySelector('.pet-sprite-container');
 
       expect(container?.getAttribute('data-pet-state')).toBe('walking');
@@ -344,7 +344,7 @@ describe('PetView', () => {
       petView.transitionState('celebration');
       petView.transitionState('petting');
 
-      const container = petView.containerEl.querySelector('.vault-pal-container');
+      const container = petView.containerEl.querySelector('.obsidian-pets-container');
       const component = petView.containerEl.querySelector('.pet-sprite-container');
 
       expect(container?.getAttribute('data-pet-state')).toBe('petting');
@@ -369,7 +369,7 @@ describe('PetView', () => {
 
       // Should log error and show error state
       expect(consoleErrorSpy).toHaveBeenCalled();
-      const errorEl = failView.containerEl.querySelector('.vault-pal-view-error');
+      const errorEl = failView.containerEl.querySelector('.obsidian-pets-view-error');
       expect(errorEl).toBeTruthy();
 
       consoleErrorSpy.mockRestore();
@@ -393,7 +393,7 @@ describe('PetView', () => {
       await petView.onOpen();
 
       // Remove the container div
-      const container = petView.containerEl.querySelector('.vault-pal-container');
+      const container = petView.containerEl.querySelector('.obsidian-pets-container');
       container?.remove();
 
       // Should not throw even though container is gone
@@ -468,8 +468,8 @@ describe('PetView', () => {
       const mainContainer = petView.containerEl.children[1];
       expect(mainContainer).toBeTruthy();
 
-      // Should have vault-pal-container inside
-      const vaultPalContainer = mainContainer.querySelector('.vault-pal-container');
+      // Should have obsidian-pets-container inside
+      const vaultPalContainer = mainContainer.querySelector('.obsidian-pets-container');
       expect(vaultPalContainer).toBeTruthy();
     });
 

@@ -160,12 +160,12 @@ export function assertStateSynchronization(
   container: Element,
   expectedState: PetState
 ): void {
-  const vaultPalContainer = container.querySelector('.vault-pal-container');
+  const vaultPalContainer = container.querySelector('.obsidian-pets-container');
   const spriteContainer = container.querySelector('.pet-sprite-container');
   const sprite = container.querySelector('.pet-sprite');
 
   if (!vaultPalContainer) {
-    throw new Error('vault-pal-container not found');
+    throw new Error('obsidian-pets-container not found');
   }
 
   if (!spriteContainer) {

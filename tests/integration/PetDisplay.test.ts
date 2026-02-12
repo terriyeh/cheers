@@ -30,7 +30,7 @@ describe('PetDisplay Integration', () => {
 
       // Verify all components are initialized
       expect(petView.getCurrentState()).toBe('walking');
-      expect(petView.containerEl.querySelector('.vault-pal-container')).toBeTruthy();
+      expect(petView.containerEl.querySelector('.obsidian-pets-container')).toBeTruthy();
       expect(petView.containerEl.querySelector('.pet-sprite-container')).toBeTruthy();
       expect(petView.containerEl.querySelector('.pet-sprite')).toBeTruthy();
     });
@@ -391,7 +391,7 @@ describe('PetDisplay Integration', () => {
         expect(petView.getCurrentState()).toBe(state);
 
         // Data attribute on container
-        const container = petView.containerEl.querySelector('.vault-pal-container');
+        const container = petView.containerEl.querySelector('.obsidian-pets-container');
         expect(container?.getAttribute('data-pet-state')).toBe(state);
 
         // Svelte component data-state
@@ -413,7 +413,7 @@ describe('PetDisplay Integration', () => {
       // All layers should be synchronized to walking
       expect(petView.getCurrentState()).toBe('walking');
 
-      const container = petView.containerEl.querySelector('.vault-pal-container');
+      const container = petView.containerEl.querySelector('.obsidian-pets-container');
       expect(container?.getAttribute('data-pet-state')).toBe('walking');
 
       const spriteContainer = petView.containerEl.querySelector('.pet-sprite-container');
@@ -470,7 +470,7 @@ describe('PetDisplay Integration', () => {
       petView.transitionState('greeting');
 
       // Simulate external DOM manipulation
-      const container = petView.containerEl.querySelector('.vault-pal-container');
+      const container = petView.containerEl.querySelector('.obsidian-pets-container');
       container?.setAttribute('data-pet-state', 'corrupted');
 
       // Auto-transition should still work
