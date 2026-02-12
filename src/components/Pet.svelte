@@ -252,7 +252,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 5px;
+    padding: 1px;
     width: 100%; /* Fill parent width */
     height: 100%;
     position: relative;
