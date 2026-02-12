@@ -117,11 +117,16 @@
 /* View Header and Action Buttons - Graph View Style */
 /* Background colors inherit from Obsidian theme for automatic light/dark mode support */
 
-.workspace-leaf-content[data-type="vault-pal-pet-view"] {
+.workspace-leaf-content[data-type="obsidian-pets-pet-view"] {
   position: relative;
 }
 
-.workspace-leaf-content[data-type="vault-pal-pet-view"] .view-header {
+/* Override Obsidian's default .view-content padding for immersive background */
+.workspace-leaf-content[data-type="obsidian-pets-pet-view"] .view-content {
+  padding: 3px;
+}
+
+.workspace-leaf-content[data-type="obsidian-pets-pet-view"] .view-header {
   /* !important required to override Obsidian's default display: none on view headers */
   display: flex !important;
   position: absolute;
@@ -138,7 +143,7 @@
 }
 
 /* Re-enable pointer events for action buttons */
-.workspace-leaf-content[data-type="vault-pal-pet-view"] .view-actions {
+.workspace-leaf-content[data-type="obsidian-pets-pet-view"] .view-actions {
   pointer-events: auto;
   position: absolute;
   top: 8px;
@@ -150,15 +155,15 @@
 }
 
 /* Hide the view header title and navigation */
-.workspace-leaf-content[data-type="vault-pal-pet-view"] .view-header-title,
-.workspace-leaf-content[data-type="vault-pal-pet-view"] .view-header-nav-buttons,
-.workspace-leaf-content[data-type="vault-pal-pet-view"] .view-header-icon {
+.workspace-leaf-content[data-type="obsidian-pets-pet-view"] .view-header-title,
+.workspace-leaf-content[data-type="obsidian-pets-pet-view"] .view-header-nav-buttons,
+.workspace-leaf-content[data-type="obsidian-pets-pet-view"] .view-header-icon {
   display: none;
 }
 
 /* Style individual action buttons - floating style like Graph view */
 /* Background colors inherit from Obsidian for automatic theme adaptation */
-.workspace-leaf-content[data-type="vault-pal-pet-view"] .view-action {
+.workspace-leaf-content[data-type="obsidian-pets-pet-view"] .view-action {
   border-radius: 4px;
   padding: 6px;
   cursor: pointer;
@@ -170,7 +175,7 @@
 }
 
 /* Icon styling */
-.workspace-leaf-content[data-type="vault-pal-pet-view"] .view-action svg {
+.workspace-leaf-content[data-type="obsidian-pets-pet-view"] .view-action svg {
   width: 18px;
   height: 18px;
   color: var(--icon-color);
