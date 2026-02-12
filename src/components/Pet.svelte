@@ -252,7 +252,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 2rem;
+    padding: 5px;
     width: 100%; /* Fill parent width */
     height: 100%;
     position: relative;
@@ -311,7 +311,6 @@
   .pet-sprite {
     width: 64px; /* 2x scale of 32px frames */
     height: 64px;
-    margin-bottom: 1rem;
     /* background-image set via inline style with correct plugin path */
     background-size: 896px 448px; /* 2x scale: 448*2 = 896, 224*2 = 448 */
     background-repeat: no-repeat;
