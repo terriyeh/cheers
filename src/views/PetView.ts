@@ -94,10 +94,10 @@ export class PetView extends ItemView {
       };
       this.stateMachine.addListener(this.stateChangeListener);
 
-      // Get the sprite sheet path with validation
-      const spriteSheetPath = this.getSpriteSheetPath();
-      const heartSpritePath = this.getHeartSpritePath();
-      const backgroundPath = this.getBackgroundPath();
+      // Get asset paths with validation
+      const spriteSheetPath = this.getAssetPath('pet-sprite-sheet.png');
+      const heartSpritePath = this.getAssetPath('heart.png');
+      const backgroundPath = this.getAssetPath('moon-world.gif', 'backgrounds');
 
       // Get plugin settings for pet name and movement speed (reuse plugin variable from above)
       const petName = plugin?.settings?.petName ?? 'Kit';
@@ -365,29 +365,6 @@ export class PetView extends ItemView {
     return assetPath;
   }
 
-  /**
-   * Get the path to the pet sprite sheet asset
-   * @returns The resource path to the sprite sheet
-   */
-  private getSpriteSheetPath(): string {
-    return this.getAssetPath('pet-sprite-sheet.png');
-  }
-
-  /**
-   * Get the path to the heart sprite asset
-   * @returns The resource path to the heart sprite
-   */
-  private getHeartSpritePath(): string {
-    return this.getAssetPath('heart.png');
-  }
-
-  /**
-   * Get the path to the background scene asset
-   * @returns The resource path to the background scene
-   */
-  private getBackgroundPath(): string {
-    return this.getAssetPath('moon-world.gif', 'backgrounds');
-  }
 
 
 }
