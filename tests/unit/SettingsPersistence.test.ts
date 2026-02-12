@@ -4,7 +4,7 @@
  */
 
 import { DEFAULT_SETTINGS } from '../../src/types/settings';
-import type { VaultPalSettings } from '../../src/types/settings';
+import type { ObsidianPetsSettings } from '../../src/types/settings';
 
 describe('Settings Persistence', () => {
 	describe('Default Settings Structure', () => {
@@ -61,7 +61,7 @@ describe('Settings Persistence', () => {
 				{},
 				DEFAULT_SETTINGS,
 				loadedData
-			) as VaultPalSettings;
+			) as ObsidianPetsSettings;
 
 			expect(merged.petName).toBe('Luna');
 			expect(merged.userName).toBe(''); // From defaults
@@ -76,7 +76,7 @@ describe('Settings Persistence', () => {
 				{},
 				DEFAULT_SETTINGS,
 				loadedData
-			) as VaultPalSettings;
+			) as ObsidianPetsSettings;
 
 			expect(merged.petName).toBe('Kit'); // From defaults
 			expect(merged.userName).toBe(''); // From defaults
@@ -97,9 +97,10 @@ describe('Settings Persistence', () => {
 			expect(merged).toHaveProperty('petName');
 			expect(merged).toHaveProperty('userName');
 			expect(merged).toHaveProperty('hasCompletedWelcome');
+			expect(merged).toHaveProperty('movementSpeed');
 
 			// Verify no unexpected fields
-			const expectedKeys = ['petName', 'userName', 'hasCompletedWelcome'];
+			const expectedKeys = ['petName', 'userName', 'hasCompletedWelcome', 'movementSpeed'];
 			const actualKeys = Object.keys(merged);
 			expect(actualKeys.sort()).toEqual(expectedKeys.sort());
 		});
@@ -155,7 +156,7 @@ describe('Settings Persistence', () => {
 
 	describe('Settings Validation Scenarios', () => {
 		it('creates valid settings object for save', () => {
-			const settings: VaultPalSettings = {
+			const settings: ObsidianPetsSettings = {
 				petName: 'Fluffy',
 				userName: 'Charlie',
 				hasCompletedWelcome: true,
@@ -168,7 +169,7 @@ describe('Settings Persistence', () => {
 		});
 
 		it('handles empty user name correctly', () => {
-			const settings: VaultPalSettings = {
+			const settings: ObsidianPetsSettings = {
 				petName: 'Solo',
 				userName: '',
 				hasCompletedWelcome: true,
@@ -180,7 +181,7 @@ describe('Settings Persistence', () => {
 
 		it('preserves exact string values', () => {
 			const testName = 'Test Name 123';
-			const settings: VaultPalSettings = {
+			const settings: ObsidianPetsSettings = {
 				petName: testName,
 				userName: testName,
 				hasCompletedWelcome: false,
@@ -194,7 +195,7 @@ describe('Settings Persistence', () => {
 	});
 
 	describe('Settings Update Scenarios', () => {
-		let settings: VaultPalSettings;
+		let settings: ObsidianPetsSettings;
 
 		beforeEach(() => {
 			settings = { ...DEFAULT_SETTINGS };

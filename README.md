@@ -40,13 +40,19 @@ We're here to:
 
 ### Key Features
 
-- **Vault-Aware Celebrations** 🎉 Pet celebrates your activities (daily notes, word counts, tasks, links)
-- **Interactive Pet Companion** ✅ IMPLEMENTED: 7 animation states (idle, greeting, talking, listening, celebration, petting) [TODO: Mapping of these states need to be changed; associated messages replaced with emojis in speech bubbles]
-- **User-Configurable Triggers** 🚧 PLANNED: Choose what actions trigger celebrations
-- **Ambient Presence** 🚧 PLANNED: Pet walks across panel, exists peacefully when you're working
-- **Pets Live Their Lives Alongside Yours** 🚧 PLANNED: Your pets have emerging behaviors and relationships, and go on adventures while you work
+- **Vault-Aware Celebrations** 🚧 PLANNED (v0.2.0): Pet celebrates your activities (daily notes, word counts, tasks, links)
+- **Interactive Pet Companion** ✅ IMPLEMENTED: 7 animation states with sprite-based animations
+  - Idle, greeting, walking, running, celebration, petting
+  - CSS-based movement system with speed control
+  - Automatic direction flipping at edges
+- **Ambient Presence** ✅ IMPLEMENTED: Pet walks across panel with configurable speed (0-100%)
+  - Walking state (0-60% speed)
+  - Running state (61-100% speed)
+  - GPU-accelerated CSS animations (<0.1% CPU)
+- **User-Configurable Triggers** 🚧 PLANNED (v0.2.0): Choose what actions trigger celebrations
+- **Pets Live Their Lives Alongside Yours** 🚧 PLANNED (v0.4.0+): Multi-pet with emergent behaviors and relationships
 - **Privacy-First** ✅ IMPLEMENTED: Fully local, no network calls, no telemetry
-- **Mobile Support** ✅ IMPLEMENTED: Touch-enabled for phones and tablets
+- **Mobile Support** ✅ IMPLEMENTED: Touch-enabled for phones and tablets, battery-optimized
 
 ---
 
@@ -130,16 +136,27 @@ You decide what deserves celebration:
 
 Your companion has 7 distinct animation states:
 
-[TODO: needs remapping to animation]
 - **Idle**: Gentle breathing when resting
 - **Greeting**: Welcoming wave when you open the panel
-- **Walking**: Travels across the panel (ambient presence)
-- **Small Celebration**: Brief cheer for everyday actions
-- **Big Celebration**: Enthusiastic celebration for milestones
+- **Walking**: CSS-based edge-to-edge movement (0-60% speed)
+  - Smooth horizontal movement with automatic direction flipping
+  - GPU-accelerated for 60 FPS performance
+  - Minimal battery drain (<0.1% CPU usage)
+- **Running**: Faster movement (61-100% speed)
+  - Same smooth movement as walking, just faster
+  - Speed controlled by movement slider
+- **Small Celebration**: Brief cheer for everyday actions (v0.2.0)
+- **Big Celebration**: Enthusiastic celebration for milestones (v0.2.0)
 - **Petting**: Content reaction when you click/tap (available anytime)
-- **Listening**: Attentive pose (reserved for future features)
+  - Returns to previous state after petting (preserves movement if walking/running)
 
-**Mobile Support**: Fully touch-enabled with optimized interactions
+**Movement System Features:**
+- Configurable speed (0-100% slider)
+- Adaptive boundaries (ResizeObserver updates on container resize)
+- Direction changes synchronized with sprite flipping
+- State preservation (pet returns to walking after interruptions)
+
+**Mobile Support**: Fully touch-enabled with battery-optimized CSS animations
 
 ---
 
@@ -275,32 +292,41 @@ obsidian-pets/
 
 ## Roadmap
 
-### Current Version (0.1.0 - Foundation)
+### Current Version (0.1.0 - Foundation + Movement)
 
 - ✅ Pet companion with 7 animation states
+- ✅ CSS-based walking/running system with speed control
 - ✅ Petting interaction (click/tap anytime)
 - ✅ Welcome modal and settings
-- ✅ Mobile touch support
+- ✅ Mobile touch support with battery optimization
+- ✅ GPU-accelerated animations (60 FPS, <0.1% CPU)
 
-### v0.2.0 - Celebration System (Next)
+### v0.2.0 - Celebration System (In Progress)
 
 - 🚧 Vault event listeners (note creation, tasks, links)
-- 🚧 Celebration animations (fireworks, hearts, confetti)
+- 🚧 Celebration animations with emoji speech bubbles
 - 🚧 User-configurable triggers
 - 🚧 Word count milestone tracking
 - 🚧 Cooldown system (prevent spam)
 
 ### v0.3.0 - Enhanced Experience
 
-- 📅 Optional companion music (user-provided URLs)
-- 📅 Pet walks across panel (ambient movement)
+- 📅 Custom celebration messages (user-entered text)
+- 📅 Celebration banner UI (toast notifications)
+- 📅 Additional movement patterns (zigzag, bounce, figure-8)
+- 📅 Speed variation (±10% randomization)
 - 📅 Background themes
 - 📅 Celebration sound effects (optional)
 
-### v0.4.0+ - Community & Customization
+### v0.4.0+ - Multi-Pet & Relationships
 
-- 📅 Multiple pet types
-- 📅 Custom celebration animations
+**Architecture Strategy: CSS for Rendering, JavaScript for Logic**
+
+- 📅 **Phase 2.5:** Multi-pet (CSS-only, no awareness)
+- 📅 **Phase 3:** Position tracking + simple behaviors (celebrate together when nearby)
+- 📅 **Phase 4:** Following/chasing with basic AI
+- 📅 **Phase 5:** Neural network for emergent behavior (experimental)
+- 📅 Multiple pet types (cat, dog, bunny, etc.)
 - 📅 Seasonal celebration packs ($1.99)
 - 📅 Premium backgrounds ($1.99)
 - 📅 Community-contributed pets

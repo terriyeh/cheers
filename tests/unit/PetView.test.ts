@@ -30,7 +30,7 @@ describe('PetView', () => {
     });
 
     it('should return correct display text', () => {
-      expect(petView.getDisplayText()).toBe('Vault Pal');
+      expect(petView.getDisplayText()).toBe('Obsidian Pets');
     });
 
     it('should return correct icon', () => {
@@ -38,7 +38,7 @@ describe('PetView', () => {
     });
 
     it('should export VIEW_TYPE_PET constant', () => {
-      expect(VIEW_TYPE_PET).toBe('vault-pal-pet-view');
+      expect(VIEW_TYPE_PET).toBe('obsidian-pets-pet-view');
     });
   });
 
@@ -54,25 +54,25 @@ describe('PetView', () => {
       await petView.onOpen();
 
       // After initialization, loading should be hidden
-      const loadingEl = petView.containerEl.querySelector('.vault-pal-loading');
+      const loadingEl = petView.containerEl.querySelector('.obsidian-pets-loading');
       expect(loadingEl).toBeNull();
 
       // And the pet container should be visible
-      const container = petView.containerEl.querySelector('.vault-pal-container');
+      const container = petView.containerEl.querySelector('.obsidian-pets-container');
       expect(container).toBeTruthy();
     });
 
     it('should hide loading state after initialization', async () => {
       await petView.onOpen();
 
-      const loadingEl = petView.containerEl.querySelector('.vault-pal-loading');
+      const loadingEl = petView.containerEl.querySelector('.obsidian-pets-loading');
       expect(loadingEl).toBeNull();
     });
 
     it('should create container div with correct class', async () => {
       await petView.onOpen();
 
-      const container = petView.containerEl.querySelector('.vault-pal-container');
+      const container = petView.containerEl.querySelector('.obsidian-pets-container');
       expect(container).toBeTruthy();
     });
 
@@ -80,7 +80,7 @@ describe('PetView', () => {
       await petView.onOpen();
 
       const currentState = petView.getCurrentState();
-      expect(currentState).toBe('idle');
+      expect(currentState).toBe('walking');
     });
 
     it('should mount Svelte component', async () => {
@@ -93,15 +93,15 @@ describe('PetView', () => {
     it('should set initial data-pet-state attribute', async () => {
       await petView.onOpen();
 
-      const container = petView.containerEl.querySelector('.vault-pal-container');
-      expect(container?.getAttribute('data-pet-state')).toBe('idle');
+      const container = petView.containerEl.querySelector('.obsidian-pets-container');
+      expect(container?.getAttribute('data-pet-state')).toBe('walking');
     });
 
     it('should pass correct props to Svelte component', async () => {
       await petView.onOpen();
 
       const component = petView.containerEl.querySelector('.pet-sprite-container');
-      expect(component?.getAttribute('data-state')).toBe('idle');
+      expect(component?.getAttribute('data-state')).toBe('walking');
     });
 
     it('should generate correct sprite sheet path', async () => {
@@ -109,7 +109,7 @@ describe('PetView', () => {
 
       // The path should be generated using app.vault.adapter.getResourcePath
       // which in our mock returns app://local/{path}
-      const expectedPath = 'app://local/.obsidian/plugins/vault-pal/assets/pet-sprite-sheet.png';
+      const expectedPath = 'app://local/.obsidian/plugins/obsidian-pets/assets/pet-sprite-sheet.png';
 
       // We can't directly access the spriteSheetPath prop, but we can verify
       // the component was mounted successfully which means the path was provided
@@ -129,7 +129,7 @@ describe('PetView', () => {
       await badView.onOpen();
 
       // Should show error state
-      const errorEl = badView.containerEl.querySelector('.vault-pal-view-error');
+      const errorEl = badView.containerEl.querySelector('.obsidian-pets-view-error');
       expect(errorEl).toBeTruthy();
 
       consoleErrorSpy.mockRestore();
@@ -145,11 +145,11 @@ describe('PetView', () => {
 
       await badView.onOpen();
 
-      const errorHeading = badView.containerEl.querySelector('.vault-pal-view-error h3');
-      const errorMessage = badView.containerEl.querySelector('.vault-pal-view-error-message');
-      const errorHint = badView.containerEl.querySelector('.vault-pal-view-error-hint');
+      const errorHeading = badView.containerEl.querySelector('.obsidian-pets-view-error h3');
+      const errorMessage = badView.containerEl.querySelector('.obsidian-pets-view-error-message');
+      const errorHint = badView.containerEl.querySelector('.obsidian-pets-view-error-hint');
 
-      expect(errorHeading?.textContent).toBe('Failed to load Vault Pal');
+      expect(errorHeading?.textContent).toBe('Failed to load Obsidian Pets');
       expect(errorMessage).toBeTruthy();
       expect(errorHint?.textContent).toBe('Check the console for more details.');
 
@@ -177,7 +177,7 @@ describe('PetView', () => {
 
     it('should clean up state machine', async () => {
       await petView.onOpen();
-      expect(petView.getCurrentState()).toBe('idle');
+      expect(petView.getCurrentState()).toBe('walking');
 
       await petView.onClose();
 
@@ -189,14 +189,14 @@ describe('PetView', () => {
       const initialChildCount = petView.containerEl.children.length;
       expect(initialChildCount).toBeGreaterThan(0);
 
-      // Find the vault-pal-container that was created
-      const vaultPalContainer = petView.containerEl.querySelector('.vault-pal-container');
+      // Find the obsidian-pets-container that was created
+      const vaultPalContainer = petView.containerEl.querySelector('.obsidian-pets-container');
       expect(vaultPalContainer).toBeTruthy();
 
       await petView.onClose();
 
-      // After close, the vault-pal-container should be removed
-      const vaultPalContainerAfter = petView.containerEl.querySelector('.vault-pal-container');
+      // After close, the obsidian-pets-container should be removed
+      const vaultPalContainerAfter = petView.containerEl.querySelector('.obsidian-pets-container');
       expect(vaultPalContainerAfter).toBeNull();
     });
 
@@ -229,17 +229,17 @@ describe('PetView', () => {
 
       petView.transitionState('greeting');
 
-      const container = petView.containerEl.querySelector('.vault-pal-container');
+      const container = petView.containerEl.querySelector('.obsidian-pets-container');
       expect(container?.getAttribute('data-pet-state')).toBe('greeting');
     });
 
     it('should update Svelte component when state changes', async () => {
       await petView.onOpen();
 
-      petView.transitionState('small-celebration');
+      petView.transitionState('celebration');
 
       const component = petView.containerEl.querySelector('.pet-sprite-container');
-      expect(component?.getAttribute('data-state')).toBe('small-celebration');
+      expect(component?.getAttribute('data-state')).toBe('celebration');
     });
 
     it('should handle state transitions through all states', async () => {
@@ -247,8 +247,8 @@ describe('PetView', () => {
 
       const states: PetState[] = [
         'greeting',
-        'small-celebration',
-        'big-celebration',
+        'celebration',
+        'petting',
         'petting',
       ];
 
@@ -256,12 +256,12 @@ describe('PetView', () => {
         petView.transitionState(state);
         expect(petView.getCurrentState()).toBe(state);
 
-        const container = petView.containerEl.querySelector('.vault-pal-container');
+        const container = petView.containerEl.querySelector('.obsidian-pets-container');
         expect(container?.getAttribute('data-pet-state')).toBe(state);
       }
     });
 
-    it('should handle auto-transition to idle', async () => {
+    it('should handle auto-transition to walking', async () => {
       await petView.onOpen();
 
       petView.transitionState('greeting');
@@ -269,12 +269,12 @@ describe('PetView', () => {
 
       vi.advanceTimersByTime(2000);
 
-      expect(petView.getCurrentState()).toBe('idle');
-      const container = petView.containerEl.querySelector('.vault-pal-container');
-      expect(container?.getAttribute('data-pet-state')).toBe('idle');
+      expect(petView.getCurrentState()).toBe('walking');
+      const container = petView.containerEl.querySelector('.obsidian-pets-container');
+      expect(container?.getAttribute('data-pet-state')).toBe('walking');
     });
 
-    it('should update component on auto-transition to idle', async () => {
+    it('should update component on auto-transition to walking', async () => {
       await petView.onOpen();
 
       petView.transitionState('petting');
@@ -283,14 +283,14 @@ describe('PetView', () => {
 
       vi.advanceTimersByTime(2000);
 
-      expect(component?.getAttribute('data-state')).toBe('idle');
+      expect(component?.getAttribute('data-state')).toBe('walking');
     });
 
     it('should return false for invalid state transition', async () => {
       await petView.onOpen();
 
       // Transitioning to same state should return false
-      const result = petView.transitionState('idle');
+      const result = petView.transitionState('walking');
       expect(result).toBe(false);
     });
 
@@ -309,12 +309,12 @@ describe('PetView', () => {
     it('should keep data attribute and component state in sync', async () => {
       await petView.onOpen();
 
-      const states: PetState[] = ['greeting', 'small-celebration', 'petting'];
+      const states: PetState[] = ['greeting', 'celebration', 'petting'];
 
       for (const state of states) {
         petView.transitionState(state);
 
-        const container = petView.containerEl.querySelector('.vault-pal-container');
+        const container = petView.containerEl.querySelector('.obsidian-pets-container');
         const component = petView.containerEl.querySelector('.pet-sprite-container');
 
         expect(container?.getAttribute('data-pet-state')).toBe(state);
@@ -326,25 +326,25 @@ describe('PetView', () => {
     it('should maintain sync after auto-transition', async () => {
       await petView.onOpen();
 
-      petView.transitionState('small-celebration');
+      petView.transitionState('celebration');
       vi.advanceTimersByTime(3000);
 
-      const container = petView.containerEl.querySelector('.vault-pal-container');
+      const container = petView.containerEl.querySelector('.obsidian-pets-container');
       const component = petView.containerEl.querySelector('.pet-sprite-container');
 
-      expect(container?.getAttribute('data-pet-state')).toBe('idle');
-      expect(component?.getAttribute('data-state')).toBe('idle');
-      expect(petView.getCurrentState()).toBe('idle');
+      expect(container?.getAttribute('data-pet-state')).toBe('walking');
+      expect(component?.getAttribute('data-state')).toBe('walking');
+      expect(petView.getCurrentState()).toBe('walking');
     });
 
     it('should maintain sync through rapid state changes', async () => {
       await petView.onOpen();
 
       petView.transitionState('greeting');
-      petView.transitionState('small-celebration');
+      petView.transitionState('celebration');
       petView.transitionState('petting');
 
-      const container = petView.containerEl.querySelector('.vault-pal-container');
+      const container = petView.containerEl.querySelector('.obsidian-pets-container');
       const component = petView.containerEl.querySelector('.pet-sprite-container');
 
       expect(container?.getAttribute('data-pet-state')).toBe('petting');
@@ -369,7 +369,7 @@ describe('PetView', () => {
 
       // Should log error and show error state
       expect(consoleErrorSpy).toHaveBeenCalled();
-      const errorEl = failView.containerEl.querySelector('.vault-pal-view-error');
+      const errorEl = failView.containerEl.querySelector('.obsidian-pets-view-error');
       expect(errorEl).toBeTruthy();
 
       consoleErrorSpy.mockRestore();
@@ -393,7 +393,7 @@ describe('PetView', () => {
       await petView.onOpen();
 
       // Remove the container div
-      const container = petView.containerEl.querySelector('.vault-pal-container');
+      const container = petView.containerEl.querySelector('.obsidian-pets-container');
       container?.remove();
 
       // Should not throw even though container is gone
@@ -424,7 +424,7 @@ describe('PetView', () => {
       await petView.onClose();
       await petView.onOpen();
 
-      expect(petView.getCurrentState()).toBe('idle');
+      expect(petView.getCurrentState()).toBe('walking');
     });
   });
 
@@ -433,7 +433,7 @@ describe('PetView', () => {
       await petView.onOpen();
 
       expect(typeof petView.getCurrentState).toBe('function');
-      expect(petView.getCurrentState()).toBe('idle');
+      expect(petView.getCurrentState()).toBe('walking');
     });
 
     it('should provide transitionState for external access', async () => {
@@ -449,11 +449,11 @@ describe('PetView', () => {
     it('should allow external code to trigger animations', async () => {
       await petView.onOpen();
 
-      petView.transitionState('big-celebration');
-      expect(petView.getCurrentState()).toBe('big-celebration');
+      petView.transitionState('petting');
+      expect(petView.getCurrentState()).toBe('petting');
 
       vi.advanceTimersByTime(5000);
-      expect(petView.getCurrentState()).toBe('idle');
+      expect(petView.getCurrentState()).toBe('walking');
     });
   });
 
@@ -468,8 +468,8 @@ describe('PetView', () => {
       const mainContainer = petView.containerEl.children[1];
       expect(mainContainer).toBeTruthy();
 
-      // Should have vault-pal-container inside
-      const vaultPalContainer = mainContainer.querySelector('.vault-pal-container');
+      // Should have obsidian-pets-container inside
+      const vaultPalContainer = mainContainer.querySelector('.obsidian-pets-container');
       expect(vaultPalContainer).toBeTruthy();
     });
 
@@ -500,7 +500,7 @@ describe('PetView', () => {
       await petView.onOpen();
 
       // Start in idle state
-      expect(petView.getCurrentState()).toBe('idle');
+      expect(petView.getCurrentState()).toBe('walking');
 
       // Transition to greeting state
       petView.transitionState('greeting');
@@ -533,19 +533,19 @@ describe('PetView', () => {
       expect(componentAfter).toBeNull();
     });
 
-    it('should handle pet event with returnTarget from idle state', async () => {
+    it('should handle pet event with returnTarget from walking state', async () => {
       await petView.onOpen();
 
-      // Start in idle state
-      expect(petView.getCurrentState()).toBe('idle');
+      // Start in walking state
+      expect(petView.getCurrentState()).toBe('walking');
 
-      // Simulate petting from idle (should return to idle)
-      petView.transitionState('petting', 'idle');
+      // Simulate petting from walking (should return to walking)
+      petView.transitionState('petting', 'walking');
       expect(petView.getCurrentState()).toBe('petting');
 
-      // After petting duration, should return to 'idle'
+      // After petting duration, should return to 'walking'
       vi.advanceTimersByTime(2000);
-      expect(petView.getCurrentState()).toBe('idle');
+      expect(petView.getCurrentState()).toBe('walking');
     });
 
     it('should handle pet event with returnTarget from greeting state', async () => {

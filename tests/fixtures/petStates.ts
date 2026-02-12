@@ -9,49 +9,42 @@ import type { PetState, StateChangeEvent } from '../../src/types/pet';
  * All valid pet states
  */
 export const ALL_PET_STATES: PetState[] = [
-  'idle',
+  'walking',
+  'running',
   'greeting',
-  'small-celebration',
-  'big-celebration',
+  'celebration',
   'petting',
+  'sleeping',
 ];
 
 /**
- * States that auto-return to idle
+ * States that auto-return to walking
  */
 export const TEMPORARY_STATES: PetState[] = [
   'greeting',
-  'small-celebration',
-  'big-celebration',
+  'celebration',
   'petting',
+  'sleeping',
 ];
 
 /**
- * States that do not auto-return to idle
+ * States that do not auto-return to walking
  */
-export const PERMANENT_STATES: PetState[] = ['idle'];
+export const PERMANENT_STATES: PetState[] = ['walking', 'running'];
 
 /**
  * State durations in milliseconds
+ * Note: walking and running durations are calculated based on speed settings
  */
 export const STATE_DURATIONS: Record<PetState, number> = {
-  idle: 0,
+  walking: 1400, // Default for speed=60 (2 - 60/60 = 1.4s)
+  running: 400, // Default for speed=100 (1 - (100-60)/40 * 0.6 = 0.4s)
   greeting: 2000,
-  'small-celebration': 3000,
-  'big-celebration': 5000,
-  petting: 2000,
+  celebration: 3000,
+  petting: 2000, // Reduced from 5s - less awkward pause
+  sleeping: 2000,
 };
 
-/**
- * Expected state text for each state
- */
-export const STATE_TEXT_MAP: Record<PetState, string> = {
-  idle: 'Just hanging out...',
-  greeting: 'Hello there!',
-  'small-celebration': 'Great job!',
-  'big-celebration': 'Amazing! You did it!',
-  petting: 'That feels nice!',
-};
 
 /**
  * Create a mock state change event
@@ -69,9 +62,9 @@ export function createMockStateChangeEvent(
 }
 
 /**
- * Check if a state should auto-return to idle
+ * Check if a state should auto-return to walking
  */
-export function shouldAutoReturnToIdle(state: PetState): boolean {
+export function shouldAutoReturnToWalking(state: PetState): boolean {
   return TEMPORARY_STATES.includes(state);
 }
 
@@ -83,10 +76,21 @@ export function getStateDuration(state: PetState): number {
 }
 
 /**
- * Get expected text for a state
+ * Calculate walking state duration based on speed (0-60)
+ * Formula: duration = 2 - (speed / 60)
  */
-export function getExpectedStateText(state: PetState): string {
-  return STATE_TEXT_MAP[state];
+export function calculateWalkingDuration(speed: number): number {
+  const clampedSpeed = Math.max(0, Math.min(60, speed));
+  return 2 - (clampedSpeed / 60);
+}
+
+/**
+ * Calculate running state duration based on speed (61-100)
+ * Formula: duration = 1 - ((speed - 60) / 40) * 0.6
+ */
+export function calculateRunningDuration(speed: number): number {
+  const clampedSpeed = Math.max(61, Math.min(100, speed));
+  return 1 - ((clampedSpeed - 60) / 40) * 0.6;
 }
 
 /**
@@ -110,12 +114,13 @@ export function createUserInteractionSequence(): {
 }[] {
   return [
     { state: 'greeting', duration: 2000, description: 'Pet greets user' },
-    { state: 'idle', duration: 0, description: 'Return to idle' },
+    { state: 'walking', duration: 1400, description: 'Return to walking' },
     {
-      state: 'small-celebration',
+      state: 'celebration',
       duration: 3000,
       description: 'User completes task',
     },
     { state: 'petting', duration: 2000, description: 'User pets companion' },
+    { state: 'sleeping', duration: 2000, description: 'Pet goes to sleep' },
   ];
 }

@@ -17,7 +17,6 @@ export default class MockPetComponent {
   private container!: HTMLElement;
   private wrapper!: HTMLElement;
   private sprite!: HTMLElement;
-  private stateText!: HTMLElement;
   private heartOverlay: HTMLElement | null = null;
 
   constructor(options: { target: HTMLElement; props: any }) {
@@ -28,6 +27,17 @@ export default class MockPetComponent {
     this.container = document.createElement('div');
     this.container.className = 'pet-sprite-container';
     this.container.dataset.state = options.props.state;
+
+    // Set initial animation duration if movementSpeed is provided
+    if (options.props.movementSpeed !== undefined) {
+      // Clamp movement speed to valid range (0-100)
+      const clampedSpeed = Math.max(0, Math.min(100, options.props.movementSpeed));
+      const isRunning = clampedSpeed > 60;
+      const animationDuration = isRunning
+        ? 1 - ((clampedSpeed - 60) / 40) * 0.6 // 1s to 0.4s
+        : 2 - (clampedSpeed / 60); // 2s to 1s
+      this.container.style.setProperty('--animation-duration', `${animationDuration}s`);
+    }
 
     // Wrapper with interactive attributes
     this.wrapper = document.createElement('div');
@@ -46,15 +56,9 @@ export default class MockPetComponent {
     this.sprite.setAttribute('aria-label', `Pet is ${options.props.state}`);
     this.sprite.style.backgroundImage = `url(${options.props.spriteSheetPath})`;
 
-    // State text
-    this.stateText = document.createElement('div');
-    this.stateText.className = 'pet-state-text';
-    this.stateText.textContent = this.getStateText(options.props.state, options.props.userName);
-
     // Assemble structure
     this.wrapper.appendChild(this.sprite);
     this.container.appendChild(this.wrapper);
-    this.container.appendChild(this.stateText);
     this.target.appendChild(this.container);
 
     // Add heart overlay if in petting state
@@ -68,7 +72,6 @@ export default class MockPetComponent {
       if (newProps.state !== undefined) {
         this.container.dataset.state = newProps.state;
         this.sprite.setAttribute('aria-label', `Pet is ${newProps.state}`);
-        this.stateText.textContent = this.getStateText(newProps.state, this.props.userName);
         this.updateInteractiveAttributes(newProps.state, this.props.petName);
         this.updateHeartOverlay(newProps.state);
       }
@@ -77,12 +80,19 @@ export default class MockPetComponent {
         this.updateInteractiveAttributes(this.props.state, newProps.petName);
       }
 
-      if (newProps.userName !== undefined) {
-        this.stateText.textContent = this.getStateText(this.props.state, newProps.userName);
-      }
-
       if (newProps.spriteSheetPath !== undefined) {
         this.sprite.style.backgroundImage = `url(${newProps.spriteSheetPath})`;
+      }
+
+      if (newProps.movementSpeed !== undefined) {
+        // Clamp movement speed to valid range (0-100)
+        const clampedSpeed = Math.max(0, Math.min(100, newProps.movementSpeed));
+        // Calculate animation duration based on speed
+        const isRunning = clampedSpeed > 60;
+        const animationDuration = isRunning
+          ? 1 - ((clampedSpeed - 60) / 40) * 0.6 // 1s to 0.4s
+          : 2 - (clampedSpeed / 60); // 2s to 1s
+        this.container.style.setProperty('--animation-duration', `${animationDuration}s`);
       }
     };
 
@@ -115,7 +125,7 @@ export default class MockPetComponent {
   }
 
   private isPettingAllowed(state: PetState): boolean {
-    return state === 'idle' || state === 'greeting';
+    return state === 'walking' || state === 'running' || state === 'greeting';
   }
 
   private updateInteractiveAttributes(state: PetState, petName: string): void {
@@ -172,18 +182,5 @@ export default class MockPetComponent {
     handlers.forEach((handler) => {
       handler({ detail });
     });
-  }
-
-  private getStateText(state: PetState, userName?: string): string {
-    const greeting = userName ? `Hello ${userName}!` : 'Hello there!';
-
-    const stateTexts: Record<PetState, string> = {
-      idle: 'Just hanging out...',
-      greeting: greeting,
-      'small-celebration': 'Great job!',
-      'big-celebration': 'Amazing! You did it!',
-      petting: 'That feels nice!',
-    };
-    return stateTexts[state];
   }
 }

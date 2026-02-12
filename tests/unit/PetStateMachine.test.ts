@@ -22,8 +22,8 @@ describe('PetStateMachine', () => {
   });
 
   describe('initialization', () => {
-    it('should initialize in idle state', () => {
-      expect(stateMachine.getCurrentState()).toBe('idle');
+    it('should initialize in walking state by default', () => {
+      expect(stateMachine.getCurrentState()).toBe('walking');
     });
 
     it('should have no listeners on initialization', () => {
@@ -36,7 +36,7 @@ describe('PetStateMachine', () => {
   });
 
   describe('state transitions', () => {
-    it('should transition from idle to greeting', () => {
+    it('should transition from walking to greeting', () => {
       const result = stateMachine.transition('greeting');
       expect(result).toBe(true);
       expect(stateMachine.getCurrentState()).toBe('greeting');
@@ -45,10 +45,11 @@ describe('PetStateMachine', () => {
     it('should transition through all valid states', () => {
       const states: PetState[] = [
         'greeting',
-        'small-celebration',
-        'big-celebration',
+        'celebration',
         'petting',
-        'idle',
+        'sleeping',
+        'walking',
+        'running',
       ];
 
       states.forEach((state) => {
@@ -59,15 +60,15 @@ describe('PetStateMachine', () => {
     });
 
     it('should return false when transitioning to the same state', () => {
-      expect(stateMachine.getCurrentState()).toBe('idle');
-      const result = stateMachine.transition('idle');
+      expect(stateMachine.getCurrentState()).toBe('walking');
+      const result = stateMachine.transition('walking');
       expect(result).toBe(false);
-      expect(stateMachine.getCurrentState()).toBe('idle');
+      expect(stateMachine.getCurrentState()).toBe('walking');
     });
 
     it('should handle rapid state transitions correctly', () => {
       stateMachine.transition('greeting');
-      stateMachine.transition('small-celebration');
+      stateMachine.transition('celebration');
       stateMachine.transition('petting');
       expect(stateMachine.getCurrentState()).toBe('petting');
     });
@@ -83,52 +84,71 @@ describe('PetStateMachine', () => {
     });
   });
 
-  describe('automatic return to idle', () => {
-    it('should return to idle after greeting duration (2s)', () => {
+  describe('automatic return to walking', () => {
+    it('should return to walking after greeting duration (2s)', () => {
       stateMachine.transition('greeting');
       expect(stateMachine.getCurrentState()).toBe('greeting');
 
       vi.advanceTimersByTime(2000);
 
-      expect(stateMachine.getCurrentState()).toBe('idle');
+      expect(stateMachine.getCurrentState()).toBe('walking');
     });
 
-    it('should return to idle after small-celebration duration (3s)', () => {
-      stateMachine.transition('small-celebration');
-      expect(stateMachine.getCurrentState()).toBe('small-celebration');
+    it('should return to walking after celebration duration (3s)', () => {
+      stateMachine.transition('celebration');
+      expect(stateMachine.getCurrentState()).toBe('celebration');
 
       vi.advanceTimersByTime(3000);
 
-      expect(stateMachine.getCurrentState()).toBe('idle');
+      expect(stateMachine.getCurrentState()).toBe('walking');
     });
 
-    it('should return to idle after big-celebration duration (5s)', () => {
-      stateMachine.transition('big-celebration');
-      expect(stateMachine.getCurrentState()).toBe('big-celebration');
-
-      vi.advanceTimersByTime(5000);
-
-      expect(stateMachine.getCurrentState()).toBe('idle');
-    });
-
-    it('should return to idle after petting duration (2s)', () => {
+    it('should return to walking after petting duration (2s)', () => {
       stateMachine.transition('petting');
       expect(stateMachine.getCurrentState()).toBe('petting');
 
       vi.advanceTimersByTime(2000);
 
-      expect(stateMachine.getCurrentState()).toBe('idle');
+      expect(stateMachine.getCurrentState()).toBe('walking');
     });
 
-    it('should NOT return to idle from idle state', () => {
-      expect(stateMachine.getCurrentState()).toBe('idle');
+    it('should return to walking after sleeping duration (2s)', () => {
+      stateMachine.transition('sleeping');
+      expect(stateMachine.getCurrentState()).toBe('sleeping');
+
+      vi.advanceTimersByTime(2000);
+
+      expect(stateMachine.getCurrentState()).toBe('walking');
+    });
+
+    it('should NOT auto-return from walking state', () => {
+      expect(stateMachine.getCurrentState()).toBe('walking');
 
       vi.advanceTimersByTime(10000);
 
-      expect(stateMachine.getCurrentState()).toBe('idle');
+      expect(stateMachine.getCurrentState()).toBe('walking');
     });
 
-    it('should cancel scheduled idle transition when transitioning to new state', () => {
+    it('should NOT auto-return from running state', () => {
+      stateMachine.transition('running');
+      expect(stateMachine.getCurrentState()).toBe('running');
+
+      vi.advanceTimersByTime(10000);
+
+      expect(stateMachine.getCurrentState()).toBe('running');
+    });
+
+    it('should return to running when returnTarget is specified', () => {
+      stateMachine.transition('running');
+      stateMachine.transition('petting', 'running');
+      expect(stateMachine.getCurrentState()).toBe('petting');
+
+      vi.advanceTimersByTime(5000);
+
+      expect(stateMachine.getCurrentState()).toBe('running');
+    });
+
+    it('should cancel scheduled walking transition when transitioning to new state', () => {
       stateMachine.transition('greeting');
       expect(stateMachine.getCurrentState()).toBe('greeting');
 
@@ -136,11 +156,11 @@ describe('PetStateMachine', () => {
       vi.advanceTimersByTime(1000);
       stateMachine.transition('petting');
 
-      // Wait for what would have been the greeting timeout
-      vi.advanceTimersByTime(2000);
+      // Wait for petting duration (5s)
+      vi.advanceTimersByTime(5000);
 
-      // Should have returned to idle after petting duration
-      expect(stateMachine.getCurrentState()).toBe('idle');
+      // Should have returned to walking after petting duration
+      expect(stateMachine.getCurrentState()).toBe('walking');
     });
   });
 
@@ -153,7 +173,7 @@ describe('PetStateMachine', () => {
 
       expect(listener).toHaveBeenCalledTimes(1);
       expect(listener).toHaveBeenCalledWith({
-        previousState: 'idle',
+        previousState: 'walking',
         newState: 'greeting',
         timestamp: expect.any(Number),
       });
@@ -224,7 +244,7 @@ describe('PetStateMachine', () => {
       expect(event.timestamp).toBeLessThanOrEqual(afterTime);
     });
 
-    it('should notify listener when auto-transitioning to idle', () => {
+    it('should notify listener when auto-transitioning to walking', () => {
       const listener = vi.fn();
       stateMachine.addListener(listener);
 
@@ -236,7 +256,7 @@ describe('PetStateMachine', () => {
       expect(listener).toHaveBeenCalledTimes(2);
       expect(listener).toHaveBeenNthCalledWith(2, {
         previousState: 'greeting',
-        newState: 'idle',
+        newState: 'walking',
         timestamp: expect.any(Number),
       });
     });
@@ -245,7 +265,7 @@ describe('PetStateMachine', () => {
       const listener = vi.fn();
       stateMachine.addListener(listener);
 
-      stateMachine.transition('idle');
+      stateMachine.transition('walking');
 
       expect(listener).not.toHaveBeenCalled();
     });
@@ -297,13 +317,13 @@ describe('PetStateMachine', () => {
   });
 
   describe('reset', () => {
-    it('should reset state to idle', () => {
+    it('should reset state to walking', () => {
       stateMachine.transition('petting');
       expect(stateMachine.getCurrentState()).toBe('petting');
 
       stateMachine.reset();
 
-      expect(stateMachine.getCurrentState()).toBe('idle');
+      expect(stateMachine.getCurrentState()).toBe('walking');
     });
 
     it('should clear any scheduled timers when resetting', () => {
@@ -315,7 +335,7 @@ describe('PetStateMachine', () => {
       expect(clearTimeoutSpy).toHaveBeenCalled();
     });
 
-    it('should notify listeners when resetting to idle from another state', () => {
+    it('should notify listeners when resetting to walking from another state', () => {
       const listener = vi.fn();
       stateMachine.addListener(listener);
       stateMachine.transition('petting');
@@ -325,12 +345,12 @@ describe('PetStateMachine', () => {
 
       expect(listener).toHaveBeenCalledWith({
         previousState: 'petting',
-        newState: 'idle',
+        newState: 'walking',
         timestamp: expect.any(Number),
       });
     });
 
-    it('should not notify listeners when already in idle state', () => {
+    it('should not notify listeners when already in walking state', () => {
       const listener = vi.fn();
       stateMachine.addListener(listener);
 
@@ -350,13 +370,13 @@ describe('PetStateMachine', () => {
       vi.advanceTimersByTime(500);
       stateMachine.transition('petting');
       vi.advanceTimersByTime(500);
-      stateMachine.transition('small-celebration');
+      stateMachine.transition('celebration');
 
-      // Wait for small-celebration to complete
+      // Wait for celebration to complete
       vi.advanceTimersByTime(3000);
 
-      expect(stateMachine.getCurrentState()).toBe('idle');
-      // Should have 4 transitions: idle->greeting, greeting->petting, petting->small-celebration, small-celebration->idle
+      expect(stateMachine.getCurrentState()).toBe('walking');
+      // Should have 4 transitions: walking->greeting, greeting->petting, petting->celebration, celebration->walking
       expect(listener).toHaveBeenCalledTimes(4);
     });
 
@@ -376,16 +396,16 @@ describe('PetStateMachine', () => {
       expect(() => stateMachine.removeListener(listener)).not.toThrow();
     });
 
-    it('should maintain state when timer expires but already in idle', () => {
+    it('should maintain state when timer expires but already in walking', () => {
       stateMachine.transition('greeting');
       vi.advanceTimersByTime(2000);
 
-      expect(stateMachine.getCurrentState()).toBe('idle');
+      expect(stateMachine.getCurrentState()).toBe('walking');
 
       // Try to advance more time
       vi.advanceTimersByTime(5000);
 
-      expect(stateMachine.getCurrentState()).toBe('idle');
+      expect(stateMachine.getCurrentState()).toBe('walking');
     });
 
     it('should handle state transitions during listener execution', () => {
@@ -395,16 +415,16 @@ describe('PetStateMachine', () => {
         if (event.newState === 'greeting' && !nestedTransitionComplete) {
           nestedTransitionComplete = true;
           // This transition happens during the listener callback
-          stateMachine.transition('small-celebration');
+          stateMachine.transition('celebration');
         }
       });
 
       stateMachine.addListener(listener);
       stateMachine.transition('greeting');
 
-      // Should end up in small-celebration state
-      expect(stateMachine.getCurrentState()).toBe('small-celebration');
-      // Listener should be called twice: once for greeting, once for small-celebration
+      // Should end up in celebration state
+      expect(stateMachine.getCurrentState()).toBe('celebration');
+      // Listener should be called twice: once for greeting, once for celebration
       expect(listener).toHaveBeenCalledTimes(2);
     });
   });
@@ -416,25 +436,16 @@ describe('PetStateMachine', () => {
       expect(stateMachine.getCurrentState()).toBe('greeting');
 
       vi.advanceTimersByTime(1);
-      expect(stateMachine.getCurrentState()).toBe('idle');
+      expect(stateMachine.getCurrentState()).toBe('walking');
     });
 
-    it('should have correct duration for small-celebration state', () => {
-      stateMachine.transition('small-celebration');
+    it('should have correct duration for celebration state', () => {
+      stateMachine.transition('celebration');
       vi.advanceTimersByTime(2999);
-      expect(stateMachine.getCurrentState()).toBe('small-celebration');
+      expect(stateMachine.getCurrentState()).toBe('celebration');
 
       vi.advanceTimersByTime(1);
-      expect(stateMachine.getCurrentState()).toBe('idle');
-    });
-
-    it('should have correct duration for big-celebration state', () => {
-      stateMachine.transition('big-celebration');
-      vi.advanceTimersByTime(4999);
-      expect(stateMachine.getCurrentState()).toBe('big-celebration');
-
-      vi.advanceTimersByTime(1);
-      expect(stateMachine.getCurrentState()).toBe('idle');
+      expect(stateMachine.getCurrentState()).toBe('walking');
     });
 
     it('should have correct duration for petting state', () => {
@@ -443,17 +454,32 @@ describe('PetStateMachine', () => {
       expect(stateMachine.getCurrentState()).toBe('petting');
 
       vi.advanceTimersByTime(1);
-      expect(stateMachine.getCurrentState()).toBe('idle');
+      expect(stateMachine.getCurrentState()).toBe('walking');
     });
 
-    it('should not have auto-transition for idle state', () => {
+    it('should have correct duration for sleeping state', () => {
+      stateMachine.transition('sleeping');
+      vi.advanceTimersByTime(1999);
+      expect(stateMachine.getCurrentState()).toBe('sleeping');
+
+      vi.advanceTimersByTime(1);
+      expect(stateMachine.getCurrentState()).toBe('walking');
+    });
+
+    it('should not have auto-transition for walking state', () => {
       vi.advanceTimersByTime(30000);
-      expect(stateMachine.getCurrentState()).toBe('idle');
+      expect(stateMachine.getCurrentState()).toBe('walking');
+    });
+
+    it('should not have auto-transition for running state', () => {
+      stateMachine.transition('running');
+      vi.advanceTimersByTime(30000);
+      expect(stateMachine.getCurrentState()).toBe('running');
     });
   });
 
   describe('returnTarget parameter', () => {
-    it('should return to specified state after petting from idle', () => {
+    it('should return to specified state after petting from walking', () => {
       // Transition to petting with returnTarget = 'greeting'
       stateMachine.transition('petting', 'greeting');
       expect(stateMachine.getCurrentState()).toBe('petting');
@@ -476,7 +502,7 @@ describe('PetStateMachine', () => {
       expect(stateMachine.getCurrentState()).toBe('greeting');
     });
 
-    it('should default to idle when returnTarget is not specified', () => {
+    it('should default to walking when returnTarget is not specified', () => {
       stateMachine.transition('greeting');
       expect(stateMachine.getCurrentState()).toBe('greeting');
 
@@ -484,19 +510,19 @@ describe('PetStateMachine', () => {
       stateMachine.transition('petting');
       expect(stateMachine.getCurrentState()).toBe('petting');
 
-      // After petting duration (2s), should return to 'idle' (default)
-      vi.advanceTimersByTime(2000);
-      expect(stateMachine.getCurrentState()).toBe('idle');
+      // After petting duration (5s), should return to 'walking' (default)
+      vi.advanceTimersByTime(5000);
+      expect(stateMachine.getCurrentState()).toBe('walking');
     });
 
     it('should handle returnTarget for greeting state', () => {
-      // Greeting already has auto-return to idle, but returnTarget should override
-      stateMachine.transition('greeting', 'small-celebration');
+      // Greeting already has auto-return to walking, but returnTarget should override
+      stateMachine.transition('greeting', 'celebration');
       expect(stateMachine.getCurrentState()).toBe('greeting');
 
-      // After greeting duration (2s), should return to 'small-celebration' (not idle)
+      // After greeting duration (2s), should return to 'celebration' (not walking)
       vi.advanceTimersByTime(2000);
-      expect(stateMachine.getCurrentState()).toBe('small-celebration');
+      expect(stateMachine.getCurrentState()).toBe('celebration');
     });
 
     it('should clear previous returnTarget when transitioning manually', () => {
@@ -506,14 +532,50 @@ describe('PetStateMachine', () => {
 
       // Manually transition before timer expires
       vi.advanceTimersByTime(1000);
-      stateMachine.transition('small-celebration');
-      expect(stateMachine.getCurrentState()).toBe('small-celebration');
+      stateMachine.transition('celebration');
+      expect(stateMachine.getCurrentState()).toBe('celebration');
 
       // Wait for what would have been the petting timeout
       vi.advanceTimersByTime(2000);
 
-      // Should still be in small-celebration, not greeting (timer was cleared)
-      expect(stateMachine.getCurrentState()).toBe('small-celebration');
+      // Should still be in celebration, not greeting (timer was cleared)
+      expect(stateMachine.getCurrentState()).toBe('celebration');
+    });
+  });
+
+  describe('negative cases', () => {
+    it('should handle invalid state gracefully', () => {
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      const result = stateMachine.transition('invalid-state' as PetState);
+
+      expect(result).toBe(false);
+      expect(stateMachine.getCurrentState()).toBe('walking');
+      expect(consoleErrorSpy).toHaveBeenCalledWith('Invalid pet state: invalid-state');
+
+      consoleErrorSpy.mockRestore();
+    });
+
+    it('should reject transition to empty string state', () => {
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      const result = stateMachine.transition('' as PetState);
+
+      expect(result).toBe(false);
+      expect(stateMachine.getCurrentState()).toBe('walking');
+
+      consoleErrorSpy.mockRestore();
+    });
+
+    it('should reject transition to null/undefined state', () => {
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      const result = stateMachine.transition(null as unknown as PetState);
+
+      expect(result).toBe(false);
+      expect(stateMachine.getCurrentState()).toBe('walking');
+
+      consoleErrorSpy.mockRestore();
     });
   });
 });

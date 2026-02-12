@@ -10,7 +10,7 @@ import type {
  * Manages state transitions and behaviors for the pet companion
  */
 export class PetStateMachine {
-  private currentState: PetState = 'idle';
+  private currentState: PetState = 'walking';
   private listeners: StateChangeListener[] = [];
   private transitionTimer: ReturnType<typeof setTimeout> | null = null;
   private readonly stateConfigs: PetStateConfigMap;
@@ -21,30 +21,34 @@ export class PetStateMachine {
 
   /**
    * Initialize state configurations
-   * - Idle loops indefinitely (duration: 0)
-   * - Temporary states return to idle after their duration
+   * - Walking/running are continuous until interrupted (duration: 0)
+   * - Temporary states return to walking after their duration
    */
   private initializeStateConfigs(): PetStateConfigMap {
     return {
-      idle: {
-        duration: 0, // Loops indefinitely until triggered
-        returnsToIdle: false,
+      walking: {
+        duration: 0, // Continuous until interrupted
+        returnsToWalking: false,
+      },
+      running: {
+        duration: 0, // Continuous until interrupted
+        returnsToWalking: false,
       },
       greeting: {
         duration: 2000, // 2 seconds
-        returnsToIdle: true,
+        returnsToWalking: true, // Returns to walking
       },
-      'small-celebration': {
+      celebration: {
         duration: 3000, // 3 seconds
-        returnsToIdle: true,
-      },
-      'big-celebration': {
-        duration: 5000, // 5 seconds
-        returnsToIdle: true,
+        returnsToWalking: true, // Returns to walking
       },
       petting: {
+        duration: 2000, // 2 seconds (reduced from 5s - less awkward pause)
+        returnsToWalking: true, // Returns to walking
+      },
+      sleeping: {
         duration: 2000, // 2 seconds
-        returnsToIdle: true,
+        returnsToWalking: true, // Returns to walking
       },
     };
   }
@@ -96,10 +100,10 @@ export class PetStateMachine {
       timestamp: Date.now(),
     });
 
-    // If state has a duration and returns to idle, schedule return
+    // If state has a duration and returns to walking, schedule return
     const config = this.stateConfigs[newState];
-    if (config.duration > 0 && config.returnsToIdle) {
-      const target = returnTarget || 'idle';
+    if (config.duration > 0 && config.returnsToWalking) {
+      const target = returnTarget || 'walking';
       this.scheduleReturnTo(config.duration, target);
     }
 
@@ -163,9 +167,9 @@ export class PetStateMachine {
   }
 
   /**
-   * Reset to idle state
+   * Reset to walking state
    */
   reset(): void {
-    this.transition('idle');
+    this.transition('walking');
   }
 }

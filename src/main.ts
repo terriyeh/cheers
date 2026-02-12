@@ -2,8 +2,8 @@ import { Plugin, Notice } from 'obsidian';
 import type { WorkspaceLeaf } from 'obsidian';
 import { PetView, VIEW_TYPE_PET } from './views/PetView';
 import type { PetState } from './types/pet';
-import type { VaultPalSettings } from './types/settings';
-import { DEFAULT_SETTINGS } from './types/settings';
+import type { ObsidianPetsSettings } from './types/settings';
+import { DEFAULT_SETTINGS, VALIDATION_RULES } from './types/settings';
 import { WelcomeModal } from './modals/WelcomeModal';
 
 // Build-time constant injected by esbuild
@@ -12,24 +12,25 @@ declare const __DEV__: boolean;
 /**
  * Debug interface for manual state testing (development only)
  */
-interface VaultPalDebug {
+interface ObsidianPetsDebug {
 	transitionState: (state: PetState) => void;
 	getCurrentState: () => PetState | null;
 	reset: () => void;
+	setSpeed: (speed: number) => void;
 	help: () => void;
 }
 
 declare global {
 	interface Window {
-		vaultPalDebug?: VaultPalDebug;
+		obsidianPetsDebug?: ObsidianPetsDebug;
 	}
 }
 
-export default class VaultPalPlugin extends Plugin {
-	settings: VaultPalSettings = DEFAULT_SETTINGS;
+export default class ObsidianPetsPlugin extends Plugin {
+	settings: ObsidianPetsSettings = DEFAULT_SETTINGS;
 
 	async onload() {
-		console.log('🦊 Vault Pal loading...');
+		console.log('🦊 Obsidian Pets loading...');
 
 		// Load settings
 		await this.loadSettings();
@@ -45,8 +46,8 @@ export default class VaultPalPlugin extends Plugin {
 
 		// Add command to open pet view (for command palette)
 		this.addCommand({
-			id: 'open-vault-pal',
-			name: 'Open Vault Pal',
+			id: 'open-obsidian-pets',
+			name: 'Open Obsidian Pets',
 			callback: () => {
 				this.activatePetView();
 			},
@@ -61,54 +62,19 @@ export default class VaultPalPlugin extends Plugin {
 			},
 		});
 
-		// Command: Open today's daily note
-		this.addCommand({
-			id: 'open-daily-note',
-			name: 'Open today\'s daily note',
-			callback: async () => {
-				const leaves = this.app.workspace.getLeavesOfType(VIEW_TYPE_PET);
-				const petViewLeaf = leaves.length > 0 ? leaves[0] : null;
-
-				if (petViewLeaf?.view && petViewLeaf.view instanceof PetView) {
-					// Pet View is open - use its method
-					await (petViewLeaf.view as PetView).openDailyNote();
-				} else {
-					// Fallback: Open note without Pet View
-					const {
-						createDailyNote,
-						getDailyNote,
-						getAllDailyNotes,
-						appHasDailyNotesPluginLoaded
-					} = await import('obsidian-daily-notes-interface');
-
-					if (!appHasDailyNotesPluginLoaded()) {
-						new Notice('Daily Notes plugin is not enabled. Please enable it in Settings → Core Plugins.', 8000);
-						return;
-					}
-
-					const today = window.moment();
-					let note = getDailyNote(today, getAllDailyNotes());
-					if (!note) {
-						note = await createDailyNote(today);
-					}
-					await this.app.workspace.getLeaf(false).openFile(note);
-				}
-			}
-		});
-
 		// Don't auto-open on startup - let user open manually via ribbon/command
 
 		// Expose debug commands for manual state testing (development only)
 		// This code is completely removed in production builds via tree-shaking
 		if (__DEV__) {
-			window.vaultPalDebug = {
+			window.obsidianPetsDebug = {
 				transitionState: (state: PetState) => {
 					const view = this.getActivePetView();
 					if (view) {
 						view.transitionState(state);
 						console.log(`🦊 Transitioned to: ${state}`);
 					} else {
-						console.error('🦊 No active pet view. Open Vault Pal first.');
+						console.error('🦊 No active pet view. Open Obsidian Pets first.');
 					}
 				},
 				getCurrentState: () => {
@@ -120,40 +86,51 @@ export default class VaultPalPlugin extends Plugin {
 				reset: () => {
 					const view = this.getActivePetView();
 					if (view) {
-						view.transitionState('idle');
-						console.log('🦊 Reset to idle');
+						view.transitionState('walking');
+						console.log('🦊 Reset to walking');
 					} else {
-						console.error('🦊 No active pet view. Open Vault Pal first.');
+						console.error('🦊 No active pet view. Open Obsidian Pets first.');
+					}
+				},
+				setSpeed: (speed: number) => {
+					const view = this.getActivePetView();
+					if (view?.petComponent) {
+						view.petComponent.$set({ movementSpeed: speed });
+						console.log(`🦊 Movement speed set to: ${speed}%`);
+					} else {
+						console.error('🦊 No active pet view. Open Obsidian Pets first.');
 					}
 				},
 				help: () => {
 					console.log(`
-🦊 Vault Pal Debug Commands:
-  vaultPalDebug.transitionState('state') - Transition to a state
-  vaultPalDebug.getCurrentState()        - Get current state
-  vaultPalDebug.reset()                  - Reset to idle
-  vaultPalDebug.help()                   - Show this help
+🦊 Obsidian Pets Debug Commands:
+  obsidianPetsDebug.transitionState('state') - Transition to a state
+  obsidianPetsDebug.getCurrentState()        - Get current state
+  obsidianPetsDebug.reset()                  - Reset to walking
+  obsidianPetsDebug.setSpeed(50)             - Set movement speed (0-100)
+  obsidianPetsDebug.help()                   - Show this help
 
 Available states:
-  - idle
+  - walking
+  - running
   - greeting
-  - small-celebration
-  - big-celebration
+  - celebration
   - petting
+  - sleeping
 					`);
 				}
 			};
 
-			console.log('🦊 Debug commands available: window.vaultPalDebug.help()');
+			console.log('🦊 Debug commands available: window.obsidianPetsDebug.help()');
 		}
 	}
 
 	onunload() {
-		console.log('🦊 Vault Pal unloaded');
+		console.log('🦊 Obsidian Pets unloaded');
 
 		// Clean up debug interface (development only)
-		if (__DEV__ && window.vaultPalDebug) {
-			delete window.vaultPalDebug;
+		if (__DEV__ && window.obsidianPetsDebug) {
+			delete window.obsidianPetsDebug;
 		}
 
 		// Detach all pet views
@@ -221,10 +198,59 @@ Available states:
 	}
 
 	/**
-	 * Load settings from disk
+	 * Validate loaded settings against validation rules
+	 * @param settings - Settings object to validate
+	 * @returns Validated settings with invalid values replaced by defaults
+	 */
+	private validateSettings(settings: ObsidianPetsSettings): ObsidianPetsSettings {
+		const validated = { ...settings };
+
+		// Validate petName
+		if (
+			typeof validated.petName !== 'string' ||
+			validated.petName.length < VALIDATION_RULES.petName.minLength ||
+			validated.petName.length > VALIDATION_RULES.petName.maxLength ||
+			!VALIDATION_RULES.petName.pattern.test(validated.petName)
+		) {
+			console.warn(`Invalid petName loaded, using default: ${DEFAULT_SETTINGS.petName}`);
+			validated.petName = DEFAULT_SETTINGS.petName;
+		}
+
+		// Validate userName
+		if (
+			typeof validated.userName !== 'string' ||
+			validated.userName.length > VALIDATION_RULES.userName.maxLength ||
+			!VALIDATION_RULES.userName.pattern.test(validated.userName)
+		) {
+			console.warn(`Invalid userName loaded, using default: ${DEFAULT_SETTINGS.userName}`);
+			validated.userName = DEFAULT_SETTINGS.userName;
+		}
+
+		// Validate movementSpeed
+		if (
+			typeof validated.movementSpeed !== 'number' ||
+			validated.movementSpeed < VALIDATION_RULES.movementSpeed.min ||
+			validated.movementSpeed > VALIDATION_RULES.movementSpeed.max
+		) {
+			console.warn(`Invalid movementSpeed loaded, using default: ${DEFAULT_SETTINGS.movementSpeed}`);
+			validated.movementSpeed = DEFAULT_SETTINGS.movementSpeed;
+		}
+
+		// Validate hasCompletedWelcome
+		if (typeof validated.hasCompletedWelcome !== 'boolean') {
+			validated.hasCompletedWelcome = DEFAULT_SETTINGS.hasCompletedWelcome;
+		}
+
+		return validated;
+	}
+
+	/**
+	 * Load settings from disk with validation
 	 */
 	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+		const loadedData = await this.loadData();
+		const mergedSettings = Object.assign({}, DEFAULT_SETTINGS, loadedData);
+		this.settings = this.validateSettings(mergedSettings);
 	}
 
 	/**
