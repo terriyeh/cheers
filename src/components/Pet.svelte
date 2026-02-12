@@ -18,6 +18,11 @@
   export let heartSpritePath: string = 'assets/heart.png';
 
   /**
+   * Path to the background scene (passed from PetView)
+   */
+  export let backgroundPath: string = '';
+
+  /**
    * Pet's name (from settings)
    */
   export let petName: string = 'Kit';
@@ -166,6 +171,8 @@
     updateMovementRange();
 
     // Watch for container resize with fallback for older browsers
+    if (!containerEl) return;
+
     try {
       // Use debounced update for resize events to improve performance
       resizeObserver = new ResizeObserver(updateMovementRangeDebounced);
@@ -202,6 +209,7 @@
   data-movement={isRunning ? 'running' : 'walking'}
   style:--animation-duration="{animationDuration}s"
   style:--movement-duration="{movementDuration}s"
+  style:background-image={backgroundPath ? `url(${backgroundPath})` : 'none'}
   bind:this={containerEl}>
   <!-- Position wrapper handles horizontal movement -->
   <div class="pet-position-wrapper">
@@ -249,6 +257,11 @@
     height: 100%;
     position: relative;
     overflow: hidden; /* Contain pet within view */
+
+    /* Background scene (set via inline style with backgroundPath prop) */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
   }
 
   /* Position wrapper handles horizontal movement */

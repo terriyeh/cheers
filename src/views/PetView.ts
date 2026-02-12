@@ -97,6 +97,7 @@ export class PetView extends ItemView {
       // Get the sprite sheet path with validation
       const spriteSheetPath = this.getSpriteSheetPath();
       const heartSpritePath = this.getHeartSpritePath();
+      const backgroundPath = this.getBackgroundPath();
 
       // Get plugin settings for pet name and movement speed (reuse plugin variable from above)
       const petName = plugin?.settings?.petName ?? 'Kit';
@@ -109,6 +110,7 @@ export class PetView extends ItemView {
           state: this.stateMachine.getCurrentState(),
           spriteSheetPath: spriteSheetPath,
           heartSpritePath: heartSpritePath,
+          backgroundPath: backgroundPath,
           petName: petName,
           movementSpeed: movementSpeed,
         },
@@ -304,10 +306,11 @@ export class PetView extends ItemView {
   /**
    * Get the path to an asset file with validation
    * @param assetFileName - Name of the asset file (e.g., 'pet-sprite-sheet.png')
+   * @param subdirectory - Optional subdirectory within assets/ (e.g., 'backgrounds')
    * @returns The resource path to the asset
    * @throws Error if path validation fails
    */
-  private getAssetPath(assetFileName: string): string {
+  private getAssetPath(assetFileName: string, subdirectory?: string): string {
     // @ts-expect-error - accessing plugin manifest
     const manifest = this.app.plugins.manifests['obsidian-pets'];
 
@@ -327,6 +330,16 @@ export class PetView extends ItemView {
       throw new Error('Invalid plugin directory path detected');
     }
 
+    // Security: Validate subdirectory if provided
+    if (subdirectory) {
+      if (!/^[a-zA-Z0-9_-]+$/.test(subdirectory)) {
+        throw new Error('Invalid subdirectory: must be alphanumeric with dash/underscore only');
+      }
+      if (subdirectory.includes('..') || subdirectory.includes('/') || subdirectory.includes('\\')) {
+        throw new Error('Invalid subdirectory: path traversal detected');
+      }
+    }
+
     // Security: Validate asset filename to prevent path traversal
     // Only allow alphanumeric, dash, underscore, and dot for file extension
     if (!/^[a-zA-Z0-9_-]+\.[a-zA-Z0-9]+$/.test(assetFileName)) {
@@ -340,7 +353,8 @@ export class PetView extends ItemView {
 
     // Normalize path and construct resource path
     const normalizedDir = pluginDir.replace(/\\/g, '/').replace(/\/\//g, '/');
-    const relativePath = `${normalizedDir}/assets/${assetFileName}`;
+    const assetSubpath = subdirectory ? `${subdirectory}/${assetFileName}` : assetFileName;
+    const relativePath = `${normalizedDir}/assets/${assetSubpath}`;
     const assetPath = this.app.vault.adapter.getResourcePath(relativePath);
 
     // Gate debug logging behind __DEV__ flag
@@ -365,6 +379,14 @@ export class PetView extends ItemView {
    */
   private getHeartSpritePath(): string {
     return this.getAssetPath('heart.png');
+  }
+
+  /**
+   * Get the path to the background scene asset
+   * @returns The resource path to the background scene
+   */
+  private getBackgroundPath(): string {
+    return this.getAssetPath('moon-world.gif', 'backgrounds');
   }
 
 

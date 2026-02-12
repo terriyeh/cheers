@@ -32,7 +32,15 @@
       "Bash(python -c:*)",
       "Bash(npx esbuild:*)",
       "Bash(git clone:*)",
-      "Bash(cd:*)"
+      "Bash(cd:*)",
+      "Bash(ls:*)",
+      "Bash(gh api:*)",
+      "WebFetch(domain:forum.obsidian.md)",
+      "WebFetch(domain:fevol.github.io)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(dir:*)",
+      "Bash(git reset:*)",
+      "Bash(git checkout:*)"
     ]
   }
 }
