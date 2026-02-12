@@ -55,10 +55,14 @@ export class PetView extends ItemView {
     try {
       // Show welcome modal on first run
       // Access plugin instance from internal registry (may break with Obsidian API changes)
-      const plugins = (this.app.plugins as any).plugins;
+      // Type assertion required as this uses undocumented Obsidian API
+      interface AppWithPlugins {
+        plugins: { plugins: Record<string, unknown> };
+      }
+      const appWithPlugins = this.app as unknown as AppWithPlugins;
       let plugin: VaultPalPlugin | undefined;
-      if (plugins && typeof plugins === 'object' && 'vault-pal' in plugins) {
-        plugin = plugins['vault-pal'] as VaultPalPlugin;
+      if (appWithPlugins.plugins?.plugins && typeof appWithPlugins.plugins.plugins === 'object' && 'vault-pal' in appWithPlugins.plugins.plugins) {
+        plugin = appWithPlugins.plugins.plugins['vault-pal'] as VaultPalPlugin;
         if (plugin && !plugin.settings.hasCompletedWelcome) {
           new WelcomeModal(plugin).open();
         }

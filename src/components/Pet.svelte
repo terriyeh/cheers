@@ -84,7 +84,7 @@
    * @param fn - Function to debounce
    * @param delay - Delay in milliseconds
    */
-  function debounce<T extends (...args: any[]) => any>(fn: T, delay: number): (...args: Parameters<T>) => void {
+  function debounce<T extends (...args: never[]) => void>(fn: T, delay: number): (...args: Parameters<T>) => void {
     let timeoutId: number | undefined;
     return (...args: Parameters<T>) => {
       if (timeoutId !== undefined) {

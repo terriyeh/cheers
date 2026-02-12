@@ -3,7 +3,7 @@ import type { WorkspaceLeaf } from 'obsidian';
 import { PetView, VIEW_TYPE_PET } from './views/PetView';
 import type { PetState } from './types/pet';
 import type { VaultPalSettings } from './types/settings';
-import { DEFAULT_SETTINGS } from './types/settings';
+import { DEFAULT_SETTINGS, VALIDATION_RULES } from './types/settings';
 import { WelcomeModal } from './modals/WelcomeModal';
 
 // Build-time constant injected by esbuild
@@ -204,9 +204,6 @@ Available states:
 	 */
 	private validateSettings(settings: VaultPalSettings): VaultPalSettings {
 		const validated = { ...settings };
-
-		// Import validation rules
-		const { VALIDATION_RULES } = require('./types/settings');
 
 		// Validate petName
 		if (

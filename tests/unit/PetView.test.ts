@@ -80,7 +80,7 @@ describe('PetView', () => {
       await petView.onOpen();
 
       const currentState = petView.getCurrentState();
-      expect(currentState).toBe('idle');
+      expect(currentState).toBe('walking');
     });
 
     it('should mount Svelte component', async () => {
@@ -94,14 +94,14 @@ describe('PetView', () => {
       await petView.onOpen();
 
       const container = petView.containerEl.querySelector('.vault-pal-container');
-      expect(container?.getAttribute('data-pet-state')).toBe('idle');
+      expect(container?.getAttribute('data-pet-state')).toBe('walking');
     });
 
     it('should pass correct props to Svelte component', async () => {
       await petView.onOpen();
 
       const component = petView.containerEl.querySelector('.pet-sprite-container');
-      expect(component?.getAttribute('data-state')).toBe('idle');
+      expect(component?.getAttribute('data-state')).toBe('walking');
     });
 
     it('should generate correct sprite sheet path', async () => {
@@ -177,7 +177,7 @@ describe('PetView', () => {
 
     it('should clean up state machine', async () => {
       await petView.onOpen();
-      expect(petView.getCurrentState()).toBe('idle');
+      expect(petView.getCurrentState()).toBe('walking');
 
       await petView.onClose();
 
@@ -261,7 +261,7 @@ describe('PetView', () => {
       }
     });
 
-    it('should handle auto-transition to idle', async () => {
+    it('should handle auto-transition to walking', async () => {
       await petView.onOpen();
 
       petView.transitionState('greeting');
@@ -269,12 +269,12 @@ describe('PetView', () => {
 
       vi.advanceTimersByTime(2000);
 
-      expect(petView.getCurrentState()).toBe('idle');
+      expect(petView.getCurrentState()).toBe('walking');
       const container = petView.containerEl.querySelector('.vault-pal-container');
-      expect(container?.getAttribute('data-pet-state')).toBe('idle');
+      expect(container?.getAttribute('data-pet-state')).toBe('walking');
     });
 
-    it('should update component on auto-transition to idle', async () => {
+    it('should update component on auto-transition to walking', async () => {
       await petView.onOpen();
 
       petView.transitionState('petting');
@@ -283,14 +283,14 @@ describe('PetView', () => {
 
       vi.advanceTimersByTime(2000);
 
-      expect(component?.getAttribute('data-state')).toBe('idle');
+      expect(component?.getAttribute('data-state')).toBe('walking');
     });
 
     it('should return false for invalid state transition', async () => {
       await petView.onOpen();
 
       // Transitioning to same state should return false
-      const result = petView.transitionState('idle');
+      const result = petView.transitionState('walking');
       expect(result).toBe(false);
     });
 
@@ -332,9 +332,9 @@ describe('PetView', () => {
       const container = petView.containerEl.querySelector('.vault-pal-container');
       const component = petView.containerEl.querySelector('.pet-sprite-container');
 
-      expect(container?.getAttribute('data-pet-state')).toBe('idle');
-      expect(component?.getAttribute('data-state')).toBe('idle');
-      expect(petView.getCurrentState()).toBe('idle');
+      expect(container?.getAttribute('data-pet-state')).toBe('walking');
+      expect(component?.getAttribute('data-state')).toBe('walking');
+      expect(petView.getCurrentState()).toBe('walking');
     });
 
     it('should maintain sync through rapid state changes', async () => {
@@ -424,7 +424,7 @@ describe('PetView', () => {
       await petView.onClose();
       await petView.onOpen();
 
-      expect(petView.getCurrentState()).toBe('idle');
+      expect(petView.getCurrentState()).toBe('walking');
     });
   });
 
@@ -433,7 +433,7 @@ describe('PetView', () => {
       await petView.onOpen();
 
       expect(typeof petView.getCurrentState).toBe('function');
-      expect(petView.getCurrentState()).toBe('idle');
+      expect(petView.getCurrentState()).toBe('walking');
     });
 
     it('should provide transitionState for external access', async () => {
@@ -453,7 +453,7 @@ describe('PetView', () => {
       expect(petView.getCurrentState()).toBe('petting');
 
       vi.advanceTimersByTime(5000);
-      expect(petView.getCurrentState()).toBe('idle');
+      expect(petView.getCurrentState()).toBe('walking');
     });
   });
 
@@ -500,7 +500,7 @@ describe('PetView', () => {
       await petView.onOpen();
 
       // Start in idle state
-      expect(petView.getCurrentState()).toBe('idle');
+      expect(petView.getCurrentState()).toBe('walking');
 
       // Transition to greeting state
       petView.transitionState('greeting');
@@ -533,19 +533,19 @@ describe('PetView', () => {
       expect(componentAfter).toBeNull();
     });
 
-    it('should handle pet event with returnTarget from idle state', async () => {
+    it('should handle pet event with returnTarget from walking state', async () => {
       await petView.onOpen();
 
-      // Start in idle state
-      expect(petView.getCurrentState()).toBe('idle');
+      // Start in walking state
+      expect(petView.getCurrentState()).toBe('walking');
 
-      // Simulate petting from idle (should return to idle)
-      petView.transitionState('petting', 'idle');
+      // Simulate petting from walking (should return to walking)
+      petView.transitionState('petting', 'walking');
       expect(petView.getCurrentState()).toBe('petting');
 
-      // After petting duration, should return to 'idle'
+      // After petting duration, should return to 'walking'
       vi.advanceTimersByTime(2000);
-      expect(petView.getCurrentState()).toBe('idle');
+      expect(petView.getCurrentState()).toBe('walking');
     });
 
     it('should handle pet event with returnTarget from greeting state', async () => {
