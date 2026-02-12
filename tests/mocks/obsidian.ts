@@ -53,6 +53,7 @@ export class App {
             petName: 'Kit',
             userName: '',
             hasCompletedWelcome: false,
+            movementSpeed: 50,
           },
         },
       },

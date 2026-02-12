@@ -30,10 +30,12 @@ export default class MockPetComponent {
 
     // Set initial animation duration if movementSpeed is provided
     if (options.props.movementSpeed !== undefined) {
-      const isRunning = options.props.movementSpeed > 60;
+      // Clamp movement speed to valid range (0-100)
+      const clampedSpeed = Math.max(0, Math.min(100, options.props.movementSpeed));
+      const isRunning = clampedSpeed > 60;
       const animationDuration = isRunning
-        ? 1 - ((options.props.movementSpeed - 60) / 40) * 0.6 // 1s to 0.4s
-        : 2 - (options.props.movementSpeed / 60); // 2s to 1s
+        ? 1 - ((clampedSpeed - 60) / 40) * 0.6 // 1s to 0.4s
+        : 2 - (clampedSpeed / 60); // 2s to 1s
       this.container.style.setProperty('--animation-duration', `${animationDuration}s`);
     }
 
@@ -83,11 +85,13 @@ export default class MockPetComponent {
       }
 
       if (newProps.movementSpeed !== undefined) {
+        // Clamp movement speed to valid range (0-100)
+        const clampedSpeed = Math.max(0, Math.min(100, newProps.movementSpeed));
         // Calculate animation duration based on speed
-        const isRunning = newProps.movementSpeed > 60;
+        const isRunning = clampedSpeed > 60;
         const animationDuration = isRunning
-          ? 1 - ((newProps.movementSpeed - 60) / 40) * 0.6 // 1s to 0.4s
-          : 2 - (newProps.movementSpeed / 60); // 2s to 1s
+          ? 1 - ((clampedSpeed - 60) / 40) * 0.6 // 1s to 0.4s
+          : 2 - (clampedSpeed / 60); // 2s to 1s
         this.container.style.setProperty('--animation-duration', `${animationDuration}s`);
       }
     };

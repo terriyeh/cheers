@@ -43,14 +43,19 @@
   const PET_WIDTH = 64; // pixels (sprite width)
 
   /**
+   * Clamp movement speed to valid range (0-100)
+   */
+  $: clampedSpeed = Math.max(0, Math.min(100, movementSpeed));
+
+  /**
    * Calculate animation duration based on movement speed
    * Walking (0-60%): 2s to 1s (sprite animation)
    * Running (61-100%): 1s to 0.4s (sprite animation)
    */
-  $: isRunning = movementSpeed > SPEED_THRESHOLD;
+  $: isRunning = clampedSpeed > SPEED_THRESHOLD;
   $: animationDuration = isRunning
-    ? RUNNING_MAX_DURATION - ((movementSpeed - SPEED_THRESHOLD) / (100 - SPEED_THRESHOLD)) * (RUNNING_MAX_DURATION - RUNNING_MIN_DURATION)
-    : WALKING_MAX_DURATION - (movementSpeed / SPEED_THRESHOLD) * (WALKING_MAX_DURATION - WALKING_MIN_DURATION);
+    ? RUNNING_MAX_DURATION - ((clampedSpeed - SPEED_THRESHOLD) / (100 - SPEED_THRESHOLD)) * (RUNNING_MAX_DURATION - RUNNING_MIN_DURATION)
+    : WALKING_MAX_DURATION - (clampedSpeed / SPEED_THRESHOLD) * (WALKING_MAX_DURATION - WALKING_MIN_DURATION);
 
   /**
    * Calculate horizontal movement duration based on movement speed
@@ -59,8 +64,8 @@
    * Running (61-100%): 10s to 4s
    */
   $: movementDuration = isRunning
-    ? 10 - ((movementSpeed - SPEED_THRESHOLD) / (100 - SPEED_THRESHOLD)) * 6  // 10s to 4s
-    : 20 - (movementSpeed / SPEED_THRESHOLD) * 10;  // 20s to 10s
+    ? 10 - ((clampedSpeed - SPEED_THRESHOLD) / (100 - SPEED_THRESHOLD)) * 6  // 10s to 4s
+    : 20 - (clampedSpeed / SPEED_THRESHOLD) * 10;  // 20s to 10s
 
   /**
    * Calculate movement range for adaptive edge-to-edge movement

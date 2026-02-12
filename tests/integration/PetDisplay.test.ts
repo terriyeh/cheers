@@ -86,7 +86,9 @@ describe('PetDisplay Integration', () => {
 
   describe('settings integration', () => {
     it('should respect movement speed setting for walking animation', async () => {
-      const viewWithSettings = new PetView(leaf, { movementSpeed: 30 });
+      const viewWithSettings = new PetView(leaf);
+      // Set plugin settings before opening
+      (viewWithSettings.app as any).plugins.plugins['obsidian-pets'].settings.movementSpeed = 30;
       await viewWithSettings.onOpen();
 
       const container = viewWithSettings.containerEl.querySelector('.pet-sprite-container') as HTMLElement;
@@ -97,7 +99,9 @@ describe('PetDisplay Integration', () => {
     });
 
     it('should respect movement speed setting for running animation', async () => {
-      const viewWithSettings = new PetView(leaf, { movementSpeed: 80 });
+      const viewWithSettings = new PetView(leaf);
+      // Set plugin settings before opening
+      (viewWithSettings.app as any).plugins.plugins['obsidian-pets'].settings.movementSpeed = 80;
       await viewWithSettings.onOpen();
 
       viewWithSettings.transitionState('running');
