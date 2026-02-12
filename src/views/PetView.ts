@@ -119,13 +119,6 @@ export class PetView extends ItemView {
 
       // Hide loading state
       this.hideLoading();
-
-      // Add top-right corner action button (matches Graph view pattern)
-      this.addAction(
-        'calendar-plus',
-        'Daily Note',
-        () => this.handleDailyNoteButton()
-      );
     } catch (error) {
       console.error('Failed to mount Pet View:', error);
 
@@ -374,48 +367,5 @@ export class PetView extends ItemView {
     return this.getAssetPath('heart.png');
   }
 
-  /**
-   * Create or open today's daily note
-   * Handles edge cases: plugin disabled, creation errors
-   */
-  async openDailyNote(): Promise<void> {
-    try {
-      const {
-        createDailyNote,
-        getDailyNote,
-        getAllDailyNotes,
-        appHasDailyNotesPluginLoaded
-      } = await import('obsidian-daily-notes-interface');
-
-      // Edge case: Daily Notes plugin not enabled
-      if (!appHasDailyNotesPluginLoaded()) {
-        new Notice('Daily Notes plugin is not enabled. Please enable it in Settings → Core Plugins.', 8000);
-        return;
-      }
-
-      // Get or create today's note
-      const today = window.moment();
-      let dailyNote = getDailyNote(today, getAllDailyNotes());
-
-      if (!dailyNote) {
-        dailyNote = await createDailyNote(today);
-      }
-
-      // Open in workspace
-      await this.app.workspace.getLeaf(false).openFile(dailyNote);
-
-    } catch (error) {
-      new Notice('Failed to create daily note: ' + (error as Error).message, 8000);
-      console.error('Error opening daily note:', error);
-    }
-  }
-
-  /**
-   * Handle daily note button click
-   * Opens or creates today's daily note
-   */
-  async handleDailyNoteButton(): Promise<void> {
-    await this.openDailyNote();
-  }
 
 }
