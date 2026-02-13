@@ -24,6 +24,11 @@ type CelebrationEventType = 'note-create' | 'task-complete' | 'link-create' | 'w
  * CelebrationService manages celebration triggers and cooldowns
  */
 export class CelebrationService {
+	// Constants for timing and limits (must match CSS animation duration)
+	private static readonly EDITOR_DEBOUNCE_MS = 500;
+	private static readonly CELEBRATION_DURATION_MS = 1800; // Must match CSS animation
+	private static readonly MAX_CONTENT_LENGTH = 1000000; // 1MB of text (~500 pages)
+
 	private plugin: ObsidianPetsPlugin;
 
 	// Event references for cleanup
@@ -63,13 +68,34 @@ export class CelebrationService {
 		this.noteCreationHandler = this.handleNoteCreation.bind(this);
 		this.editorChangeHandler = this.handleEditorChange.bind(this);
 
-		// Listen for note creation (using type assertion as event exists but isn't in types)
-		const createRef = (vault as any).on('create', this.noteCreationHandler);
-		this.eventRefs.push(createRef);
+		try {
+			// Listen for note creation (using type assertion as event exists but isn't in types)
+			// Validate that registration method exists
+			if (typeof (vault as any).on === 'function') {
+				const createRef = (vault as any).on('create', this.noteCreationHandler);
+				if (createRef) {
+					this.eventRefs.push(createRef);
+				} else {
+					console.warn('[CelebrationService] Vault event registration returned null');
+				}
+			} else {
+				console.warn('[CelebrationService] Vault event registration unavailable');
+			}
 
-		// Listen for editor changes (debounced)
-		const editorChangeRef = (workspace as any).on('editor-change', this.editorChangeHandler);
-		this.eventRefs.push(editorChangeRef);
+			// Listen for editor changes (debounced)
+			if (typeof (workspace as any).on === 'function') {
+				const editorChangeRef = (workspace as any).on('editor-change', this.editorChangeHandler);
+				if (editorChangeRef) {
+					this.eventRefs.push(editorChangeRef);
+				} else {
+					console.warn('[CelebrationService] Workspace event registration returned null');
+				}
+			} else {
+				console.warn('[CelebrationService] Workspace event registration unavailable');
+			}
+		} catch (error) {
+			console.error('[CelebrationService] Failed to register event listeners:', error);
+		}
 	}
 
 	/**
@@ -106,7 +132,7 @@ export class CelebrationService {
 		// Set new timeout for debounced processing
 		this.editorChangeTimeout = window.setTimeout(() => {
 			this.processEditorChange(editor);
-		}, 500);
+		}, CelebrationService.EDITOR_DEBOUNCE_MS);
 	}
 
 	/**
@@ -116,6 +142,12 @@ export class CelebrationService {
 	 */
 	private processEditorChange(editor: Editor): void {
 		const content = editor.getValue();
+
+		// Guard: Reject excessively large content to prevent ReDoS attacks
+		if (content.length > CelebrationService.MAX_CONTENT_LENGTH) {
+			console.warn('[CelebrationService] Content too large for celebration processing');
+			return;
+		}
 
 		// Check all celebration types in a single pass
 		this.checkTaskCompletion(content);
@@ -238,20 +270,23 @@ export class CelebrationService {
 				return;
 			}
 
-			// Success - schedule flag reset after 1.8 seconds
+			// Success - schedule flag reset after celebration animation completes
 			this.celebrationTimeout = window.setTimeout(() => {
 				this.isCelebrating = false;
 				this.celebrationTimeout = undefined;
-			}, 1800); // 1.8 second duration
+			}, CelebrationService.CELEBRATION_DURATION_MS);
 
 			console.debug(`[CelebrationService] Celebration triggered for ${eventType}`);
 		} catch (error) {
-			// Error occurred - reset flag immediately
+			// Error occurred - reset flag FIRST to ensure consistency
 			this.isCelebrating = false;
+
+			// Then clean up timeout if it exists
 			if (this.celebrationTimeout !== undefined) {
 				clearTimeout(this.celebrationTimeout);
 				this.celebrationTimeout = undefined;
 			}
+
 			console.warn('[CelebrationService] Error triggering celebration:', error);
 		}
 	}

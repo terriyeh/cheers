@@ -90,9 +90,10 @@ export class ObsidianPetsSettingTab extends PluginSettingTab {
 					})
 			);
 
-		// Word Milestones
+		// Word Count Milestones
 		const wordMilestoneSetting = new Setting(containerEl)
-			.setName('Word milestones')
+			.setName('Word count milestones')
+			.setDesc('Reaching a certain number of words written that day')
 			.addToggle((toggle) =>
 				toggle
 					.setValue(this.plugin.settings.celebrations.onWordMilestone)
@@ -104,21 +105,25 @@ export class ObsidianPetsSettingTab extends PluginSettingTab {
 					})
 			);
 
-		// Word Milestones Input (only show if word milestones are enabled)
+		// Word Count Milestones Input (only show if word milestones are enabled)
 		if (this.plugin.settings.celebrations.onWordMilestone) {
 			new Setting(containerEl)
-				.setName('Word count milestones')
-				.setDesc('Comma-separated numbers (e.g., 100, 500, 1000, 3500, 5000)')
+				.setName('Milestone thresholds')
+				.setDesc('Comma-separated numbers (e.g., 100, 500, 1000). Max value: 10,000,000 words.')
 				.addText((text) =>
 					text
 						.setPlaceholder('100, 500, 1000, 3500, 5000')
 						.setValue(this.plugin.settings.celebrations.wordMilestones.join(', '))
 						.onChange(async (value) => {
+							const MAX_MILESTONE = 10000000; // 10 million words
+							const MAX_MILESTONE_COUNT = 50; // Limit array size
+
 							// Parse and validate
 							const milestones = value
 								.split(',')
 								.map((s) => parseInt(s.trim()))
-								.filter((n) => !isNaN(n) && n > 0);
+								.filter((n) => !isNaN(n) && n > 0 && n <= MAX_MILESTONE)
+								.slice(0, MAX_MILESTONE_COUNT);
 
 							// Remove duplicates and sort
 							const unique = [...new Set(milestones)].sort((a, b) => a - b);

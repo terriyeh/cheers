@@ -96,6 +96,43 @@ Research into VS Code Pets (2.26M installs) and the Obsidian pet plugin landscap
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-02-12
+
+### Added - Vault Celebrations System
+
+**Celebration Features:**
+- 🎉 **Note creation celebrations**: Fireworks animation when creating new markdown files
+- ✅ **Task completion celebrations**: Fireworks animation when checking off checkboxes (`- [x]`)
+- 🔗 **Link creation celebrations**: Fireworks animation when adding wiki links (`[[link]]`) or markdown links (`[text](url)`)
+- 📝 **Word milestone celebrations**: Fireworks animation when crossing configurable word count thresholds (default: 100, 500, 1000, 3500, 5000 words)
+
+**Settings Integration:**
+- Individual toggle for each celebration type in Settings → Obsidian Pets → Celebrations
+- Conditional word milestone input (only shows when word milestones enabled)
+- Word milestone validation: auto-removes duplicates, sorts ascending, filters invalid numbers
+- Default fallback: `100, 500, 1000, 3500, 5000` if input is cleared
+
+**Technical Implementation:**
+- `CelebrationService` class for event management and celebration triggers
+- Debounced editor change handling (500ms delay) to reduce performance impact
+- Race condition prevention (blocks overlapping celebrations with boolean flag)
+- State tracking to celebrate only increases (won't trigger on unchecking tasks or removing links)
+- Milestone tracking per document (celebrates each threshold once)
+- Clean event listener management with proper cleanup on view close
+
+**Visual Effects:**
+- CSS sprite sheet animation (7 frames, 1.8 seconds duration)
+- Fireworks celebration sprite (`assets/effects/fireworks-spritesheet.png` - 10KB)
+- Celebration overlay positioned in top third of view, horizontally centered
+- Flying island background (`assets/backgrounds/flying-island.gif` - 942KB)
+- GPU-accelerated CSS `steps()` animation for smooth playback
+
+**Testing:**
+- 29 comprehensive tests for CelebrationService
+- Test coverage: initialization, cleanup, all 4 celebration types, race condition prevention, debouncing
+- Integration tests with PetView state transitions
+- TDD approach with tests written before implementation
+
 ### Added - Movement System (Phase 2 Completion)
 - CSS-based edge-to-edge adaptive movement system
   - Walking state (0-60% speed range)

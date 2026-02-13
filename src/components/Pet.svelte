@@ -204,9 +204,7 @@
   onDestroy(() => {
     // Explicit cleanup to help garbage collection
     // ResizeObserver cleanup is handled by onMount return function
-    if (celebrationInterval !== undefined) {
-      clearInterval(celebrationInterval);
-    }
+    // Note: Celebration animation handled entirely by CSS, no interval needed
     containerEl = null;
   });
 
