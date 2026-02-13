@@ -23,6 +23,11 @@
   export let backgroundPath: string = '';
 
   /**
+   * Path to celebration sprite sheet
+   */
+  export let celebrationSpritePath: string = '';
+
+  /**
    * Pet's name (from settings)
    */
   export let petName: string = 'Kit';
@@ -165,6 +170,9 @@
     ? `Pet ${petName}`
     : `Pet ${petName} (currently busy)`;
   $: showHeart = state === 'petting';
+  $: showCelebration = state === 'celebration';
+
+  // Celebration animation handled by CSS sprite sheet animation
 
   onMount(() => {
     // Initial update (not debounced for immediate positioning)
@@ -196,6 +204,9 @@
   onDestroy(() => {
     // Explicit cleanup to help garbage collection
     // ResizeObserver cleanup is handled by onMount return function
+    if (celebrationInterval !== undefined) {
+      clearInterval(celebrationInterval);
+    }
     containerEl = null;
   });
 
@@ -244,6 +255,16 @@
       </div>
     </div>
   </div>
+
+  <!-- Celebration overlay - top third, horizontally centered -->
+  {#if showCelebration}
+    <div class="celebration-overlay" aria-hidden="true">
+      <div
+        class="celebration-sprite"
+        style:background-image="url({celebrationSpritePath})"
+      />
+    </div>
+  {/if}
 </div>
 
 <style>
@@ -451,5 +472,29 @@
     50%, 100% {
       transform: scaleX(-1); /* Facing left (moving 50→100%) */
     }
+  }
+
+  /* Celebration overlay - top third, horizontally centered */
+  .celebration-overlay {
+    position: absolute;
+    top: 16.66%; /* Top third = 33.33% / 2 */
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 20; /* Above pet */
+    pointer-events: none;
+  }
+
+  .celebration-sprite {
+    width: 128px;
+    height: 128px;
+    background-size: 896px 128px; /* 7 frames × 128px = 896px width, 128px height */
+    background-repeat: no-repeat;
+    image-rendering: auto; /* Smooth rendering for celebration effects */
+    animation: celebration-animation 1.8s steps(7) 1;
+  }
+
+  @keyframes celebration-animation {
+    from { background-position: 0 0; }
+    to { background-position: -896px 0; } /* 7 frames × 128px */
   }
 </style>

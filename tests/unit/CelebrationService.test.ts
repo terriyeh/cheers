@@ -11,43 +11,34 @@ import type { ObsidianPetsSettings } from '../../src/types/settings';
 // Mock types for testing
 interface MockPlugin {
 	app: App;
-	settings: ObsidianPetsSettings & {
-		celebrations: {
-			enabled: boolean;
-			onNoteCreate: boolean;
-			onTaskComplete: boolean;
-			onLinkCreate: boolean;
-			onWordMilestone: boolean;
-			wordMilestones: number[];
-			cooldownMinutes: number;
-		};
-	};
+	settings: ObsidianPetsSettings;
 	petView?: {
 		transitionState: (state: string) => boolean;
 	};
 }
 
 // We'll import CelebrationService once it's created
-// import { CelebrationService } from '../../src/celebrations/CelebrationService';
+import { CelebrationService } from '../../src/celebrations/CelebrationService';
 
 describe('CelebrationService', () => {
 	let plugin: MockPlugin;
 	let mockVault: Partial<Vault>;
 	let mockWorkspace: Partial<Workspace>;
-	// let service: CelebrationService;
+	let service: CelebrationService;
 
 	beforeEach(() => {
 		vi.useFakeTimers();
 
-		// Mock Vault with event registration
+		// Mock Vault with event registration (returns EventRef-like object)
 		mockVault = {
-			on: vi.fn(),
+			on: vi.fn().mockReturnValue({} as any),
 			off: vi.fn(),
+			offref: vi.fn(),
 		};
 
-		// Mock Workspace with event registration
+		// Mock Workspace with event registration (returns EventRef-like object)
 		mockWorkspace = {
-			on: vi.fn(),
+			on: vi.fn().mockReturnValue({} as any),
 			off: vi.fn(),
 		};
 
@@ -63,13 +54,11 @@ describe('CelebrationService', () => {
 				hasCompletedWelcome: true,
 				movementSpeed: 50,
 				celebrations: {
-					enabled: true,
 					onNoteCreate: true,
 					onTaskComplete: true,
 					onLinkCreate: true,
 					onWordMilestone: true,
 					wordMilestones: [100, 500, 1000],
-					cooldownMinutes: 5,
 				},
 			},
 			petView: {
@@ -77,11 +66,11 @@ describe('CelebrationService', () => {
 			},
 		};
 
-		// service = new CelebrationService(plugin as unknown as ObsidianPetsPlugin);
+		service = new CelebrationService(plugin as unknown as ObsidianPetsPlugin);
 	});
 
 	afterEach(() => {
-		// service?.cleanup();
+		service?.cleanup();
 		vi.restoreAllMocks();
 		vi.clearAllTimers();
 	});
@@ -97,35 +86,29 @@ describe('CelebrationService', () => {
 			expect(mockWorkspace.on).toHaveBeenCalledWith('editor-change', expect.any(Function));
 		});
 
-		it('should not register events if celebrations are disabled', () => {
-			plugin.settings.celebrations.enabled = false;
-			vi.clearAllMocks();
-			// const disabledService = new CelebrationService(plugin as unknown as ObsidianPetsPlugin);
-
-			// Should not register any events
-			expect(mockVault.on).not.toHaveBeenCalled();
-			expect(mockWorkspace.on).not.toHaveBeenCalled();
-
-			// disabledService.cleanup();
-		});
-
 		it('should unregister all event listeners on cleanup', () => {
-			// service.cleanup();
+			service.cleanup();
 
-			expect(mockVault.off).toHaveBeenCalledWith('create', expect.any(Function));
-			expect(mockWorkspace.off).toHaveBeenCalledWith('editor-change', expect.any(Function));
+			// offref should be called twice (once for each registered event)
+			expect(mockVault.offref).toHaveBeenCalledTimes(2);
 		});
 
-		it('should clear all cooldown timers on cleanup', () => {
-			// Trigger a celebration to start cooldown
-			// const mockFile = { path: 'test.md', basename: 'test' } as TFile;
-			// service.handleNoteCreation(mockFile);
+		it('should clear celebration timeout on cleanup', () => {
+			const mockFile = { path: 'test.md', basename: 'test' } as TFile;
+			const createHandler = (mockVault.on as any).mock.calls.find(
+				(call: any) => call[0] === 'create'
+			)?.[1];
 
-			// Cleanup should clear the cooldown map
-			// service.cleanup();
+			// Trigger a celebration to start timeout
+			createHandler?.(mockFile);
 
-			// Verify cooldown map is empty (internal state check)
-			// This will be tested via behavior: celebrations should work after cleanup + reinit
+			// Cleanup should clear the timeout and reset flag
+			service.cleanup();
+
+			// Verify flag is reset by triggering another celebration
+			vi.clearAllMocks();
+			createHandler?.(mockFile);
+			expect(plugin.petView?.transitionState).toHaveBeenCalled();
 		});
 	});
 
@@ -148,7 +131,6 @@ describe('CelebrationService', () => {
 
 		it('should not celebrate if onNoteCreate is disabled', () => {
 			plugin.settings.celebrations.onNoteCreate = false;
-			// const disabledService = new CelebrationService(plugin as unknown as ObsidianPetsPlugin);
 
 			const mockFile = { path: 'test.md', basename: 'test' } as TFile;
 			const createHandler = (mockVault.on as any).mock.calls.find(
@@ -157,7 +139,6 @@ describe('CelebrationService', () => {
 			createHandler?.(mockFile);
 
 			expect(plugin.petView?.transitionState).not.toHaveBeenCalled();
-			// disabledService.cleanup();
 		});
 
 		it('should ignore non-markdown files', () => {
@@ -175,29 +156,6 @@ describe('CelebrationService', () => {
 			expect(plugin.petView?.transitionState).not.toHaveBeenCalled();
 		});
 
-		it('should respect cooldown period for note creation', () => {
-			const mockFile1 = { path: 'note1.md', basename: 'note1' } as TFile;
-			const mockFile2 = { path: 'note2.md', basename: 'note2' } as TFile;
-
-			const createHandler = (mockVault.on as any).mock.calls.find(
-				(call: any) => call[0] === 'create'
-			)?.[1];
-
-			// First celebration should work
-			createHandler?.(mockFile1);
-			expect(plugin.petView?.transitionState).toHaveBeenCalledTimes(1);
-
-			vi.clearAllMocks();
-
-			// Second celebration within cooldown should be ignored
-			createHandler?.(mockFile2);
-			expect(plugin.petView?.transitionState).not.toHaveBeenCalled();
-
-			// After cooldown period (5 minutes = 300000ms)
-			vi.advanceTimersByTime(300000);
-			createHandler?.(mockFile2);
-			expect(plugin.petView?.transitionState).toHaveBeenCalledTimes(1);
-		});
 	});
 
 	describe('task completion celebration', () => {
@@ -240,6 +198,8 @@ describe('CelebrationService', () => {
 			mockEditor.getValue = vi.fn().mockReturnValue('- [x] Task 1\n- [ ] Task 2\n- [ ] Task 3');
 			editorChangeHandler?.(mockEditor);
 			vi.advanceTimersByTime(500);
+			// First increase detected and celebrated
+			expect(plugin.petView?.transitionState).toHaveBeenCalledWith('celebration');
 
 			vi.clearAllMocks();
 
@@ -250,7 +210,8 @@ describe('CelebrationService', () => {
 			editorChangeHandler?.(mockEditor);
 			vi.advanceTimersByTime(500);
 
-			expect(plugin.petView?.transitionState).toHaveBeenCalledWith('celebration');
+			// Second celebration blocked while celebrating (by design)
+			expect(plugin.petView?.transitionState).not.toHaveBeenCalled();
 		});
 
 		it('should not celebrate if onTaskComplete is disabled', () => {
@@ -420,7 +381,17 @@ describe('CelebrationService', () => {
 				(call: any) => call[0] === 'editor-change'
 			)?.[1];
 
-			// Initial state: 495 words
+			// Establish previous state: already past 100 milestone
+			mockEditor.getValue = vi.fn().mockReturnValue('word '.repeat(101));
+			editorChangeHandler?.(mockEditor);
+			vi.advanceTimersByTime(500);
+			// This celebrates for 100 milestone
+
+			// Wait for celebration to complete
+			vi.advanceTimersByTime(1800);
+			vi.clearAllMocks();
+
+			// Now at 495 words (between 100 and 500)
 			mockEditor.getValue = vi.fn().mockReturnValue('word '.repeat(495));
 			editorChangeHandler?.(mockEditor);
 			vi.advanceTimersByTime(500);
@@ -444,7 +415,17 @@ describe('CelebrationService', () => {
 				(call: any) => call[0] === 'editor-change'
 			)?.[1];
 
-			// Initial state: 995 words
+			// Establish previous state: already past 100 and 500 milestones
+			mockEditor.getValue = vi.fn().mockReturnValue('word '.repeat(501));
+			editorChangeHandler?.(mockEditor);
+			vi.advanceTimersByTime(500);
+			// This celebrates for 100 milestone first
+
+			// Wait for celebration to complete
+			vi.advanceTimersByTime(1800);
+			vi.clearAllMocks();
+
+			// Now at 995 words (between 500 and 1000)
 			mockEditor.getValue = vi.fn().mockReturnValue('word '.repeat(995));
 			editorChangeHandler?.(mockEditor);
 			vi.advanceTimersByTime(500);
@@ -559,82 +540,91 @@ describe('CelebrationService', () => {
 
 		it('should reset debounce timer on each editor change', () => {
 			const mockEditor = {
-				getValue: vi.fn().mockReturnValue('text'),
+				getValue: vi.fn(),
 			} as unknown as Editor;
 
 			const editorChangeHandler = (mockWorkspace.on as any).mock.calls.find(
 				(call: any) => call[0] === 'editor-change'
 			)?.[1];
 
-			// First change
+			// First change: no content (establishes baseline)
+			mockEditor.getValue = vi.fn().mockReturnValue('');
 			editorChangeHandler?.(mockEditor);
 			vi.advanceTimersByTime(300);
 
-			// Second change before debounce completes (resets timer)
+			// Second change before debounce completes (resets timer): adds a task
+			mockEditor.getValue = vi.fn().mockReturnValue('- [x] Task complete');
 			editorChangeHandler?.(mockEditor);
 			vi.advanceTimersByTime(300);
 
-			// Still shouldn't have triggered
+			// Still shouldn't have triggered (debounce not complete)
 			expect(plugin.petView?.transitionState).not.toHaveBeenCalled();
 
-			// Complete the debounce period
+			// Complete the debounce period (total 500ms from second change)
 			vi.advanceTimersByTime(200);
+			// Now celebration should trigger for task completion
 			expect(plugin.petView?.transitionState).toHaveBeenCalledTimes(1);
 		});
 	});
 
-	describe('cooldown management', () => {
-		it('should track separate cooldowns for different celebration types', () => {
-			const mockFile = { path: 'test.md', basename: 'test' } as TFile;
-			const mockEditor = {
-				getValue: vi.fn().mockReturnValue('- [x] Task'),
-			} as unknown as Editor;
+	describe('race condition prevention', () => {
+		it('should block celebration while already celebrating', () => {
+			const mockFile1 = { path: 'note1.md', basename: 'note1' } as TFile;
+			const mockFile2 = { path: 'note2.md', basename: 'note2' } as TFile;
 
-			const createHandler = (mockVault.on as any).mock.calls.find(
-				(call: any) => call[0] === 'create'
-			)?.[1];
-			const editorChangeHandler = (mockWorkspace.on as any).mock.calls.find(
-				(call: any) => call[0] === 'editor-change'
-			)?.[1];
-
-			// Trigger note creation celebration
-			createHandler?.(mockFile);
-			expect(plugin.petView?.transitionState).toHaveBeenCalledTimes(1);
-
-			vi.clearAllMocks();
-
-			// Task completion should still work (different cooldown)
-			editorChangeHandler?.(mockEditor);
-			vi.advanceTimersByTime(500);
-			expect(plugin.petView?.transitionState).toHaveBeenCalledTimes(1);
-		});
-
-		it('should use configured cooldown duration from settings', () => {
-			plugin.settings.celebrations.cooldownMinutes = 10; // 10 minutes
-			// const customService = new CelebrationService(plugin as unknown as ObsidianPetsPlugin);
-
-			const mockFile = { path: 'note1.md', basename: 'note1' } as TFile;
 			const createHandler = (mockVault.on as any).mock.calls.find(
 				(call: any) => call[0] === 'create'
 			)?.[1];
 
 			// First celebration
-			createHandler?.(mockFile);
+			createHandler?.(mockFile1);
 			expect(plugin.petView?.transitionState).toHaveBeenCalledTimes(1);
 
 			vi.clearAllMocks();
 
-			// After 5 minutes (less than cooldown)
-			vi.advanceTimersByTime(300000);
-			createHandler?.(mockFile);
+			// Second celebration immediately after should be blocked
+			createHandler?.(mockFile2);
 			expect(plugin.petView?.transitionState).not.toHaveBeenCalled();
+		});
 
-			// After 10 minutes (cooldown complete)
-			vi.advanceTimersByTime(300000);
-			createHandler?.(mockFile);
+		it('should allow celebration after 1.8 seconds', () => {
+			const mockFile1 = { path: 'note1.md', basename: 'note1' } as TFile;
+			const mockFile2 = { path: 'note2.md', basename: 'note2' } as TFile;
+
+			const createHandler = (mockVault.on as any).mock.calls.find(
+				(call: any) => call[0] === 'create'
+			)?.[1];
+
+			// First celebration
+			createHandler?.(mockFile1);
 			expect(plugin.petView?.transitionState).toHaveBeenCalledTimes(1);
 
-			// customService.cleanup();
+			vi.clearAllMocks();
+
+			// After 1.8 seconds
+			vi.advanceTimersByTime(1800);
+
+			// Second celebration should work
+			createHandler?.(mockFile2);
+			expect(plugin.petView?.transitionState).toHaveBeenCalledTimes(1);
+		});
+
+		it('should reset celebration flag on cleanup', () => {
+			const mockFile = { path: 'test.md', basename: 'test' } as TFile;
+			const createHandler = (mockVault.on as any).mock.calls.find(
+				(call: any) => call[0] === 'create'
+			)?.[1];
+
+			// Start celebration
+			createHandler?.(mockFile);
+
+			// Cleanup
+			service.cleanup();
+
+			// Flag should be reset
+			vi.clearAllMocks();
+			createHandler?.(mockFile);
+			expect(plugin.petView?.transitionState).toHaveBeenCalled();
 		});
 	});
 
