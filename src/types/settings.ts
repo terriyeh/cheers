@@ -10,6 +10,19 @@ export interface ObsidianPetsSettings {
 	hasCompletedWelcome: boolean;
 	/** Movement speed (0-100%): 0-60 = walking, 61-100 = running */
 	movementSpeed: number;
+	/** Celebration settings */
+	celebrations: {
+		/** Celebrate when a new note is created */
+		onNoteCreate: boolean;
+		/** Celebrate when a task is completed */
+		onTaskComplete: boolean;
+		/** Celebrate when a link is created */
+		onLinkCreate: boolean;
+		/** Celebrate when word count milestones are reached */
+		onWordMilestone: boolean;
+		/** Word count thresholds for celebrations */
+		wordMilestones: number[];
+	};
 }
 
 /**
@@ -20,6 +33,13 @@ export const DEFAULT_SETTINGS: ObsidianPetsSettings = {
 	userName: '',
 	hasCompletedWelcome: false,
 	movementSpeed: 50,
+	celebrations: {
+		onNoteCreate: true,
+		onTaskComplete: true,
+		onLinkCreate: true,
+		onWordMilestone: true,
+		wordMilestones: [100, 500, 1000, 3500, 5000],
+	},
 };
 
 /**

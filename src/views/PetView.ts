@@ -97,7 +97,8 @@ export class PetView extends ItemView {
       // Get asset paths with validation
       const spriteSheetPath = this.getAssetPath('pet-sprite-sheet.png');
       const heartSpritePath = this.getAssetPath('heart.png');
-      const backgroundPath = this.getAssetPath('moon-world.gif', 'backgrounds');
+      const backgroundPath = this.getAssetPath('flying-island.gif', 'backgrounds');
+      const celebrationSpritePath = this.getAssetPath('fireworks-spritesheet.png', 'effects');
 
       // Get plugin settings for pet name and movement speed (reuse plugin variable from above)
       const petName = plugin?.settings?.petName ?? 'Kit';
@@ -111,6 +112,7 @@ export class PetView extends ItemView {
           spriteSheetPath: spriteSheetPath,
           heartSpritePath: heartSpritePath,
           backgroundPath: backgroundPath,
+          celebrationSpritePath: celebrationSpritePath,
           petName: petName,
           movementSpeed: movementSpeed,
         },
@@ -305,7 +307,7 @@ export class PetView extends ItemView {
 
   /**
    * Get the path to an asset file with validation
-   * @param assetFileName - Name of the asset file (e.g., 'pet-sprite-sheet.png')
+   * @param assetFileName - Name of the asset file (e.g., 'pet-sprite-sheet.png'), or empty string for directory path
    * @param subdirectory - Optional subdirectory within assets/ (e.g., 'backgrounds')
    * @returns The resource path to the asset
    * @throws Error if path validation fails
@@ -341,25 +343,32 @@ export class PetView extends ItemView {
     }
 
     // Security: Validate asset filename to prevent path traversal
-    // Only allow alphanumeric, dash, underscore, and dot for file extension
-    if (!/^[a-zA-Z0-9_-]+\.[a-zA-Z0-9]+$/.test(assetFileName)) {
-      throw new Error('Invalid asset filename: must be alphanumeric with single file extension');
-    }
+    // Allow empty string for directory paths, otherwise must be valid filename
+    if (assetFileName !== '') {
+      // Only allow alphanumeric, dash, underscore, and dot for file extension
+      if (!/^[a-zA-Z0-9_-]+\.[a-zA-Z0-9]+$/.test(assetFileName)) {
+        throw new Error('Invalid asset filename: must be alphanumeric with single file extension');
+      }
 
-    // Additional check: ensure no path separators or traversal sequences
-    if (assetFileName.includes('..') || assetFileName.includes('/') || assetFileName.includes('\\')) {
-      throw new Error('Invalid asset filename: path traversal detected');
+      // Additional check: ensure no path separators or traversal sequences
+      if (assetFileName.includes('..') || assetFileName.includes('/') || assetFileName.includes('\\')) {
+        throw new Error('Invalid asset filename: path traversal detected');
+      }
     }
 
     // Normalize path and construct resource path
     const normalizedDir = pluginDir.replace(/\\/g, '/').replace(/\/\//g, '/');
-    const assetSubpath = subdirectory ? `${subdirectory}/${assetFileName}` : assetFileName;
+    const assetSubpath = subdirectory
+      ? assetFileName !== ''
+        ? `${subdirectory}/${assetFileName}`
+        : subdirectory
+      : assetFileName;
     const relativePath = `${normalizedDir}/assets/${assetSubpath}`;
     const assetPath = this.app.vault.adapter.getResourcePath(relativePath);
 
     // Gate debug logging behind __DEV__ flag
     if (__DEV__) {
-      console.debug(`Asset path for ${assetFileName} resolved to: ${assetPath}`);
+      console.debug(`Asset path for ${assetFileName || subdirectory} resolved to: ${assetPath}`);
     }
 
     return assetPath;

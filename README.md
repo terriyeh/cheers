@@ -40,7 +40,7 @@ We're here to:
 
 ### Key Features
 
-- **Vault-Aware Celebrations** 🚧 PLANNED (v0.2.0): Pet celebrates your activities (daily notes, word counts, tasks, links)
+- **Vault-Aware Celebrations** ✅ IMPLEMENTED (v0.2.0, Feb 12 2026): Pet celebrates note creation, task completion, link creation, and word milestones
 - **Interactive Pet Companion** ✅ IMPLEMENTED: 7 animation states with sprite-based animations
   - Idle, greeting, walking, running, celebration, petting
   - CSS-based movement system with speed control
@@ -49,7 +49,7 @@ We're here to:
   - Walking state (0-60% speed)
   - Running state (61-100% speed)
   - GPU-accelerated CSS animations (<0.1% CPU)
-- **User-Configurable Triggers** 🚧 PLANNED (v0.2.0): Choose what actions trigger celebrations
+- **User-Configurable Triggers** ✅ IMPLEMENTED (v0.2.0): Individual toggles for each celebration type + custom word count milestones
 - **Pets Live Their Lives Alongside Yours** 🚧 PLANNED (v0.4.0+): Multi-pet with emergent behaviors and relationships
 - **Privacy-First** ✅ IMPLEMENTED: Fully local, no network calls, no telemetry
 - **Mobile Support** ✅ IMPLEMENTED: Touch-enabled for phones and tablets, battery-optimized
@@ -93,40 +93,34 @@ You can change these settings later using **Command Palette → "Edit Pet Settin
 
 ### 3. Start Writing
 
-Your pet notices when you:
-- Create a daily note
-- Create any new note
-- Add links between notes
-- Check off task checkboxes
-- Reach word count milestones (customizable)
-- [TODO: Research what other "milestones" users like to track in plugins like RPG Stats Tracker]
+Your pet celebrates when you:
+- ✅ **Create any new note** - Fireworks animation
+- ✅ **Check off task checkboxes** - Fireworks animation
+- ✅ **Add links between notes** (wiki `[[link]]` or markdown `[link](url)`) - Fireworks animation
+- ✅ **Reach word count milestones** (default: 100, 500, 1000, 3500, 5000 words) - Fireworks animation
 
-Each action triggers a celebration animation—no input required from you. Just write, and your pet celebrates alongside you.
+Each action triggers a celebration animation—no input required from you. Just write, and your pet celebrates alongside you. Configure which celebrations you want in Settings.
 
 ---
 
 ## Celebration Triggers
 
-### Built-in Celebrations (Coming Soon)
+### Built-in Celebrations
 
 | Action | Animation | Configurable |
 |--------|-----------|--------------|
-| **Create daily note** | Small celebration | ✅ On/Off |
-| **Create any note** | Hearts | ✅ On/Off |
-| **Add a link** | Sparkles | ✅ On/Off |
-| **Check off task** | Confetti | ✅ On/Off |
-| **Word count milestone** | Fireworks | ✅ Custom thresholds |
+| **Create any note** (.md files) | Fireworks | ✅ On/Off |
+| **Check off task** (`- [x]`) | Fireworks | ✅ On/Off |
+| **Add a link** (`[[wiki]]` or `[markdown](url)`) | Fireworks | ✅ On/Off |
+| **Word count milestone** (configurable thresholds) | Fireworks | ✅ Custom thresholds |
 
 ### Customization
 
-You decide what deserves celebration:
-- Toggle each celebration type on/off
-- Set your own word count milestones (e.g., 100, 500, 1000 words)
-- Adjust celebration frequency (cooldowns to prevent spam)
-- Create celebration banner UI, allow user to customize message
-- You decide how you want to celebrate each achievment (pick what animation to play, or what message to display)
-
-**Settings coming in v0.2.0**
+Configure celebrations in **Settings → Obsidian Pets → Celebrations**:
+- **Individual toggles**: Enable/disable each celebration type independently
+- **Word count milestones**: Set custom thresholds (default: 100, 500, 1000, 3500, 5000 words)
+- **Race condition prevention**: Only one celebration plays at a time (prevents overlapping animations)
+- **Smart detection**: Only celebrates increases (won't trigger when unchecking tasks or removing links)
 
 ---
 
@@ -199,14 +193,20 @@ Obsidian Pets works beautifully alongside other plugins to create your perfect w
 | Pet name | Your companion's name | Kit | 1-30 characters, alphanumeric + spaces only |
 | Your name | What your pet calls you | (optional) | 0-30 characters, alphanumeric + spaces only |
 
-### Celebration Settings (Coming Soon)
+### Celebration Settings
 
-Configure which actions trigger celebrations, and what celebrations they each trigger:
-- Daily note creation
-- Any note creation
-- Link creation
-- Task completion
-- Word count milestones (custom thresholds)
+Open **Settings → Obsidian Pets → Celebrations** to configure:
+
+**Individual Toggles:**
+- ✅ **Note creation** - Celebrate when creating new .md files
+- ✅ **Task completion** - Celebrate when checking off checkboxes (`- [x]`)
+- ✅ **Link creation** - Celebrate when adding wiki links or markdown links
+- ✅ **Word milestones** - Celebrate when reaching word count thresholds
+
+**Word Milestone Configuration** (shown only when word milestones enabled):
+- Enter comma-separated numbers (e.g., `100, 500, 1000, 3500, 5000`)
+- Auto-validates: removes duplicates, sorts ascending, filters invalid numbers
+- Celebrates once per milestone per document (won't re-celebrate same milestone)
 
 ---
 
@@ -352,10 +352,12 @@ obsidian-pets/
 - Check that animations aren't disabled by another plugin
 - Look for CSS conflicts with theme
 
-### Celebrations not triggering (v0.2.0+)
-- Check Settings → Obsidian Pets to verify triggers are enabled
-- Some celebrations have cooldowns to prevent spam
-- Restart Obsidian if celebrations stop working
+### Celebrations not triggering
+- Check **Settings → Obsidian Pets → Celebrations** to verify triggers are enabled
+- Celebrations use race condition prevention (only one at a time) - not cooldowns
+- Link celebrations require content inside brackets (won't trigger on empty `[[]]`)
+- Word milestones celebrate once per threshold per document
+- Restart Obsidian if celebrations stop working after plugin update
 
 ### Welcome modal doesn't appear
 - Welcome modal only appears on first view open

@@ -100,7 +100,7 @@ describe('Settings Persistence', () => {
 			expect(merged).toHaveProperty('movementSpeed');
 
 			// Verify no unexpected fields
-			const expectedKeys = ['petName', 'userName', 'hasCompletedWelcome', 'movementSpeed'];
+			const expectedKeys = ['petName', 'userName', 'hasCompletedWelcome', 'movementSpeed', 'celebrations'];
 			const actualKeys = Object.keys(merged);
 			expect(actualKeys.sort()).toEqual(expectedKeys.sort());
 		});

@@ -93,8 +93,8 @@ A plugin you feel, not think about.
 
 ### Phase 2 (Next)
 - 1 placeholder background
-- Companion toggle (0-2)
 - Vault event listeners + celebration triggers
+- Companion toggle (0-2)
 - Toggle on/off companions
 - Butterfly chase interaction
 - Cart approach behavior

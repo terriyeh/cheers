@@ -5,6 +5,8 @@ import type { PetState } from './types/pet';
 import type { ObsidianPetsSettings } from './types/settings';
 import { DEFAULT_SETTINGS, VALIDATION_RULES } from './types/settings';
 import { WelcomeModal } from './modals/WelcomeModal';
+import { CelebrationService } from './celebrations/CelebrationService';
+import { ObsidianPetsSettingTab } from './settings/SettingsTab';
 
 // Build-time constant injected by esbuild
 declare const __DEV__: boolean;
@@ -28,6 +30,8 @@ declare global {
 
 export default class ObsidianPetsPlugin extends Plugin {
 	settings: ObsidianPetsSettings = DEFAULT_SETTINGS;
+	petView?: PetView;
+	private celebrationService?: CelebrationService;
 
 	async onload() {
 		console.log('🦊 Obsidian Pets loading...');
@@ -38,11 +42,18 @@ export default class ObsidianPetsPlugin extends Plugin {
 		// Register the pet view
 		this.registerView(
 			VIEW_TYPE_PET,
-			(leaf) => new PetView(leaf)
+			(leaf) => {
+				const view = new PetView(leaf);
+				this.petView = view;
+				return view;
+			}
 		);
 
 		// Initialize the view in the left sidebar (creates tab icon for switching)
 		this.initializePetView();
+
+		// Add settings tab
+		this.addSettingTab(new ObsidianPetsSettingTab(this.app, this));
 
 		// Add command to open pet view (for command palette)
 		this.addCommand({
@@ -63,6 +74,9 @@ export default class ObsidianPetsPlugin extends Plugin {
 		});
 
 		// Don't auto-open on startup - let user open manually via ribbon/command
+
+		// Initialize celebration service
+		this.celebrationService = new CelebrationService(this);
 
 		// Expose debug commands for manual state testing (development only)
 		// This code is completely removed in production builds via tree-shaking
@@ -127,6 +141,9 @@ Available states:
 
 	onunload() {
 		console.log('🦊 Obsidian Pets unloaded');
+
+		// Clean up celebration service
+		this.celebrationService?.cleanup();
 
 		// Clean up debug interface (development only)
 		if (__DEV__ && window.obsidianPetsDebug) {
