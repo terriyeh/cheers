@@ -96,6 +96,35 @@ Research into VS Code Pets (2.26M installs) and the Obsidian pet plugin landscap
 
 ## [Unreleased]
 
+### Changed - Animation and Movement System Simplification (2026-02-18)
+
+**Animation System Migration (Sprite Sheets → GIF)**:
+- Migrated from sprite sheet animation to GIF-based animation system
+- GIF files handle frame animation internally (no CSS keyframe management needed)
+- Current states: walking, celebration, petting (simplified from 7 states)
+- Future: Different GIF files for different states (celebration.gif, petting.gif)
+- Sprite sheet system retained only for celebration overlay (7-frame fireworks animation)
+
+**Speed Formula Simplification**:
+- Removed 60% walking/running threshold distinction
+- Eliminated 6 constants, reduced to 2: MAX_DURATION=33s, MIN_DURATION=6s
+- Linear speed scaling: duration = MAX_DURATION - (speed/100) * (MAX_DURATION - MIN_DURATION)
+- Consistent movement behavior across entire 0-100% range
+- Maintains constant px/s speed across different container widths
+
+**Background Tiling System**:
+- Implemented horizontal tiling (background-repeat: repeat-x)
+- No vertical or horizontal scaling (background-size: auto auto)
+- 128x128px tileable background design
+- Pet positioned at bottom: 64px (aligns with center of background tile)
+- Light neutral fill color (#f5f3ef) above background
+
+**Technical Benefits**:
+- Simpler codebase (fewer animation constants, clearer speed calculations)
+- Better performance (GIF animation handled by browser, not CSS keyframes)
+- More maintainable (linear formula easier to understand and modify)
+- Consistent tiling (background repeats seamlessly without scaling artifacts)
+
 ## [0.2.0] - 2026-02-12
 
 ### Added - Vault Celebrations System

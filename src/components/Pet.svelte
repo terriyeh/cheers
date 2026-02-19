@@ -44,17 +44,19 @@
   let containerEl: HTMLElement | null = null;
   let resizeObserver: ResizeObserver | null = null;
 
-  // Sprite dimension detection (dynamically loaded from image)
+  // GIF dimension detection (dynamically loaded from image)
+  // GIF handles frame animation internally - no sprite sheet needed
   let spriteImgElement: HTMLImageElement | null = null;
-  let spriteWidth = 128; // Default fallback
-  let spriteHeight = 128; // Default fallback
+  let spriteWidth = 128; // Default fallback (natural GIF width)
+  let spriteHeight = 128; // Default fallback (natural GIF height)
 
-  // Animation timing constants
-  const MAX_DURATION = 33; // Slowest speed (0%)
-  const MIN_DURATION = 6; // Fastest speed (100%)
+  // Movement speed constants (simplified linear scaling)
+  // Removed walking/running threshold - now linear 0-100%
+  const MAX_DURATION = 33; // Slowest speed (0%) - 33 seconds for full traversal
+  const MIN_DURATION = 6; // Fastest speed (100%) - 6 seconds for full traversal
   const REFERENCE_CONTAINER_WIDTH = 800; // Reference width for speed calibration (pixels)
 
-  // Reactive pet width based on loaded sprite dimensions
+  // Reactive pet width based on loaded GIF dimensions
   $: petWidth = spriteWidth;
 
   /**
@@ -63,7 +65,8 @@
   $: clampedSpeed = Math.max(0, Math.min(100, movementSpeed));
 
   /**
-   * Calculate animation duration based on movement speed
+   * Calculate animation duration for GIF playback
+   * Note: GIF animation is handled by the browser, this is for potential future use
    * Linear scaling: 0% = 2s (slowest), 100% = 1s (fastest)
    */
   $: animationDuration = 2 - (clampedSpeed / 100);
@@ -82,15 +85,16 @@
   let movementDuration = 15; // Default fallback value
 
   /**
-   * Handle sprite image load - detect dimensions dynamically
-   * This allows any sprite size to work without manual configuration
+   * Handle GIF image load - detect dimensions dynamically
+   * This allows any GIF size to work without manual configuration
+   * GIF animation is handled by browser, no frame management needed
    */
   function handleSpriteLoad(): void {
     if (spriteImgElement) {
       spriteWidth = spriteImgElement.naturalWidth;
       spriteHeight = spriteImgElement.naturalHeight;
 
-      // Recalculate movement range with new sprite dimensions
+      // Recalculate movement range with new GIF dimensions
       updateMovementRange();
     }
   }
@@ -98,7 +102,7 @@
   /**
    * Calculate movement range for adaptive edge-to-edge movement
    * Also calculates duration based on constant speed to maintain consistent px/s across window sizes
-   * Uses dynamically detected sprite width for accurate boundary calculations
+   * Uses dynamically detected GIF width for accurate boundary calculations
    */
   function updateMovementRange(): void {
     if (!containerEl) return;
@@ -106,14 +110,15 @@
     const containerWidth = containerEl.offsetWidth;
 
     // Maximum left position (container width - pet width)
-    // This gives true edge-to-edge movement using dynamically detected sprite width
+    // This gives true edge-to-edge movement using dynamically detected GIF width
     const maxLeft = containerWidth - petWidth;
 
     // Calculate actual distance for this container
     const actualDistance = maxLeft;
 
     // Calculate duration to maintain constant speed in px/s
-    // duration = distance / speed
+    // Linear speed scaling: duration = distance / speed
+    // Ensures movement speed (px/s) is consistent regardless of container width
     movementDuration = actualDistance / speedInPixelsPerSecond;
 
     // Set CSS custom properties for keyframes and positioning
@@ -202,11 +207,13 @@
   $: showCelebration = state === 'celebration';
 
   // Recalculate movement duration when speed changes
+  // Maintains constant px/s speed across different container widths
   $: if (speedInPixelsPerSecond && containerEl) {
     updateMovementRange();
   }
 
-  // Celebration animation handled by CSS sprite sheet animation
+  // Celebration animation handled by CSS sprite sheet overlay (7-frame fireworks)
+  // Walking animation handled by GIF (browser-native frame animation)
 
   onMount(() => {
     // Initial update (not debounced for immediate positioning)
@@ -238,12 +245,14 @@
   onDestroy(() => {
     // Explicit cleanup to help garbage collection
     // ResizeObserver cleanup is handled by onMount return function
-    // Note: Celebration animation handled entirely by CSS, no interval needed
+    // Note: GIF animation handled by browser, no cleanup needed
+    // Celebration sprite sheet animation handled by CSS, no interval needed
     containerEl = null;
   });
 
-  // Sprite sheet is now handled entirely by CSS
-  // No need for emoji fallback once sprite sheet is placed in assets/
+  // GIF animation is handled natively by the browser
+  // Celebration uses CSS sprite sheet animation (7-frame overlay)
+  // No JavaScript animation loops needed
 </script>
 
 <div
@@ -406,10 +415,11 @@
     }
   }
 
-  /* GIF-based animations */
-  /* GIF handles frame animation internally - no CSS keyframes needed */
-  /* Future: Different GIF files for celebration and petting states */
-  /* For now, all states use the same walking.gif */
+  /* GIF-based animation system */
+  /* GIF handles frame animation internally - no CSS sprite sheet keyframes needed */
+  /* Browser natively plays GIF frames, reducing CSS complexity */
+  /* Future enhancement: Separate GIF files per state (celebration.gif, petting.gif) */
+  /* Current: Single walking.gif for all states */
 
   /* Apply movement animations - pet moves continuously in all states */
   /* Movement speed is controlled by --movement-duration CSS variable */

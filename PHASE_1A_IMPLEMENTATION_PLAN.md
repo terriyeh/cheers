@@ -1,8 +1,11 @@
 # Phase 1A: Core First Scene - Implementation Plan
 
 **Created**: 2026-02-12
-**Status**: Planning Complete - Ready for Implementation
+**Updated**: 2026-02-18
+**Status**: Partially Implemented - Background tiling system implemented differently than planned
 **Estimated Time**: 6-8 hours development + 18 hours testing = **24-26 hours total**
+
+**NOTE**: This plan represents the original design. The actual implementation uses a simpler horizontal tiling system (128x128px repeat-x) instead of the Garden.svelte + PetPanel.svelte architecture. See TECHNICAL_ARCHITECTURE.md for current implementation details.
 
 ---
 
