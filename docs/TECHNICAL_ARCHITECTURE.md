@@ -354,6 +354,19 @@ $: movementDuration = actualDistance / speedInPixelsPerSecond;
 - ✅ Constant px/s: Movement speed consistent across window sizes
 - ✅ Browser-native animation: No JS coordination needed
 
+**What JavaScript Still Handles**:
+- ✅ Horizontal movement position (via CSS custom properties)
+- ✅ State transitions (walking → celebration → walking)
+- ✅ User interactions (click/touch handlers for petting)
+- ✅ Window resize handling (recalculate movement range)
+- ✅ Speed calculations (px/s formula)
+
+**What JavaScript NO LONGER Handles**:
+- ❌ Frame animation (GIF does this natively)
+- ❌ Animation timing loops (CSS handles movement)
+- ❌ Sprite coordinate calculations
+- ❌ Frame synchronization
+
 **Files Affected**:
 - ✏️ `src/components/Pet.svelte` (speed calculation logic)
 - ✏️ `src/views/PetView.ts` (uses cat.gif instead of sprite sheet)

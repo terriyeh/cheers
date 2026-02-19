@@ -126,6 +126,10 @@ Research into VS Code Pets (2.26M installs) and the Obsidian pet plugin landscap
 - More maintainable (linear formula easier to understand and modify)
 - Consistent tiling (background repeats seamlessly without scaling artifacts)
 
+**JavaScript Responsibilities** (clarified scope):
+- ✅ **Still handles**: Movement position, state transitions, user interactions, resize handling, speed calculations
+- ❌ **No longer handles**: Frame animation, animation timing loops, sprite coordinates, frame synchronization
+
 ## [0.2.0] - 2026-02-12
 
 ### Added - Vault Celebrations System
