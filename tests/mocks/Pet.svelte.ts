@@ -4,6 +4,7 @@
  */
 
 import type { PetState } from '../../src/types/pet';
+import { clampMovementSpeed, calculateGifAnimationDuration } from '../../src/utils/animation';
 
 export default class MockPetComponent {
   private target: HTMLElement;
@@ -30,10 +31,8 @@ export default class MockPetComponent {
 
     // Set initial animation duration if movementSpeed is provided
     if (options.props.movementSpeed !== undefined) {
-      // Clamp movement speed to valid range (0-100)
-      const clampedSpeed = Math.max(0, Math.min(100, options.props.movementSpeed));
-      // Linear scaling: 0% = 2s (slowest), 100% = 1s (fastest)
-      const animationDuration = 2 - (clampedSpeed / 100);
+      const clampedSpeed = clampMovementSpeed(options.props.movementSpeed);
+      const animationDuration = calculateGifAnimationDuration(clampedSpeed);
       this.container.style.setProperty('--animation-duration', `${animationDuration}s`);
     }
 
@@ -83,10 +82,8 @@ export default class MockPetComponent {
       }
 
       if (newProps.movementSpeed !== undefined) {
-        // Clamp movement speed to valid range (0-100)
-        const clampedSpeed = Math.max(0, Math.min(100, newProps.movementSpeed));
-        // Linear scaling: 0% = 2s (slowest), 100% = 1s (fastest)
-        const animationDuration = 2 - (clampedSpeed / 100);
+        const clampedSpeed = clampMovementSpeed(newProps.movementSpeed);
+        const animationDuration = calculateGifAnimationDuration(clampedSpeed);
         this.container.style.setProperty('--animation-duration', `${animationDuration}s`);
       }
     };
@@ -120,7 +117,7 @@ export default class MockPetComponent {
   }
 
   private isPettingAllowed(state: PetState): boolean {
-    return state === 'walking' || state === 'running' || state === 'greeting';
+    return state === 'walking';
   }
 
   private updateInteractiveAttributes(state: PetState, petName: string): void {

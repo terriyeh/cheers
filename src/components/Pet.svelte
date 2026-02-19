@@ -1,6 +1,12 @@
 <script lang="ts">
   import { createEventDispatcher, onMount, onDestroy } from 'svelte';
   import type { PetState } from '../types/pet';
+  import {
+    ANIMATION_CONSTANTS,
+    clampMovementSpeed,
+    calculateGifAnimationDuration,
+    calculateSpeedInPixelsPerSecond,
+  } from '../utils/animation';
 
   /**
    * Current state of the pet
@@ -47,14 +53,8 @@
   // GIF dimension detection (dynamically loaded from image)
   // GIF handles frame animation internally - no sprite sheet needed
   let spriteImgElement: HTMLImageElement | null = null;
-  let spriteWidth = 128; // Default fallback (natural GIF width)
-  let spriteHeight = 128; // Default fallback (natural GIF height)
-
-  // Movement speed constants (simplified linear scaling)
-  // Removed walking/running threshold - now linear 0-100%
-  const MAX_DURATION = 33; // Slowest speed (0%) - 33 seconds for full traversal
-  const MIN_DURATION = 6; // Fastest speed (100%) - 6 seconds for full traversal
-  const REFERENCE_CONTAINER_WIDTH = 800; // Reference width for speed calibration (pixels)
+  let spriteWidth = ANIMATION_CONSTANTS.DEFAULT_PET_WIDTH; // Default fallback (natural GIF width)
+  let spriteHeight = ANIMATION_CONSTANTS.DEFAULT_PET_WIDTH; // Default fallback (natural GIF height)
 
   // Reactive pet width based on loaded GIF dimensions
   $: petWidth = spriteWidth;
@@ -62,24 +62,21 @@
   /**
    * Clamp movement speed to valid range (0-100)
    */
-  $: clampedSpeed = Math.max(0, Math.min(100, movementSpeed));
+  $: clampedSpeed = clampMovementSpeed(movementSpeed);
 
   /**
    * Calculate animation duration for GIF playback
    * Note: GIF animation is handled by the browser, this is for potential future use
    * Linear scaling: 0% = 2s (slowest), 100% = 1s (fastest)
    */
-  $: animationDuration = 2 - (clampedSpeed / 100);
+  $: animationDuration = calculateGifAnimationDuration(clampedSpeed);
 
   /**
    * Calculate base speed in pixels per second using reference container width
    * This ensures consistent movement speed regardless of actual container size
-   * Linear scaling: speed 0% = 33s (slowest), speed 100% = 6s (fastest)
    * Uses dynamically detected sprite width for accurate calculations
    */
-  $: referenceDistance = REFERENCE_CONTAINER_WIDTH - petWidth;
-  $: referenceDuration = MAX_DURATION - (clampedSpeed / 100) * (MAX_DURATION - MIN_DURATION);
-  $: speedInPixelsPerSecond = referenceDistance / referenceDuration;
+  $: speedInPixelsPerSecond = calculateSpeedInPixelsPerSecond(clampedSpeed, petWidth);
 
   // Movement duration will be calculated dynamically based on actual container width
   let movementDuration = 15; // Default fallback value
@@ -137,9 +134,9 @@
     let timeoutId: number | undefined;
     return (...args: Parameters<T>) => {
       if (timeoutId !== undefined) {
-        clearTimeout(timeoutId);
+        window.clearTimeout(timeoutId);
       }
-      timeoutId = setTimeout(() => fn(...args), delay) as unknown as number;
+      timeoutId = window.setTimeout(() => fn(...args), delay);
     };
   }
 

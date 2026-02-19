@@ -151,7 +151,7 @@ describe('PetView', () => {
 
       expect(errorHeading?.textContent).toBe('Failed to load Obsidian Pets');
       expect(errorMessage).toBeTruthy();
-      expect(errorHint?.textContent).toBe('Check the console for more details.');
+      expect(errorHint?.textContent).toBe('An unexpected error occurred. Check the console (Ctrl+Shift+I) for details.');
 
       consoleErrorSpy.mockRestore();
     });

@@ -4,6 +4,7 @@
  */
 
 import type { PetState, StateChangeEvent } from '../../src/types/pet';
+import { calculateMovementDuration as utilCalculateMovementDuration } from '../../src/utils/animation';
 
 /**
  * All valid pet states
@@ -75,22 +76,8 @@ export function getStateDuration(state: PetState): number {
  * @param containerWidth - Container width in pixels (defaults to reference width of 800px)
  */
 export function calculateMovementDuration(speed: number, containerWidth: number = 800): number {
-  const clampedSpeed = Math.max(0, Math.min(100, speed));
-  const PET_WIDTH = 128;
-  const REFERENCE_CONTAINER_WIDTH = 800;
-  const MAX_DURATION = 33;
-  const MIN_DURATION = 6;
-
-  // Calculate reference duration (at reference container width)
-  const referenceDuration = MAX_DURATION - (clampedSpeed / 100) * (MAX_DURATION - MIN_DURATION);
-
-  // Calculate base speed in px/s using reference width
-  const referenceDistance = REFERENCE_CONTAINER_WIDTH - PET_WIDTH;
-  const speedInPixelsPerSecond = referenceDistance / referenceDuration;
-
-  // Calculate actual duration for given container width
-  const actualDistance = containerWidth - PET_WIDTH;
-  return actualDistance / speedInPixelsPerSecond;
+  // Delegate to centralized utility
+  return utilCalculateMovementDuration(speed, containerWidth);
 }
 
 /**
