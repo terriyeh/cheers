@@ -111,7 +111,7 @@ describe('PetView', () => {
       // which in our mock returns app://local/{path}
       const expectedPath = 'app://local/.obsidian/plugins/obsidian-pets/assets/pet-sprite-sheet.png';
 
-      // We can't directly access the spriteSheetPath prop, but we can verify
+      // We can't directly access the petSpritePath prop, but we can verify
       // the component was mounted successfully which means the path was provided
       const component = petView.containerEl.querySelector('.pet-sprite-container');
       expect(component).toBeTruthy();
@@ -212,11 +212,11 @@ describe('PetView', () => {
 
     it('should prevent timer from firing after close', async () => {
       await petView.onOpen();
-      petView.transitionState('greeting');
+      petView.transitionState('celebration');
 
       await petView.onClose();
 
-      vi.advanceTimersByTime(2000);
+      vi.advanceTimersByTime(1800);
 
       // getCurrentState should return null after close
       expect(petView.getCurrentState()).toBeNull();
@@ -227,10 +227,10 @@ describe('PetView', () => {
     it('should update data attribute when state changes', async () => {
       await petView.onOpen();
 
-      petView.transitionState('greeting');
+      petView.transitionState('celebration');
 
       const container = petView.containerEl.querySelector('.obsidian-pets-container');
-      expect(container?.getAttribute('data-pet-state')).toBe('greeting');
+      expect(container?.getAttribute('data-pet-state')).toBe('celebration');
     });
 
     it('should update Svelte component when state changes', async () => {
@@ -246,10 +246,9 @@ describe('PetView', () => {
       await petView.onOpen();
 
       const states: PetState[] = [
-        'greeting',
         'celebration',
         'petting',
-        'petting',
+        'walking',
       ];
 
       for (const state of states) {
@@ -264,10 +263,10 @@ describe('PetView', () => {
     it('should handle auto-transition to walking', async () => {
       await petView.onOpen();
 
-      petView.transitionState('greeting');
-      expect(petView.getCurrentState()).toBe('greeting');
+      petView.transitionState('celebration');
+      expect(petView.getCurrentState()).toBe('celebration');
 
-      vi.advanceTimersByTime(2000);
+      vi.advanceTimersByTime(1800);
 
       expect(petView.getCurrentState()).toBe('walking');
       const container = petView.containerEl.querySelector('.obsidian-pets-container');
@@ -295,7 +294,7 @@ describe('PetView', () => {
     });
 
     it('should return false when transitioning before open', () => {
-      const result = petView.transitionState('greeting');
+      const result = petView.transitionState('celebration');
       expect(result).toBe(false);
     });
 
@@ -309,7 +308,7 @@ describe('PetView', () => {
     it('should keep data attribute and component state in sync', async () => {
       await petView.onOpen();
 
-      const states: PetState[] = ['greeting', 'celebration', 'petting'];
+      const states: PetState[] = ['celebration', 'petting', 'walking'];
 
       for (const state of states) {
         petView.transitionState(state);
@@ -327,7 +326,7 @@ describe('PetView', () => {
       await petView.onOpen();
 
       petView.transitionState('celebration');
-      vi.advanceTimersByTime(3000);
+      vi.advanceTimersByTime(1800);
 
       const container = petView.containerEl.querySelector('.obsidian-pets-container');
       const component = petView.containerEl.querySelector('.pet-sprite-container');
@@ -340,7 +339,6 @@ describe('PetView', () => {
     it('should maintain sync through rapid state changes', async () => {
       await petView.onOpen();
 
-      petView.transitionState('greeting');
       petView.transitionState('celebration');
       petView.transitionState('petting');
 
@@ -397,12 +395,12 @@ describe('PetView', () => {
       container?.remove();
 
       // Should not throw even though container is gone
-      expect(() => petView.transitionState('greeting')).not.toThrow();
+      expect(() => petView.transitionState('celebration')).not.toThrow();
     });
 
     it('should handle state transition during close', async () => {
       await petView.onOpen();
-      petView.transitionState('greeting');
+      petView.transitionState('celebration');
 
       // Start close but don't await
       const closePromise = petView.onClose();
@@ -441,9 +439,9 @@ describe('PetView', () => {
 
       expect(typeof petView.transitionState).toBe('function');
 
-      const result = petView.transitionState('greeting');
+      const result = petView.transitionState('celebration');
       expect(result).toBe(true);
-      expect(petView.getCurrentState()).toBe('greeting');
+      expect(petView.getCurrentState()).toBe('celebration');
     });
 
     it('should allow external code to trigger animations', async () => {
@@ -452,7 +450,7 @@ describe('PetView', () => {
       petView.transitionState('petting');
       expect(petView.getCurrentState()).toBe('petting');
 
-      vi.advanceTimersByTime(5000);
+      vi.advanceTimersByTime(2000);
       expect(petView.getCurrentState()).toBe('walking');
     });
   });
@@ -496,28 +494,6 @@ describe('PetView', () => {
       // but we can verify the event handling works in the next tests)
     });
 
-    it('should handle pet event with returnTarget parameter', async () => {
-      await petView.onOpen();
-
-      // Start in idle state
-      expect(petView.getCurrentState()).toBe('walking');
-
-      // Transition to greeting state
-      petView.transitionState('greeting');
-      expect(petView.getCurrentState()).toBe('greeting');
-
-      // Simulate petting event from Pet.svelte component
-      // (In real scenario, this would be triggered by clicking the pet sprite)
-      // Since we can't easily dispatch custom events from the Svelte component in this test,
-      // we verify the state machine's returnTarget functionality instead
-      petView.transitionState('petting', 'greeting');
-      expect(petView.getCurrentState()).toBe('petting');
-
-      // After petting duration, should return to 'greeting'
-      vi.advanceTimersByTime(2000);
-      expect(petView.getCurrentState()).toBe('greeting');
-    });
-
     it('should remove pet event listener on close', async () => {
       await petView.onOpen();
 
@@ -546,22 +522,6 @@ describe('PetView', () => {
       // After petting duration, should return to 'walking'
       vi.advanceTimersByTime(2000);
       expect(petView.getCurrentState()).toBe('walking');
-    });
-
-    it('should handle pet event with returnTarget from greeting state', async () => {
-      await petView.onOpen();
-
-      // Transition to greeting state
-      petView.transitionState('greeting');
-      expect(petView.getCurrentState()).toBe('greeting');
-
-      // Simulate petting from greeting (should return to greeting)
-      petView.transitionState('petting', 'greeting');
-      expect(petView.getCurrentState()).toBe('petting');
-
-      // After petting duration, should return to 'greeting'
-      vi.advanceTimersByTime(2000);
-      expect(petView.getCurrentState()).toBe('greeting');
     });
   });
 });

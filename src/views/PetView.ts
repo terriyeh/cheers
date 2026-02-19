@@ -95,7 +95,7 @@ export class PetView extends ItemView {
       this.stateMachine.addListener(this.stateChangeListener);
 
       // Get asset paths with validation
-      const spriteSheetPath = this.getAssetPath('pet-sprite-sheet.png');
+      const petSpritePath = this.getAssetPath('cat.gif'); // Walking animation GIF
       const heartSpritePath = this.getAssetPath('heart.png');
       const backgroundPath = this.getAssetPath('Background_reg.png', 'backgrounds');
       const celebrationSpritePath = this.getAssetPath('fireworks-spritesheet.png', 'effects');
@@ -109,7 +109,7 @@ export class PetView extends ItemView {
         target: this.containerDiv,
         props: {
           state: this.stateMachine.getCurrentState(),
-          spriteSheetPath: spriteSheetPath,
+          petSpritePath: petSpritePath,
           heartSpritePath: heartSpritePath,
           backgroundPath: backgroundPath,
           celebrationSpritePath: celebrationSpritePath,
@@ -205,11 +205,8 @@ export class PetView extends ItemView {
       // Validate state against known valid states
       const validStates: PetState[] = [
         'walking',
-        'running',
-        'greeting',
         'celebration',
         'petting',
-        'sleeping',
       ];
 
       if (validStates.includes(state)) {

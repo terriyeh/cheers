@@ -89,16 +89,17 @@ A plugin you feel, not think about.
 ## Phase Breakdown
 
 ### Phase 1 (Complete)
-- Movement system (CSS-based walking/running)
-- Basic pet sprite with animation states
+- Movement system (CSS-based walking)
+- Basic pet gifs for each state
 - Petting interaction
 - Settings persistence
 
-### Phase 2 (Next)
-- 1 placeholder background
-- Vault event listeners + celebration triggers
-- Companion toggle (0-2)
-- Toggle on/off companions
+### Phase 2 (In Progress)
+- (Complete) 1 background
+- (Complete) Vault event listeners + celebration triggers
+- (In Progress) Main character animations (walk, pet, celebrate)
+- Production heart and fireworkds animation 
+- Toggle on/off companions (0-2)
 - Butterfly chase interaction
 - Cart approach behavior
 - Cosmetic Foundation
