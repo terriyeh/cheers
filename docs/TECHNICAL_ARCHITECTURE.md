@@ -324,6 +324,7 @@ export let petSpritePath: string = 'assets/cat.gif';
 **How It Works**:
 - GIF files handle frame animation internally (browser-native)
 - No CSS sprite sheet keyframes needed
+- **No JavaScript animation loops or frame management** (browser handles all animation)
 - Current: Single walking.gif for all states
 - Future: Separate GIFs per state (celebration.gif, petting.gif, etc.)
 - Celebration state uses sprite sheet overlay (7-frame fireworks animation)
@@ -347,9 +348,11 @@ $: movementDuration = actualDistance / speedInPixelsPerSecond;
 **Key Simplifications** (vs. old system):
 - ❌ Removed: 60% walking/running threshold
 - ❌ Removed: 6 speed constants (WALKING_MIN_SPEED, WALKING_MAX_SPEED, etc.)
+- ❌ Removed: JavaScript frame management and animation loops
 - ✅ Added: 2 duration constants (MAX_DURATION, MIN_DURATION)
 - ✅ Linear scaling: Simple, predictable speed progression
 - ✅ Constant px/s: Movement speed consistent across window sizes
+- ✅ Browser-native animation: No JS coordination needed
 
 **Files Affected**:
 - ✏️ `src/components/Pet.svelte` (speed calculation logic)

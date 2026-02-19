@@ -122,6 +122,7 @@ Research into VS Code Pets (2.26M installs) and the Obsidian pet plugin landscap
 **Technical Benefits**:
 - Simpler codebase (fewer animation constants, clearer speed calculations)
 - Better performance (GIF animation handled by browser, not CSS keyframes)
+- **Simplified JavaScript scope**: No animation loops, no frame management, no sprite coordination
 - More maintainable (linear formula easier to understand and modify)
 - Consistent tiling (background repeats seamlessly without scaling artifacts)
 
