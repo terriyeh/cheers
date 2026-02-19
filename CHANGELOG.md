@@ -124,7 +124,7 @@ Research into VS Code Pets (2.26M installs) and the Obsidian pet plugin landscap
 - CSS sprite sheet animation (7 frames, 1.8 seconds duration)
 - Fireworks celebration sprite (`assets/effects/fireworks-spritesheet.png` - 10KB)
 - Celebration overlay positioned in top third of view, horizontally centered
-- Flying island background (`assets/backgrounds/flying-island.gif` - 942KB)
+- Background scene (`assets/backgrounds/Background_reg.png` - 128KB)
 - GPU-accelerated CSS `steps()` animation for smooth playback
 
 **Testing:**

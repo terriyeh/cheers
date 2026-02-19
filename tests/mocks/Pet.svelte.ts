@@ -32,10 +32,8 @@ export default class MockPetComponent {
     if (options.props.movementSpeed !== undefined) {
       // Clamp movement speed to valid range (0-100)
       const clampedSpeed = Math.max(0, Math.min(100, options.props.movementSpeed));
-      const isRunning = clampedSpeed > 60;
-      const animationDuration = isRunning
-        ? 1 - ((clampedSpeed - 60) / 40) * 0.6 // 1s to 0.4s
-        : 2 - (clampedSpeed / 60); // 2s to 1s
+      // Linear scaling: 0% = 2s (slowest), 100% = 1s (fastest)
+      const animationDuration = 2 - (clampedSpeed / 100);
       this.container.style.setProperty('--animation-duration', `${animationDuration}s`);
     }
 
@@ -54,7 +52,7 @@ export default class MockPetComponent {
     this.sprite.className = 'pet-sprite';
     this.sprite.setAttribute('role', 'img');
     this.sprite.setAttribute('aria-label', `Pet is ${options.props.state}`);
-    this.sprite.style.backgroundImage = `url(${options.props.spriteSheetPath})`;
+    this.sprite.style.backgroundImage = `url(${options.props.petSpritePath})`;
 
     // Assemble structure
     this.wrapper.appendChild(this.sprite);
@@ -80,18 +78,15 @@ export default class MockPetComponent {
         this.updateInteractiveAttributes(this.props.state, newProps.petName);
       }
 
-      if (newProps.spriteSheetPath !== undefined) {
-        this.sprite.style.backgroundImage = `url(${newProps.spriteSheetPath})`;
+      if (newProps.petSpritePath !== undefined) {
+        this.sprite.style.backgroundImage = `url(${newProps.petSpritePath})`;
       }
 
       if (newProps.movementSpeed !== undefined) {
         // Clamp movement speed to valid range (0-100)
         const clampedSpeed = Math.max(0, Math.min(100, newProps.movementSpeed));
-        // Calculate animation duration based on speed
-        const isRunning = clampedSpeed > 60;
-        const animationDuration = isRunning
-          ? 1 - ((clampedSpeed - 60) / 40) * 0.6 // 1s to 0.4s
-          : 2 - (clampedSpeed / 60); // 2s to 1s
+        // Linear scaling: 0% = 2s (slowest), 100% = 1s (fastest)
+        const animationDuration = 2 - (clampedSpeed / 100);
         this.container.style.setProperty('--animation-duration', `${animationDuration}s`);
       }
     };
