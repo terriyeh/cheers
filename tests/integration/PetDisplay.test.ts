@@ -90,12 +90,12 @@ describe('PetDisplay Integration', () => {
       expect(petView.getCurrentState()).toBe('walking');
     });
 
-    it('should play celebration animation for correct duration (2880ms)', async () => {
+    it('should play celebration animation for correct duration (4320ms)', async () => {
       await petView.onOpen();
 
       petView.transitionState('celebration');
 
-      vi.advanceTimersByTime(2879);
+      vi.advanceTimersByTime(4319);
       expect(petView.getCurrentState()).toBe('celebration');
 
       vi.advanceTimersByTime(1);
@@ -112,8 +112,8 @@ describe('PetDisplay Integration', () => {
       petView.transitionState('celebration');
       expect(petView.getCurrentState()).toBe('celebration');
 
-      // Wait for celebration to complete (2880ms)
-      vi.advanceTimersByTime(2880);
+      // Wait for celebration to complete (4320ms)
+      vi.advanceTimersByTime(4320);
 
       expect(petView.getCurrentState()).toBe('walking');
     });
@@ -176,7 +176,7 @@ describe('PetDisplay Integration', () => {
       petView.transitionState('celebration');
 
       // Transition to petting right before celebration would complete
-      vi.advanceTimersByTime(2879);
+      vi.advanceTimersByTime(4319);
       petView.transitionState('petting');
 
       // Advance past where celebration would have completed
@@ -195,11 +195,11 @@ describe('PetDisplay Integration', () => {
 
       // User completes first task
       petView.transitionState('celebration');
-      vi.advanceTimersByTime(2880);
+      vi.advanceTimersByTime(4320);
 
       // User completes daily note
       petView.transitionState('celebration');
-      vi.advanceTimersByTime(2880);
+      vi.advanceTimersByTime(4320);
 
       // Evening: user closes vault
       await petView.onClose();
@@ -210,7 +210,7 @@ describe('PetDisplay Integration', () => {
       // First session
       await petView.onOpen();
       petView.transitionState('celebration');
-      vi.advanceTimersByTime(2880);
+      vi.advanceTimersByTime(4320);
       await petView.onClose();
 
       // Second session
@@ -260,7 +260,7 @@ describe('PetDisplay Integration', () => {
       await petView.onOpen();
 
       petView.transitionState('celebration');
-      vi.advanceTimersByTime(2880);
+      vi.advanceTimersByTime(4320);
 
       // All layers should be synchronized to walking
       expect(petView.getCurrentState()).toBe('walking');
@@ -323,7 +323,7 @@ describe('PetDisplay Integration', () => {
       container?.setAttribute('data-pet-state', 'corrupted');
 
       // Auto-transition should still work
-      vi.advanceTimersByTime(2880);
+      vi.advanceTimersByTime(4320);
 
       expect(petView.getCurrentState()).toBe('walking');
       expect(container?.getAttribute('data-pet-state')).toBe('walking');
