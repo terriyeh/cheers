@@ -4,45 +4,38 @@
  */
 
 import type { PetState, StateChangeEvent } from '../../src/types/pet';
+import { calculateMovementDuration as utilCalculateMovementDuration } from '../../src/utils/animation';
 
 /**
  * All valid pet states
  */
 export const ALL_PET_STATES: PetState[] = [
   'walking',
-  'running',
-  'greeting',
   'celebration',
   'petting',
-  'sleeping',
 ];
 
 /**
  * States that auto-return to walking
  */
 export const TEMPORARY_STATES: PetState[] = [
-  'greeting',
   'celebration',
   'petting',
-  'sleeping',
 ];
 
 /**
  * States that do not auto-return to walking
  */
-export const PERMANENT_STATES: PetState[] = ['walking', 'running'];
+export const PERMANENT_STATES: PetState[] = ['walking'];
 
 /**
  * State durations in milliseconds
- * Note: walking and running durations are calculated based on speed settings
+ * Note: walking duration is 0 (continuous), celebration and petting have fixed durations
  */
 export const STATE_DURATIONS: Record<PetState, number> = {
-  walking: 1400, // Default for speed=60 (2 - 60/60 = 1.4s)
-  running: 400, // Default for speed=100 (1 - (100-60)/40 * 0.6 = 0.4s)
-  greeting: 2000,
-  celebration: 3000,
-  petting: 2000, // Reduced from 5s - less awkward pause
-  sleeping: 2000,
+  walking: 0, // Continuous until interrupted
+  celebration: 4320, // 4.32 seconds (matches fireworks GIF loop)
+  petting: 2000, // 2 seconds
 };
 
 
@@ -76,21 +69,15 @@ export function getStateDuration(state: PetState): number {
 }
 
 /**
- * Calculate walking state duration based on speed (0-60)
- * Formula: duration = 2 - (speed / 60)
+ * Calculate horizontal movement duration based on speed (0-100) and container width
+ * Now maintains constant speed in px/s regardless of container size
+ * Linear scaling: speed 0% = 33s (slowest), speed 100% = 6s (fastest)
+ * @param speed - Movement speed (0-100)
+ * @param containerWidth - Container width in pixels (defaults to reference width of 800px)
  */
-export function calculateWalkingDuration(speed: number): number {
-  const clampedSpeed = Math.max(0, Math.min(60, speed));
-  return 2 - (clampedSpeed / 60);
-}
-
-/**
- * Calculate running state duration based on speed (61-100)
- * Formula: duration = 1 - ((speed - 60) / 40) * 0.6
- */
-export function calculateRunningDuration(speed: number): number {
-  const clampedSpeed = Math.max(61, Math.min(100, speed));
-  return 1 - ((clampedSpeed - 60) / 40) * 0.6;
+export function calculateMovementDuration(speed: number, containerWidth: number = 800): number {
+  // Delegate to centralized utility
+  return utilCalculateMovementDuration(speed, containerWidth);
 }
 
 /**
@@ -113,14 +100,14 @@ export function createUserInteractionSequence(): {
   description: string;
 }[] {
   return [
-    { state: 'greeting', duration: 2000, description: 'Pet greets user' },
-    { state: 'walking', duration: 1400, description: 'Return to walking' },
+    { state: 'walking', duration: 0, description: 'Pet walks continuously' },
     {
       state: 'celebration',
-      duration: 3000,
+      duration: 4320,
       description: 'User completes task',
     },
+    { state: 'walking', duration: 0, description: 'Return to walking' },
     { state: 'petting', duration: 2000, description: 'User pets companion' },
-    { state: 'sleeping', duration: 2000, description: 'Pet goes to sleep' },
+    { state: 'walking', duration: 0, description: 'Return to walking' },
   ];
 }

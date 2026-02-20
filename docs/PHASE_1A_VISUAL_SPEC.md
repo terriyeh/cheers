@@ -20,13 +20,25 @@ This document defines the visual specifications for the first garden scene in Va
 
 ### 1.1 Dimensions and Aspect Ratio
 
-**Recommended Canvas Size**: 800px × 600px (4:3 aspect ratio)
+**Current Implementation**: 128x128px tileable image (horizontal repeat only)
 
-**Rationale**:
+**Implemented Canvas Size**: 128px × 128px (1:1 aspect ratio, tileable)
+
+**Implementation Details**:
+- **Tiling**: Horizontal repeat (background-repeat: repeat-x)
+- **No scaling**: background-size: auto auto (natural 128x128px dimensions)
+- **Positioning**: bottom center (anchored to bottom edge)
+- **Pet alignment**: bottom: 64px (center of 128px tile)
+
+**Original Design Spec**: 800px × 600px (4:3 aspect ratio)
+
+**Original Rationale**:
 - **Width**: 800px provides sufficient detail when scaled down to sidebar widths (300-400px)
 - **Height**: 600px maintains proper vertical composition without excessive letterboxing
 - **Aspect Ratio**: 4:3 portrait-leaning provides vertical space for pet ground positioning while avoiding extreme portrait ratios that would waste horizontal space
 - **Scaling**: CSS `background-size: cover` ensures the background fills the container while maintaining aspect ratio
+
+**Why Implementation Differs**: Tiling system provides seamless horizontal repeat with smaller file size and no scaling distortion
 
 **Responsive Behavior**:
 - Container will be **100% width × 100% height** of the sidebar panel
@@ -41,7 +53,14 @@ This document defines the visual specifications for the first garden scene in Va
 
 ### 1.2 Visual Style
 
-**Style**: **Soft pixel art with painted textures**
+**Current Implementation**: **Horizontal tiling background system**
+- Background image: 128x128px tileable image
+- Tiling: Horizontal only (background-repeat: repeat-x)
+- No scaling: background-size: auto auto (maintains natural dimensions)
+- Positioning: bottom center (anchored to bottom edge)
+- Above-background fill: #f5f3ef (light neutral color)
+
+**Original Design Spec**: **Soft pixel art with painted textures**
 
 **Characteristics**:
 - **Pixel art foundation**: Complements the 64x64px pet sprite's pixelated aesthetic

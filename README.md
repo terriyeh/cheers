@@ -41,13 +41,12 @@ We're here to:
 ### Key Features
 
 - **Vault-Aware Celebrations** ✅ IMPLEMENTED (v0.2.0, Feb 12 2026): Pet celebrates note creation, task completion, link creation, and word milestones
-- **Interactive Pet Companion** ✅ IMPLEMENTED: 7 animation states with sprite-based animations
-  - Idle, greeting, walking, running, celebration, petting
+- **Interactive Pet Companion** ✅ IMPLEMENTED: 3 animation states with GIF-based animations
+  - Walking, celebration, petting
   - CSS-based movement system with speed control
   - Automatic direction flipping at edges
 - **Ambient Presence** ✅ IMPLEMENTED: Pet walks across panel with configurable speed (0-100%)
-  - Walking state (0-60% speed)
-  - Running state (61-100% speed)
+  - Linear speed scaling (0% = 33s duration, 100% = 6s duration)
   - GPU-accelerated CSS animations (<0.1% CPU)
 - **User-Configurable Triggers** ✅ IMPLEMENTED (v0.2.0): Individual toggles for each celebration type + custom word count milestones
 - **Pets Live Their Lives Alongside Yours** 🚧 PLANNED (v0.4.0+): Multi-pet with emergent behaviors and relationships
@@ -128,21 +127,20 @@ Configure celebrations in **Settings → Obsidian Pets → Celebrations**:
 
 ### Pet Animations
 
-Your companion has 7 distinct animation states:
+Your companion has 3 animation states using GIF-based animation:
 
-- **Idle**: Gentle breathing when resting
-- **Greeting**: Welcoming wave when you open the panel
-- **Walking**: CSS-based edge-to-edge movement (0-60% speed)
+- **Walking**: Continuous edge-to-edge movement with configurable speed (0-100%)
   - Smooth horizontal movement with automatic direction flipping
+  - Linear speed scaling (0% = slowest 33s, 100% = fastest 6s)
   - GPU-accelerated for 60 FPS performance
   - Minimal battery drain (<0.1% CPU usage)
-- **Running**: Faster movement (61-100% speed)
-  - Same smooth movement as walking, just faster
-  - Speed controlled by movement slider
-- **Small Celebration**: Brief cheer for everyday actions (v0.2.0)
-- **Big Celebration**: Enthusiastic celebration for milestones (v0.2.0)
+  - GIF handles frame animation internally, no sprite sheets
+- **Celebration**: Fireworks animation triggered by vault events (v0.2.0)
+  - GIF animation (4.32 seconds)
+  - Triggered by note creation, task completion, link creation, word milestones
 - **Petting**: Content reaction when you click/tap (available anytime)
-  - Returns to previous state after petting (preserves movement if walking/running)
+  - Heart overlay animation (2 seconds)
+  - Returns to walking state after petting
 
 **Movement System Features:**
 - Configurable speed (0-100% slider)

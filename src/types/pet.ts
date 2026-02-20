@@ -5,28 +5,24 @@
 /**
  * All possible states for the pet companion
  *
- * Movement states (continuous):
- * - walking: Default state, continuous movement (speed 0-60%)
- * - running: High-speed movement (speed 61-100%)
+ * Movement state (continuous):
+ * - walking: Default state with neutral expression, continuous movement
  *
  * Interaction states (temporary, return to walking):
- * - greeting: When pet view opens (2s duration)
- * - celebration: When celebrating vault activities (3s duration)
- * - petting: When celebrating major milestones (5s duration)
- * - sleeping: When user clicks/taps the pet (2s duration)
+ * - celebration: Happy expression when celebrating vault activities (fireworks overlay)
+ * - petting: Content expression when user interacts with pet (hearts overlay)
+ *
+ * Note: Movement speed (0-100%) is controlled by CSS animation-duration,
+ * not by separate states. All states use the same walking animation at different speeds.
  */
 export type PetState =
   | 'walking'
-  | 'running'
-  | 'greeting'
   | 'celebration'
-  | 'petting'
-  | 'sleeping';
+  | 'petting';
 
 /**
  * Movement speed percentage (0-100)
- * - 0-60: Walking speed (Row 3 sprite)
- * - 61-100: Running speed (Row 4 sprite)
+ * Controls horizontal translation speed via CSS animation-duration
  */
 export type MovementSpeed = number;
 

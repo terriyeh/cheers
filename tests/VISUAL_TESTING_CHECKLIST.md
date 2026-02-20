@@ -63,10 +63,11 @@ This checklist should be performed whenever CSS changes are made to the plugin, 
   - Pet in sleeping state: Opacity reduced (visible dimming)
   - Pet in encouraging state: Left border with accent color visible
 
-- [ ] **Sprite Sheet Loading**
-  - Sprite sheet loads correctly (no broken images)
-  - Animations play smoothly
+- [ ] **GIF Animation Loading**
+  - GIF animation loads correctly (no broken images)
+  - GIF plays smoothly (browser-native animation)
   - No visual glitches or tearing during state transitions
+  - Celebration sprite sheet overlay displays correctly (7-frame fireworks)
 
 ### Responsive Design
 
@@ -91,7 +92,7 @@ This checklist should be performed whenever CSS changes are made to the plugin, 
   - Loading state styling is consistent with theme
 
 - [ ] **Error State**
-  - Simulate error (e.g., delete sprite sheet file temporarily)
+  - Simulate error (e.g., delete GIF file temporarily)
   - Verify error message displays correctly
   - Error styling uses appropriate color (red/warning)
   - Error hint text is readable and helpful

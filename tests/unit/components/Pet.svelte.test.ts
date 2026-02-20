@@ -21,9 +21,11 @@ describe('Pet.svelte Component', () => {
 
   const defaultProps = {
     state: 'walking' as PetState,
-    spriteSheetPath: 'assets/pet-sprite-sheet.png',
+    petSpritePath: 'assets/cat.gif',
+    heartSpritePath: 'assets/heart.png',
+    backgroundPath: '',
+    celebrationSpritePath: '',
     petName: 'Kit',
-    userName: 'TestUser',
     movementSpeed: 60,
   };
 
@@ -39,7 +41,7 @@ describe('Pet.svelte Component', () => {
       const component = new MockPetComponent({ target: container, props: defaultProps });
       const sprite = container.querySelector('.pet-sprite') as HTMLElement;
       expect(sprite).toBeTruthy();
-      expect(sprite.style.backgroundImage).toContain('assets/pet-sprite-sheet.png');
+      expect(sprite.style.backgroundImage).toContain('assets/cat.gif');
       component.$destroy();
     });
 
@@ -62,10 +64,10 @@ describe('Pet.svelte Component', () => {
       const component = new MockPetComponent({ target: container, props: defaultProps });
 
       // Update state
-      component.$set({ state: 'greeting' });
+      component.$set({ state: 'celebration' });
 
       const spriteContainer = container.querySelector('.pet-sprite-container');
-      expect(spriteContainer?.getAttribute('data-state')).toBe('greeting');
+      expect(spriteContainer?.getAttribute('data-state')).toBe('celebration');
       component.$destroy();
     });
   });
@@ -84,8 +86,8 @@ describe('Pet.svelte Component', () => {
       const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'walking', movementSpeed: 30 } });
       const petContainer = container.querySelector('.pet-sprite-container') as HTMLElement;
       expect(petContainer).toBeTruthy();
-      // Duration = 2 - (30 / 60) = 1.5s
-      expect(petContainer.style.getPropertyValue('--animation-duration')).toBe('1.5s');
+      // Duration = 2 - (30 / 100) = 1.7s
+      expect(petContainer.style.getPropertyValue('--animation-duration')).toBe('1.7s');
       component.$destroy();
     });
 
@@ -93,35 +95,8 @@ describe('Pet.svelte Component', () => {
       const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'walking', movementSpeed: 60 } });
       const petContainer = container.querySelector('.pet-sprite-container') as HTMLElement;
       expect(petContainer).toBeTruthy();
-      // Duration = 2 - (60 / 60) = 1s
-      expect(petContainer.style.getPropertyValue('--animation-duration')).toBe('1s');
-      component.$destroy();
-    });
-
-    it('should apply running animation duration for speed 61 (slowest running)', () => {
-      const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'running', movementSpeed: 61 } });
-      const petContainer = container.querySelector('.pet-sprite-container') as HTMLElement;
-      expect(petContainer).toBeTruthy();
-      // Duration = 1 - ((61 - 60) / 40) * 0.6 = 1 - 0.015 = 0.985s
-      expect(parseFloat(petContainer.style.getPropertyValue('--animation-duration'))).toBeCloseTo(0.985, 2);
-      component.$destroy();
-    });
-
-    it('should apply running animation duration for speed 80 (medium running)', () => {
-      const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'running', movementSpeed: 80 } });
-      const petContainer = container.querySelector('.pet-sprite-container') as HTMLElement;
-      expect(petContainer).toBeTruthy();
-      // Duration = 1 - ((80 - 60) / 40) * 0.6 = 1 - 0.3 = 0.7s
-      expect(petContainer.style.getPropertyValue('--animation-duration')).toBe('0.7s');
-      component.$destroy();
-    });
-
-    it('should apply running animation duration for speed 100 (fastest)', () => {
-      const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'running', movementSpeed: 100 } });
-      const petContainer = container.querySelector('.pet-sprite-container') as HTMLElement;
-      expect(petContainer).toBeTruthy();
-      // Duration = 1 - ((100 - 60) / 40) * 0.6 = 1 - 0.6 = 0.4s
-      expect(petContainer.style.getPropertyValue('--animation-duration')).toBe('0.4s');
+      // Duration = 2 - (60 / 100) = 1.4s
+      expect(petContainer.style.getPropertyValue('--animation-duration')).toBe('1.4s');
       component.$destroy();
     });
 
@@ -129,21 +104,21 @@ describe('Pet.svelte Component', () => {
       const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'walking', movementSpeed: 30 } });
       const petContainer = container.querySelector('.pet-sprite-container') as HTMLElement;
 
-      // Initial: 1.5s for speed 30
-      expect(petContainer.style.getPropertyValue('--animation-duration')).toBe('1.5s');
+      // Initial: 1.7s for speed 30
+      expect(petContainer.style.getPropertyValue('--animation-duration')).toBe('1.7s');
 
       // Update speed to 60
       component.$set({ movementSpeed: 60 });
-      expect(petContainer.style.getPropertyValue('--animation-duration')).toBe('1s');
+      expect(petContainer.style.getPropertyValue('--animation-duration')).toBe('1.4s');
 
       component.$destroy();
     });
 
     it('should not apply movement speed to non-movement states', () => {
-      const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'greeting', movementSpeed: 100 } });
+      const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'celebration', movementSpeed: 100 } });
       const sprite = container.querySelector('.pet-sprite') as HTMLElement;
       expect(sprite).toBeTruthy();
-      // Greeting should use fixed 2s duration, not affected by movement speed
+      // Celebration should use fixed duration, not affected by movement speed
       component.$destroy();
     });
   });
@@ -158,26 +133,8 @@ describe('Pet.svelte Component', () => {
       component.$destroy();
     });
 
-    it('should be interactive during greeting state', () => {
-      const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'greeting' } });
-      const wrapper = container.querySelector('.pet-sprite-wrapper') as HTMLElement;
-      expect(wrapper.getAttribute('tabindex')).toBe('0');
-      expect(wrapper.getAttribute('aria-disabled')).toBe('false');
-      expect(wrapper.style.cursor).toBe('pointer');
-      component.$destroy();
-    });
-
     it('should be non-interactive during celebration state', () => {
       const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'celebration' } });
-      const wrapper = container.querySelector('.pet-sprite-wrapper') as HTMLElement;
-      expect(wrapper.getAttribute('tabindex')).toBe('-1');
-      expect(wrapper.getAttribute('aria-disabled')).toBe('true');
-      expect(wrapper.style.cursor).toBe('not-allowed');
-      component.$destroy();
-    });
-
-    it('should be non-interactive during sleeping state', () => {
-      const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'sleeping' } });
       const wrapper = container.querySelector('.pet-sprite-wrapper') as HTMLElement;
       expect(wrapper.getAttribute('tabindex')).toBe('-1');
       expect(wrapper.getAttribute('aria-disabled')).toBe('true');
@@ -201,37 +158,8 @@ describe('Pet.svelte Component', () => {
       component.$destroy();
     });
 
-    it('should emit pet event with greeting returnToState when clicked during greeting', () => {
-      const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'greeting' } });
-      const wrapper = container.querySelector('.pet-sprite-wrapper') as HTMLElement;
-
-      const petHandler = vi.fn();
-      component.$on('pet', petHandler);
-
-      wrapper.click();
-
-      expect(petHandler).toHaveBeenCalledTimes(1);
-      expect(petHandler.mock.calls[0][0].detail).toEqual({
-        returnToState: 'greeting',
-      });
-      component.$destroy();
-    });
-
     it('should not emit pet event when clicked during celebration state', () => {
       const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'celebration' } });
-      const wrapper = container.querySelector('.pet-sprite-wrapper') as HTMLElement;
-
-      const petHandler = vi.fn();
-      component.$on('pet', petHandler);
-
-      wrapper.click();
-
-      expect(petHandler).not.toHaveBeenCalled();
-      component.$destroy();
-    });
-
-    it('should not emit pet event when clicked during sleeping state', () => {
-      const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'sleeping' } });
       const wrapper = container.querySelector('.pet-sprite-wrapper') as HTMLElement;
 
       const petHandler = vi.fn();
@@ -278,19 +206,11 @@ describe('Pet.svelte Component', () => {
 
 
   describe('duration formula calculations', () => {
-    it('should calculate correct walking duration for speed=30 (1.5s)', () => {
+    it('should calculate correct walking duration for speed=30 (1.7s)', () => {
       const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'walking', movementSpeed: 30 } });
       const petContainer = container.querySelector('.pet-sprite-container') as HTMLElement;
-      // duration = 2 - (30 / 60) = 1.5s
-      expect(petContainer.style.getPropertyValue('--animation-duration')).toBe('1.5s');
-      component.$destroy();
-    });
-
-    it('should calculate correct running duration for speed=90 (0.55s)', () => {
-      const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'running', movementSpeed: 90 } });
-      const petContainer = container.querySelector('.pet-sprite-container') as HTMLElement;
-      // duration = 1 - ((90 - 60) / 40) * 0.6 = 1 - 0.45 = 0.55s
-      expect(petContainer.style.getPropertyValue('--animation-duration')).toBe('0.55s');
+      // duration = 2 - (30 / 100) = 1.7s
+      expect(petContainer.style.getPropertyValue('--animation-duration')).toBe('1.7s');
       component.$destroy();
     });
   });
@@ -313,23 +233,6 @@ describe('Pet.svelte Component', () => {
       component.$destroy();
     });
 
-    it('should emit pet event when Space key pressed during greeting state', () => {
-      const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'greeting' } });
-      const wrapper = container.querySelector('.pet-sprite-wrapper') as HTMLElement;
-
-      const petHandler = vi.fn();
-      component.$on('pet', petHandler);
-
-      const event = new KeyboardEvent('keydown', { key: ' ' });
-      wrapper.dispatchEvent(event);
-
-      expect(petHandler).toHaveBeenCalledTimes(1);
-      expect(petHandler.mock.calls[0][0].detail).toEqual({
-        returnToState: 'greeting',
-      });
-      component.$destroy();
-    });
-
     it('should not emit pet event when Enter pressed during celebration state', () => {
       const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'celebration' } });
       const wrapper = container.querySelector('.pet-sprite-wrapper') as HTMLElement;
@@ -338,20 +241,6 @@ describe('Pet.svelte Component', () => {
       component.$on('pet', petHandler);
 
       const event = new KeyboardEvent('keydown', { key: 'Enter' });
-      wrapper.dispatchEvent(event);
-
-      expect(petHandler).not.toHaveBeenCalled();
-      component.$destroy();
-    });
-
-    it('should not emit pet event when Space pressed during sleeping state', () => {
-      const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'sleeping' } });
-      const wrapper = container.querySelector('.pet-sprite-wrapper') as HTMLElement;
-
-      const petHandler = vi.fn();
-      component.$on('pet', petHandler);
-
-      const event = new KeyboardEvent('keydown', { key: ' ' });
       wrapper.dispatchEvent(event);
 
       expect(petHandler).not.toHaveBeenCalled();
@@ -382,24 +271,10 @@ describe('Pet.svelte Component', () => {
       component.$destroy();
     });
 
-    it('should have correct ARIA label during greeting state', () => {
-      const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'greeting', petName: 'Fluffy' } });
-      const wrapper = container.querySelector('.pet-sprite-wrapper') as HTMLElement;
-      expect(wrapper.getAttribute('aria-label')).toBe('Pet Fluffy');
-      component.$destroy();
-    });
-
     it('should have correct ARIA label during celebration state (busy)', () => {
       const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'celebration', petName: 'Kit' } });
       const wrapper = container.querySelector('.pet-sprite-wrapper') as HTMLElement;
       expect(wrapper.getAttribute('aria-label')).toBe('Pet Kit (currently busy)');
-      component.$destroy();
-    });
-
-    it('should have correct ARIA label during sleeping state (busy)', () => {
-      const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'sleeping', petName: 'Buddy' } });
-      const wrapper = container.querySelector('.pet-sprite-wrapper') as HTMLElement;
-      expect(wrapper.getAttribute('aria-label')).toBe('Pet Buddy (currently busy)');
       component.$destroy();
     });
 
@@ -448,7 +323,7 @@ describe('Pet.svelte Component', () => {
     });
 
     it('should have opacity 0.7 when aria-disabled is true', () => {
-      const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'sleeping' } });
+      const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'celebration' } });
       const wrapper = container.querySelector('.pet-sprite-wrapper') as HTMLElement;
       expect(wrapper.getAttribute('aria-disabled')).toBe('true');
       // CSS will apply opacity via attribute selector

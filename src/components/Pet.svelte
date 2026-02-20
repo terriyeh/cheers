@@ -1,6 +1,12 @@
 <script lang="ts">
   import { createEventDispatcher, onMount, onDestroy } from 'svelte';
   import type { PetState } from '../types/pet';
+  import {
+    ANIMATION_CONSTANTS,
+    clampMovementSpeed,
+    calculateGifAnimationDuration,
+    calculateSpeedInPixelsPerSecond,
+  } from '../utils/animation';
 
   /**
    * Current state of the pet
@@ -8,9 +14,9 @@
   export let state: PetState = 'walking';
 
   /**
-   * Path to the sprite sheet (passed from PetView)
+   * Path to the pet sprite GIF (passed from PetView)
    */
-  export let spriteSheetPath: string = 'assets/pet-sprite-sheet.png';
+  export let petSpritePath: string = 'assets/cat.gif';
 
   /**
    * Path to the heart sprite (passed from PetView)
@@ -44,41 +50,56 @@
   let containerEl: HTMLElement | null = null;
   let resizeObserver: ResizeObserver | null = null;
 
-  // Animation timing constants
-  const SPEED_THRESHOLD = 60; // Speed above which pet runs (0-60 = walk, 61-100 = run)
-  const WALKING_MAX_DURATION = 2; // seconds
-  const WALKING_MIN_DURATION = 1; // seconds
-  const RUNNING_MAX_DURATION = 1; // seconds
-  const RUNNING_MIN_DURATION = 0.4; // seconds
-  const PET_WIDTH = 64; // pixels (sprite width)
+  // GIF dimension detection (dynamically loaded from image)
+  // GIF handles frame animation internally - no sprite sheet needed
+  let spriteImgElement: HTMLImageElement | null = null;
+  let spriteWidth = ANIMATION_CONSTANTS.DEFAULT_PET_WIDTH; // Default fallback (natural GIF width)
+  let spriteHeight = ANIMATION_CONSTANTS.DEFAULT_PET_WIDTH; // Default fallback (natural GIF height)
+
+  // Reactive pet width based on loaded GIF dimensions
+  $: petWidth = spriteWidth;
 
   /**
    * Clamp movement speed to valid range (0-100)
    */
-  $: clampedSpeed = Math.max(0, Math.min(100, movementSpeed));
+  $: clampedSpeed = clampMovementSpeed(movementSpeed);
 
   /**
-   * Calculate animation duration based on movement speed
-   * Walking (0-60%): 2s to 1s (sprite animation)
-   * Running (61-100%): 1s to 0.4s (sprite animation)
+   * Calculate animation duration for GIF playback
+   * Note: GIF animation is handled by the browser, this is for potential future use
+   * Linear scaling: 0% = 2s (slowest), 100% = 1s (fastest)
    */
-  $: isRunning = clampedSpeed > SPEED_THRESHOLD;
-  $: animationDuration = isRunning
-    ? RUNNING_MAX_DURATION - ((clampedSpeed - SPEED_THRESHOLD) / (100 - SPEED_THRESHOLD)) * (RUNNING_MAX_DURATION - RUNNING_MIN_DURATION)
-    : WALKING_MAX_DURATION - (clampedSpeed / SPEED_THRESHOLD) * (WALKING_MAX_DURATION - WALKING_MIN_DURATION);
+  $: animationDuration = calculateGifAnimationDuration(clampedSpeed);
 
   /**
-   * Calculate horizontal movement duration based on movement speed
-   * Inverse relationship: higher speed = shorter duration = faster movement
-   * Walking (0-60%): 20s to 10s
-   * Running (61-100%): 10s to 4s
+   * Calculate base speed in pixels per second using reference container width
+   * This ensures consistent movement speed regardless of actual container size
+   * Uses dynamically detected sprite width for accurate calculations
    */
-  $: movementDuration = isRunning
-    ? 10 - ((clampedSpeed - SPEED_THRESHOLD) / (100 - SPEED_THRESHOLD)) * 6  // 10s to 4s
-    : 20 - (clampedSpeed / SPEED_THRESHOLD) * 10;  // 20s to 10s
+  $: speedInPixelsPerSecond = calculateSpeedInPixelsPerSecond(clampedSpeed, petWidth);
+
+  // Movement duration will be calculated dynamically based on actual container width
+  let movementDuration = 15; // Default fallback value
+
+  /**
+   * Handle GIF image load - detect dimensions dynamically
+   * This allows any GIF size to work without manual configuration
+   * GIF animation is handled by browser, no frame management needed
+   */
+  function handleSpriteLoad(): void {
+    if (spriteImgElement) {
+      spriteWidth = spriteImgElement.naturalWidth;
+      spriteHeight = spriteImgElement.naturalHeight;
+
+      // Recalculate movement range with new GIF dimensions
+      updateMovementRange();
+    }
+  }
 
   /**
    * Calculate movement range for adaptive edge-to-edge movement
+   * Also calculates duration based on constant speed to maintain consistent px/s across window sizes
+   * Uses dynamically detected GIF width for accurate boundary calculations
    */
   function updateMovementRange(): void {
     if (!containerEl) return;
@@ -86,12 +107,25 @@
     const containerWidth = containerEl.offsetWidth;
 
     // Maximum left position (container width - pet width)
-    // This gives true edge-to-edge movement
-    const maxLeft = containerWidth - PET_WIDTH;
+    // This gives true edge-to-edge movement using dynamically detected GIF width
+    const maxLeft = containerWidth - petWidth;
 
-    // Set CSS custom properties for keyframes
+    // Calculate actual distance for this container
+    const actualDistance = maxLeft;
+
+    // Calculate duration to maintain constant speed in px/s
+    // Linear speed scaling: duration = distance / speed
+    // Ensures movement speed (px/s) is consistent regardless of container width
+    // Prevent division by zero - fallback to slowest speed
+    movementDuration = speedInPixelsPerSecond > 0 && actualDistance > 0
+      ? actualDistance / speedInPixelsPerSecond
+      : ANIMATION_CONSTANTS.MAX_DURATION;
+
+    // Set CSS custom properties for keyframes and positioning
     containerEl.style.setProperty('--container-width', `${containerWidth}px`);
     containerEl.style.setProperty('--max-left', `${maxLeft}px`);
+    containerEl.style.setProperty('--movement-duration', `${movementDuration}s`);
+    containerEl.style.setProperty('--pet-width', `${petWidth}px`);
   }
 
   /**
@@ -103,9 +137,9 @@
     let timeoutId: number | undefined;
     return (...args: Parameters<T>) => {
       if (timeoutId !== undefined) {
-        clearTimeout(timeoutId);
+        window.clearTimeout(timeoutId);
       }
-      timeoutId = setTimeout(() => fn(...args), delay) as unknown as number;
+      timeoutId = window.setTimeout(() => fn(...args), delay);
     };
   }
 
@@ -114,10 +148,10 @@
 
   /**
    * Check if petting interaction is allowed in the current state
-   * Walking, running, and greeting states allow petting
+   * Only walking state allows petting (celebration and petting are temporary states)
    */
   function isPettingAllowed(currentState: PetState): boolean {
-    return currentState === 'walking' || currentState === 'running' || currentState === 'greeting';
+    return currentState === 'walking';
   }
 
   /**
@@ -172,7 +206,14 @@
   $: showHeart = state === 'petting';
   $: showCelebration = state === 'celebration';
 
-  // Celebration animation handled by CSS sprite sheet animation
+  // Recalculate movement duration when speed changes
+  // Maintains constant px/s speed across different container widths
+  $: if (speedInPixelsPerSecond && containerEl) {
+    updateMovementRange();
+  }
+
+  // Celebration animation handled by GIF overlay (browser-native frame animation)
+  // Walking animation handled by GIF (browser-native frame animation)
 
   onMount(() => {
     // Initial update (not debounced for immediate positioning)
@@ -204,18 +245,17 @@
   onDestroy(() => {
     // Explicit cleanup to help garbage collection
     // ResizeObserver cleanup is handled by onMount return function
-    // Note: Celebration animation handled entirely by CSS, no interval needed
+    // Note: GIF animations (walking and celebration) handled by browser, no cleanup needed
     containerEl = null;
   });
 
-  // Sprite sheet is now handled entirely by CSS
-  // No need for emoji fallback once sprite sheet is placed in assets/
+  // All animations (walking and celebration) are handled natively by the browser via GIF
+  // No JavaScript animation loops needed
 </script>
 
 <div
   class="pet-sprite-container"
   data-state={state}
-  data-movement={isRunning ? 'running' : 'walking'}
   style:--animation-duration="{animationDuration}s"
   style:--movement-duration="{movementDuration}s"
   style:background-image={backgroundPath ? `url(${backgroundPath})` : 'none'}
@@ -235,14 +275,15 @@
         on:click={handlePetInteraction}
         on:keydown={handleKeyDown}
         on:touchend={handleTouchEnd}>
-        <!-- Sprite sheet animation -->
-        <div
+        <!-- Animated GIF with dynamic dimension detection -->
+        <!-- Image renders at natural size; dimensions detected for calculations only -->
+        <img
+          bind:this={spriteImgElement}
+          on:load={handleSpriteLoad}
           class="pet-sprite"
-          role="img"
-          aria-label={`Pet is ${state}`}
-          style:background-image="url({spriteSheetPath})">
-          <!-- Sprite background set dynamically via style attribute -->
-        </div>
+          src={petSpritePath}
+          alt={`Pet is ${state}`}
+        />
 
         <!-- Heart overlay during petting state -->
         {#if showHeart}
@@ -257,9 +298,10 @@
   <!-- Celebration overlay - top third, horizontally centered -->
   {#if showCelebration}
     <div class="celebration-overlay" aria-hidden="true">
-      <div
+      <img
         class="celebration-sprite"
-        style:background-image="url({celebrationSpritePath})"
+        src={celebrationSpritePath}
+        alt=""
       />
     </div>
   {/if}
@@ -277,18 +319,23 @@
     position: relative;
     overflow: hidden; /* Contain pet within view */
 
-    /* Background scene (set via inline style with backgroundPath prop) */
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
+    /* Background scene - tiled horizontally, no vertical scaling */
+    /* Maintains natural image dimensions, tiles left-right, anchored to bottom */
+    background-size: auto auto;
+    background-position: bottom center;
+    background-repeat: repeat-x;
+
+    /* Light neutral color fills space above background */
+    background-color: #f5f3ef;
   }
 
   /* Position wrapper handles horizontal movement */
+  /* Anchored to bottom with offset to align pet with path center */
+  /* Position cat on the road in the background, re-check when changing backgrounds */
   .pet-position-wrapper {
     position: absolute;
-    top: 50%;
+    bottom: 64px; /* Offset from bottom - aligns with center of 128px background */
     left: 0;
-    margin-top: -32px; /* Half of pet height (64px) for vertical centering */
   }
 
   /* Flip wrapper handles direction changes */
@@ -328,12 +375,11 @@
   }
 
   .pet-sprite {
-    width: 64px; /* 2x scale of 32px frames */
-    height: 64px;
-    /* background-image set via inline style with correct plugin path */
-    background-size: 896px 448px; /* 2x scale: 448*2 = 896, 224*2 = 448 */
-    background-repeat: no-repeat;
+    /* Width and height set dynamically via inline styles based on loaded image dimensions */
+    display: block;
     image-rendering: pixelated; /* Keep pixel art crisp */
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
   }
 
   /* Heart overlay positioned top-right diagonal */
@@ -368,86 +414,21 @@
     }
   }
 
-  /* Sprite animations for each state */
-  /* Note: All positions are 2x scale (64px instead of 32px) */
-  /* Ordered by sprite row (top to bottom) for easier debugging */
+  /* GIF-based animation system */
+  /* GIF handles frame animation internally - no CSS sprite sheet keyframes needed */
+  /* Browser natively plays GIF frames, reducing CSS complexity */
+  /* Walking: cat.gif, Celebration: fireworks.gif (both browser-native animation) */
 
-  /* Row 1 (y=0): Idle - Removed in favor of walking as default state */
-  /* Original implementation preserved in git history (commit 2594122) */
-
-  /* Row 2 (y=-64px): Greeting - 14 frames */
-  .pet-sprite-container[data-state='greeting'] .pet-sprite {
-    animation: sprite-greeting 1.4s steps(14) 1;
-  }
-
-  @keyframes sprite-greeting {
-    from { background-position: 0 -64px; }
-    to { background-position: -896px -64px; } /* 14 frames × 64px */
-  }
-
-  /* Row 3 (y=-128px): Walking - 8 frames (placeholder) */
-  .pet-sprite-container[data-state='walking'] .pet-sprite {
-    animation: sprite-walking var(--animation-duration, 1.5s) steps(8) infinite;
-  }
-
-  /* Apply movement animations based on data-movement (speed), not data-state (sprite) */
-  /* This keeps pet moving during temporary states (petting, celebration, sleeping) */
-  /* Use same animation for both walking and running to avoid jumps at threshold */
-  .pet-sprite-container[data-movement='walking'] .pet-position-wrapper,
-  .pet-sprite-container[data-movement='running'] .pet-position-wrapper {
+  /* Apply movement animations - pet moves continuously in all states */
+  /* Movement speed is controlled by --movement-duration CSS variable */
+  .pet-sprite-container .pet-position-wrapper {
     animation: move-back-and-forth var(--movement-duration, 15s) linear infinite;
     animation-delay: -7.5s; /* Fixed delay (midpoint of 20s-10s and 10s-4s ranges) */
   }
 
-  .pet-sprite-container[data-movement='walking'] .pet-flip-wrapper,
-  .pet-sprite-container[data-movement='running'] .pet-flip-wrapper {
+  .pet-sprite-container .pet-flip-wrapper {
     animation: flip-at-edges var(--movement-duration, 15s) steps(2, jump-both) infinite;
     animation-delay: -7.5s; /* Sync with position animation */
-  }
-
-  @keyframes sprite-walking {
-    from { background-position: 0 -128px; }
-    to { background-position: -512px -128px; } /* 8 frames × 64px (estimated) */
-  }
-
-  /* Row 4 (y=-192px): Running - 8 frames (placeholder) */
-  .pet-sprite-container[data-state='running'] .pet-sprite {
-    animation: sprite-running var(--animation-duration, 0.7s) steps(8) infinite;
-  }
-
-  @keyframes sprite-running {
-    from { background-position: 0 -192px; }
-    to { background-position: -512px -192px; } /* 8 frames × 64px (estimated) */
-  }
-
-  /* Row 5 (y=-256px): Celebration - 5 frames (was small-celebration) */
-  .pet-sprite-container[data-state='celebration'] .pet-sprite {
-    animation: sprite-celebration 0.5s steps(5) 1;
-  }
-
-  @keyframes sprite-celebration {
-    from { background-position: 0 -256px; }
-    to { background-position: -320px -256px; } /* 5 frames × 64px */
-  }
-
-  /* Row 6 (y=-320px): Sleeping - 6 frames (was petting) */
-  .pet-sprite-container[data-state='sleeping'] .pet-sprite {
-    animation: sprite-sleeping 0.6s steps(6) 1;
-  }
-
-  @keyframes sprite-sleeping {
-    from { background-position: 0 -320px; }
-    to { background-position: -384px -320px; } /* 6 frames × 64px */
-  }
-
-  /* Row 7 (y=-384px): Petting - 7 frames (was big-celebration) */
-  .pet-sprite-container[data-state='petting'] .pet-sprite {
-    animation: sprite-petting 0.7s steps(7) 1;
-  }
-
-  @keyframes sprite-petting {
-    from { background-position: 0 -384px; }
-    to { background-position: -448px -384px; } /* 7 frames × 64px */
   }
 
   /* Movement: Full cycle with direction changes at edges (used for both walking and running) */
@@ -456,7 +437,8 @@
       left: 0px; /* Left edge */
     }
     50% {
-      left: var(--max-left, calc(100% - 64px)); /* Right edge */
+      /* Right edge - dynamically calculated, fallback uses CSS custom property */
+      left: var(--max-left, calc(100% - var(--pet-width, 128px)));
     }
     100% {
       left: 0px; /* Back to left edge */
@@ -465,10 +447,10 @@
 
   @keyframes flip-at-edges {
     0%, 49.9% {
-      transform: scaleX(1); /* Facing right (moving 0→50%) */
+      transform: scaleX(-1); /* Facing left while moving left (0→50%) */
     }
     50%, 100% {
-      transform: scaleX(-1); /* Facing left (moving 50→100%) */
+      transform: scaleX(1); /* Facing right while moving right (50→100%) */
     }
   }
 
@@ -483,16 +465,10 @@
   }
 
   .celebration-sprite {
+    display: block;
     width: 128px;
     height: 128px;
-    background-size: 896px 128px; /* 7 frames × 128px = 896px width, 128px height */
-    background-repeat: no-repeat;
     image-rendering: auto; /* Smooth rendering for celebration effects */
-    animation: celebration-animation 1.8s steps(7) 1;
-  }
-
-  @keyframes celebration-animation {
-    from { background-position: 0 0; }
-    to { background-position: -896px 0; } /* 7 frames × 128px */
+    /* GIF animation is handled natively by the browser */
   }
 </style>

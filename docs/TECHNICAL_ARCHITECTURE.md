@@ -248,48 +248,52 @@ export function getCurrentSeason(): Season {
 }
 ```
 
-**CSS**: Background Rendering
+**CSS**: Background Rendering (Horizontal Tiling System)
 ```svelte
-<!-- src/components/Garden.svelte -->
-<script>
-  import { onMount, onDestroy } from 'svelte';
-  import { getCurrentSeason } from '../pet/SeasonDetector';
-
-  let season = getCurrentSeason();
-  let seasonCheckInterval: number;
-
-  onMount(() => {
-    // Check for season change every hour
-    seasonCheckInterval = setInterval(() => {
-      const newSeason = getCurrentSeason();
-      if (newSeason !== season) {
-        season = newSeason;
-      }
-    }, 3600000); // 1 hour
-  });
-
-  onDestroy(() => {
-    clearInterval(seasonCheckInterval);
-  });
-
-  $: backgroundPath = `backgrounds/${season}.webp`;
-</script>
-
-<div class="garden-scene" style:background-image="url({backgroundPath})">
-  <slot /> <!-- Pet components render here -->
+<!-- src/components/Pet.svelte (current implementation) -->
+<div
+  class="pet-sprite-container"
+  data-state={state}
+  style:--animation-duration="{animationDuration}s"
+  style:--movement-duration="{movementDuration}s"
+  style:background-image={backgroundPath ? `url(${backgroundPath})` : 'none'}>
+  <!-- Pet renders here -->
 </div>
 
 <style>
-  .garden-scene {
+  .pet-sprite-container {
+    /* Background scene - tiled horizontally, no vertical scaling */
+    /* Maintains natural image dimensions, tiles left-right, anchored to bottom */
+    background-size: auto auto;        /* No scaling - use natural 128x128px size */
+    background-position: bottom center; /* Anchor to bottom edge */
+    background-repeat: repeat-x;        /* Tile horizontally only */
+
+    /* Light neutral color fills space above background */
+    background-color: #f5f3ef;
+
+    /* Container properties */
     width: 100%;
     height: 100%;
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
     position: relative;
+    overflow: hidden;
+  }
+
+  /* Pet positioning - aligned with center of 128px background */
+  .pet-position-wrapper {
+    position: absolute;
+    bottom: 64px; /* Offset from bottom - aligns with center of 128px background */
+    left: 0;
   }
 </style>
 ```
+
+**Background Tiling System Details**:
+- **Tile size**: 128x128px (natural image dimensions)
+- **Tiling**: Horizontal only (repeat-x) - seamless left-to-right repeat
+- **No scaling**: background-size: auto auto - prevents distortion
+- **Positioning**: bottom center - anchored to bottom edge
+- **Pet alignment**: bottom: 64px - places pet at center of 128px tile
+- **Above-background fill**: #f5f3ef light neutral color for empty space
 
 **Files Affected**:
 - 🆕 `src/components/Garden.svelte`
@@ -304,7 +308,74 @@ export function getCurrentSeason(): Season {
 
 ---
 
-### 2. Character System (Companions)
+### 2. Animation and Movement System
+
+**Animation Approach**: GIF-based animation system
+
+**GIF Animation Details**:
+```typescript
+// src/components/Pet.svelte
+/**
+ * Path to the pet sprite GIF (passed from PetView)
+ */
+export let petSpritePath: string = 'assets/cat.gif';
+```
+
+**How It Works**:
+- GIF files handle frame animation internally (browser-native)
+- No CSS sprite sheet keyframes needed
+- **No JavaScript animation loops or frame management** (browser handles all animation)
+- Current: Single walking.gif for all states
+- Future: Separate GIFs per state (celebration.gif, petting.gif, etc.)
+- Celebration state uses sprite sheet overlay (7-frame fireworks animation)
+
+**Movement Speed System**: Linear scaling with constant px/s
+
+**Speed Formula (Simplified)**:
+```typescript
+// Animation timing constants
+const MAX_DURATION = 33; // Slowest speed (0%) - 33 seconds
+const MIN_DURATION = 6;  // Fastest speed (100%) - 6 seconds
+
+// Linear speed scaling
+$: referenceDuration = MAX_DURATION - (clampedSpeed / 100) * (MAX_DURATION - MIN_DURATION);
+$: speedInPixelsPerSecond = referenceDistance / referenceDuration;
+
+// Maintains constant px/s across different container widths
+$: movementDuration = actualDistance / speedInPixelsPerSecond;
+```
+
+**Key Simplifications** (vs. old system):
+- ❌ Removed: 60% walking/running threshold
+- ❌ Removed: 6 speed constants (WALKING_MIN_SPEED, WALKING_MAX_SPEED, etc.)
+- ❌ Removed: JavaScript frame management and animation loops
+- ✅ Added: 2 duration constants (MAX_DURATION, MIN_DURATION)
+- ✅ Linear scaling: Simple, predictable speed progression
+- ✅ Constant px/s: Movement speed consistent across window sizes
+- ✅ Browser-native animation: No JS coordination needed
+
+**What JavaScript Still Handles**:
+- ✅ Horizontal movement position (via CSS custom properties)
+- ✅ State transitions (walking → celebration → walking)
+- ✅ User interactions (click/touch handlers for petting)
+- ✅ Window resize handling (recalculate movement range)
+- ✅ Speed calculations (px/s formula)
+
+**What JavaScript NO LONGER Handles**:
+- ❌ Frame animation (GIF does this natively)
+- ❌ Animation timing loops (CSS handles movement)
+- ❌ Sprite coordinate calculations
+- ❌ Frame synchronization
+
+**Files Affected**:
+- ✏️ `src/components/Pet.svelte` (speed calculation logic)
+- ✏️ `src/views/PetView.ts` (uses cat.gif instead of sprite sheet)
+
+**Estimated Effort**: Already implemented
+
+---
+
+### 3. Character System (Companions)
 
 **Approach**: Svelte component duplication with CSS positioning
 
@@ -346,7 +417,7 @@ export function getCurrentSeason(): Season {
 
 ---
 
-### 3. Vault-Aware Celebrations
+### 4. Vault-Aware Celebrations
 
 **Event Flow**:
 ```
@@ -380,7 +451,7 @@ CelebrationManager.handleEvent()
 
 ---
 
-### 4. Butterfly Chase Interaction (Phase 2)
+### 5. Butterfly Chase Interaction (Phase 2)
 
 **CSS**: Butterfly Animation
 ```css
@@ -422,7 +493,7 @@ CelebrationManager.handleEvent()
 
 ---
 
-### 5. Cart Approach (Ambient Behavior)
+### 6. Cart Approach (Ambient Behavior)
 
 **Approach**: Timer-based periodic trigger
 
@@ -533,7 +604,7 @@ preloadImage(getBackgroundPath(nextSeason));
 3. X Fix failing tests
 4. ? Enhance Obsidian mocks
 
-**Deliverable**: Clean codebase
+**Deliverable**: X Clean codebase
 
 ---
 
@@ -541,10 +612,10 @@ preloadImage(getBackgroundPath(nextSeason));
 **Estimated**: 6-8 horus
 
 1. Garden.svelte (3h)
-2. One placeholder background (purchase existing)
+2. X One placeholder background (purchase existing)
 3. PetPanel.svelte (3h)
 
-**Deliverable**: One placeholder scene with animated components 
+**Deliverable**: X One placeholder scene with animated components 
 
 ---
 

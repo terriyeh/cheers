@@ -10,17 +10,20 @@ A plugin you feel, not think about.
 ## Core Features
 
 ### 1. Scene Rendering
-- **Background system**: Single image file per season (4 total: spring, summer, autumn, winter). Animated  format (like gif) for ambient element.
+- **Background system**: Tileable 128x128px image file per season (4 total: spring, summer, autumn, winter)
+- **Background tiling**: Horizontal tiling only (repeat-x), no vertical/horizontal scaling
+- **Pet positioning**: bottom: 64px (aligns with center of 128px background tile)
 - **Scene elements**: Fountain + unmanned cart (painted into background images)
-- **Rendering**: 2-layer system (background image + character sprites)
+- **Rendering**: 2-layer system (background image + character GIF sprites)
 - **Season switching**: Image file swap via CSS `background-image` property
 
 ### 2. Character System
 - **Main pet**: 1 sprite with cosmetics support (hats, scarves, accessories)
 - **Companions**: 0-2 optional (user toggle), shared generic sprite
-- **Sprite states**: drink, walk, chase, celebrate, petting, greeting (to companions)
+- **Animation system**: GIF-based animation (walking.gif handles frame animation internally, no sprite sheets)
+- **Sprite states**: walking, celebration, petting
 - **Movement**: CSS-based horizontal animation (edge-to-edge with direction flip)
-- **Speed control**: 0-100% slider (walk at 0-60%, run at 61-100%)
+- **Speed control**: 0-100% slider with linear scaling (MAX_DURATION=33s at 0%, MIN_DURATION=6s at 100%)
 
 ### 3. Interactions
 - **Petting**: Click/tap pet → heart sprite appears → return to previous state
@@ -86,16 +89,17 @@ A plugin you feel, not think about.
 ## Phase Breakdown
 
 ### Phase 1 (Complete)
-- Movement system (CSS-based walking/running)
-- Basic pet sprite with animation states
+- Movement system (CSS-based walking)
+- Basic pet gifs for each state
 - Petting interaction
 - Settings persistence
 
-### Phase 2 (Next)
-- 1 placeholder background
-- Vault event listeners + celebration triggers
-- Companion toggle (0-2)
-- Toggle on/off companions
+### Phase 2 (In Progress)
+- (Complete) 1 background
+- (Complete) Vault event listeners + celebration triggers
+- (In Progress) Main character animations (walk, pet, celebrate)
+- Production heart and fireworkds animation 
+- Toggle on/off companions (0-2)
 - Butterfly chase interaction
 - Cart approach behavior
 - Cosmetic Foundation

@@ -95,10 +95,10 @@ export class PetView extends ItemView {
       this.stateMachine.addListener(this.stateChangeListener);
 
       // Get asset paths with validation
-      const spriteSheetPath = this.getAssetPath('pet-sprite-sheet.png');
-      const heartSpritePath = this.getAssetPath('heart.png');
-      const backgroundPath = this.getAssetPath('flying-island.gif', 'backgrounds');
-      const celebrationSpritePath = this.getAssetPath('fireworks-spritesheet.png', 'effects');
+      const petSpritePath = this.getAssetPath('cat.gif'); // Walking animation GIF
+      const heartSpritePath = this.getAssetPath('heart.png', 'effects');
+      const backgroundPath = this.getAssetPath('Background_reg.png', 'backgrounds');
+      const celebrationSpritePath = this.getAssetPath('fireworks.gif', 'effects');
 
       // Get plugin settings for pet name and movement speed (reuse plugin variable from above)
       const petName = plugin?.settings?.petName ?? 'Kit';
@@ -109,7 +109,7 @@ export class PetView extends ItemView {
         target: this.containerDiv,
         props: {
           state: this.stateMachine.getCurrentState(),
-          spriteSheetPath: spriteSheetPath,
+          petSpritePath: petSpritePath,
           heartSpritePath: heartSpritePath,
           backgroundPath: backgroundPath,
           celebrationSpritePath: celebrationSpritePath,
@@ -205,11 +205,8 @@ export class PetView extends ItemView {
       // Validate state against known valid states
       const validStates: PetState[] = [
         'walking',
-        'running',
-        'greeting',
         'celebration',
         'petting',
-        'sleeping',
       ];
 
       if (validStates.includes(state)) {
@@ -247,33 +244,79 @@ export class PetView extends ItemView {
   }
 
   /**
-   * Show error state in the view
+   * Categorize error and provide user-friendly message
+   */
+  private categorizeError(error: unknown): { title: string; message: string; hint: string } {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+
+    // Path/asset loading errors
+    if (errorMsg.includes('asset') || errorMsg.includes('path') || errorMsg.includes('file')) {
+      return {
+        title: 'Asset Loading Failed',
+        message: errorMsg,
+        hint: 'The pet assets (images/sprites) could not be loaded. Try reinstalling the plugin.',
+      };
+    }
+
+    // Component mounting errors
+    if (errorMsg.includes('mount') || errorMsg.includes('component')) {
+      return {
+        title: 'Component Initialization Failed',
+        message: errorMsg,
+        hint: 'Failed to initialize the pet component. Try reloading Obsidian.',
+      };
+    }
+
+    // Permission/security errors
+    if (errorMsg.includes('permission') || errorMsg.includes('denied') || errorMsg.includes('Invalid')) {
+      return {
+        title: 'Security Error',
+        message: errorMsg,
+        hint: 'A security check failed. This might be a plugin installation issue.',
+      };
+    }
+
+    // Generic error
+    return {
+      title: 'Failed to load Obsidian Pets',
+      message: errorMsg,
+      hint: 'An unexpected error occurred. Check the console (Ctrl+Shift+I) for details.',
+    };
+  }
+
+  /**
+   * Show error state in the view with categorized error messages
    */
   private showError(error: unknown): void {
     try {
       const container = this.getContentContainer();
       container.empty();
 
+      const { title, message, hint } = this.categorizeError(error);
+
       const errorDiv = container.createDiv({
         cls: 'obsidian-pets-view-error',
       });
 
-      errorDiv.createEl('h3', {
-        text: 'Failed to load Obsidian Pets',
-      });
+      errorDiv.createEl('h3', { text: title });
 
       errorDiv.createEl('p', {
-        text: error instanceof Error ? error.message : 'Unknown error',
+        text: message,
         cls: 'obsidian-pets-view-error-message',
       });
 
       errorDiv.createEl('p', {
-        text: 'Check the console for more details.',
+        text: hint,
         cls: 'obsidian-pets-view-error-hint',
       });
+
+      // Also show as notice for visibility
+      new Notice(`Obsidian Pets: ${message}`, 8000);
     } catch (containerError) {
       console.error('Failed to show error state:', containerError);
       console.error('Original error:', error);
+      // Fallback notice
+      new Notice('Obsidian Pets failed to load. Check the console for details.', 8000);
     }
   }
 
@@ -292,17 +335,48 @@ export class PetView extends ItemView {
   }
 
   /**
-   * Get the content container safely with bounds checking
+   * Get the content container safely with multiple fallback strategies
    * @throws Error if container element not found
    */
   private getContentContainer(): HTMLElement {
-    const container = this.containerEl.children[1];
-    if (!container) {
-      throw new Error(
-        'Pet view container element not found. Obsidian DOM structure may have changed.'
-      );
+    // Strategy 1: Try standard Obsidian ItemView content container class
+    let container = this.containerEl.querySelector('.view-content') as HTMLElement;
+
+    // Strategy 2: Try children[1] (traditional Obsidian structure)
+    if (!container && this.containerEl.children.length > 1) {
+      container = this.containerEl.children[1] as HTMLElement;
     }
-    return container as HTMLElement;
+
+    // Strategy 3: Find first div child that's not a header
+    if (!container) {
+      const children = Array.from(this.containerEl.children);
+      container = children.find(
+        (el) => el.tagName === 'DIV' && !el.classList.contains('view-header')
+      ) as HTMLElement;
+    }
+
+    // Strategy 4: Create fallback container if none exists
+    if (!container) {
+      console.warn('Standard container not found, creating fallback container');
+      container = this.containerEl.createDiv({ cls: 'view-content' });
+    }
+
+    return container;
+  }
+
+  /**
+   * Check if a path is absolute (cross-platform)
+   * @param pathStr - Path to check
+   * @returns true if path is absolute
+   */
+  private isAbsolutePath(pathStr: string): boolean {
+    // Unix/Linux/Mac absolute paths start with /
+    if (pathStr.startsWith('/')) return true;
+    // Windows absolute paths: C:\ or C:/ (drive letter followed by colon and slash)
+    if (/^[a-zA-Z]:[/\\]/.test(pathStr)) return true;
+    // UNC paths: \\server\share
+    if (pathStr.startsWith('\\\\')) return true;
+    return false;
   }
 
   /**
@@ -313,21 +387,24 @@ export class PetView extends ItemView {
    * @throws Error if path validation fails
    */
   private getAssetPath(assetFileName: string, subdirectory?: string): string {
-    // @ts-expect-error - accessing plugin manifest
-    const manifest = this.app.plugins.manifests['obsidian-pets'];
+    // Access plugin manifest safely using type assertion (undocumented Obsidian API)
+    interface AppWithManifests {
+      plugins: { manifests: Record<string, { dir?: string }> };
+    }
+    const appWithManifests = this.app as unknown as AppWithManifests;
+    const manifest = appWithManifests.plugins?.manifests?.['obsidian-pets'];
 
     if (!manifest) {
       console.warn('Obsidian Pets manifest not found, using fallback path');
     }
 
-    const pluginDir = manifest?.dir || '.obsidian/plugins/vault-pal';
+    const pluginDir = manifest?.dir || '.obsidian/plugins/obsidian-pets';
 
     // Validate path doesn't contain traversal sequences or absolute paths
     if (
       pluginDir.includes('..') ||
       pluginDir.includes('~') ||
-      pluginDir.startsWith('/') ||
-      /^[a-zA-Z]:/.test(pluginDir) // Fixed: test from index 0, not substring(1)
+      this.isAbsolutePath(pluginDir)
     ) {
       throw new Error('Invalid plugin directory path detected');
     }
@@ -342,17 +419,30 @@ export class PetView extends ItemView {
       }
     }
 
-    // Security: Validate asset filename to prevent path traversal
+    // Security: Validate asset filename to prevent path traversal and DoS
     // Allow empty string for directory paths, otherwise must be valid filename
     if (assetFileName !== '') {
+      // Length validation to prevent DoS attacks
+      if (assetFileName.length > 255) {
+        throw new Error('Invalid asset filename: exceeds maximum length (255 characters)');
+      }
+
       // Only allow alphanumeric, dash, underscore, and dot for file extension
-      if (!/^[a-zA-Z0-9_-]+\.[a-zA-Z0-9]+$/.test(assetFileName)) {
-        throw new Error('Invalid asset filename: must be alphanumeric with single file extension');
+      // Filename: 1-200 chars, Extension: 1-10 chars
+      if (!/^[a-zA-Z0-9_-]{1,200}\.[a-zA-Z0-9]{1,10}$/.test(assetFileName)) {
+        throw new Error('Invalid asset filename: must be alphanumeric with valid file extension');
       }
 
       // Additional check: ensure no path separators or traversal sequences
       if (assetFileName.includes('..') || assetFileName.includes('/') || assetFileName.includes('\\')) {
         throw new Error('Invalid asset filename: path traversal detected');
+      }
+
+      // Whitelist common asset extensions for additional security
+      const allowedExtensions = ['gif', 'png', 'jpg', 'jpeg', 'svg', 'webp'];
+      const extension = assetFileName.split('.').pop()?.toLowerCase();
+      if (!extension || !allowedExtensions.includes(extension)) {
+        throw new Error(`Invalid asset extension: only ${allowedExtensions.join(', ')} are allowed`);
       }
     }
 

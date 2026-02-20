@@ -44,18 +44,6 @@ describe('PetDisplay Integration', () => {
   });
 
   describe('state change visual updates', () => {
-    it('should update visual state when transitioning to greeting', async () => {
-      await petView.onOpen();
-
-      petView.transitionState('greeting');
-
-      const container = petView.containerEl.querySelector('.pet-sprite-container');
-      const sprite = petView.containerEl.querySelector('.pet-sprite');
-
-      expect(container?.getAttribute('data-state')).toBe('greeting');
-      expect(sprite?.getAttribute('aria-label')).toBe('Pet is greeting');
-    });
-
     it('should update visual state when transitioning to celebration', async () => {
       await petView.onOpen();
 
@@ -63,15 +51,6 @@ describe('PetDisplay Integration', () => {
 
       const container = petView.containerEl.querySelector('.pet-sprite-container');
       expect(container?.getAttribute('data-state')).toBe('celebration');
-    });
-
-    it('should update visual state when transitioning to sleeping', async () => {
-      await petView.onOpen();
-
-      petView.transitionState('sleeping');
-
-      const container = petView.containerEl.querySelector('.pet-sprite-container');
-      expect(container?.getAttribute('data-state')).toBe('sleeping');
     });
 
     it('should update visual state when transitioning to petting', async () => {
@@ -92,52 +71,14 @@ describe('PetDisplay Integration', () => {
       await viewWithSettings.onOpen();
 
       const container = viewWithSettings.containerEl.querySelector('.pet-sprite-container') as HTMLElement;
-      // Speed 30 -> duration = 2 - (30/60) = 1.5s
-      expect(container.style.getPropertyValue('--animation-duration')).toBe('1.5s');
+      // Speed 30 -> duration = 2 - (30/100) = 1.7s
+      expect(container.style.getPropertyValue('--animation-duration')).toBe('1.7s');
 
       await viewWithSettings.onClose();
-    });
-
-    it('should respect movement speed setting for running animation', async () => {
-      const viewWithSettings = new PetView(leaf);
-      // Set plugin settings before opening
-      (viewWithSettings.app as any).plugins.plugins['obsidian-pets'].settings.movementSpeed = 80;
-      await viewWithSettings.onOpen();
-
-      viewWithSettings.transitionState('running');
-      const container = viewWithSettings.containerEl.querySelector('.pet-sprite-container') as HTMLElement;
-      // Speed 80 -> duration = 1 - ((80-60)/40) * 0.6 = 0.7s
-      expect(container.style.getPropertyValue('--animation-duration')).toBe('0.7s');
-
-      await viewWithSettings.onClose();
-    });
-
-    it.skip('should update animation when movement speed setting changes', async () => {
-      // TODO: Implement updateSettings() method in PetView
-      await petView.onOpen();
-
-      // Update settings
-      petView.updateSettings({ movementSpeed: 100 });
-
-      petView.transitionState('running');
-      const container = petView.containerEl.querySelector('.pet-sprite-container') as HTMLElement;
-      // Speed 100 -> duration = 1 - ((100-60)/40) * 0.6 = 0.4s
-      expect(container.style.getPropertyValue('--animation-duration')).toBe('0.4s');
     });
   });
 
   describe('animation sequences', () => {
-    it('should play greeting animation and return to walking', async () => {
-      await petView.onOpen();
-
-      petView.transitionState('greeting');
-      expect(petView.getCurrentState()).toBe('greeting');
-
-      vi.advanceTimersByTime(2000);
-
-      expect(petView.getCurrentState()).toBe('walking');
-    });
-
     it('should play petting animation and return to walking', async () => {
       await petView.onOpen();
 
@@ -149,91 +90,21 @@ describe('PetDisplay Integration', () => {
       expect(petView.getCurrentState()).toBe('walking');
     });
 
-    it('should play celebration animation for correct duration', async () => {
+    it('should play celebration animation for correct duration (4320ms)', async () => {
       await petView.onOpen();
 
       petView.transitionState('celebration');
 
-      vi.advanceTimersByTime(2999);
+      vi.advanceTimersByTime(4319);
       expect(petView.getCurrentState()).toBe('celebration');
 
       vi.advanceTimersByTime(1);
       expect(petView.getCurrentState()).toBe('walking');
     });
-
-    it('should play sleeping animation for correct duration', async () => {
-      await petView.onOpen();
-
-      petView.transitionState('sleeping');
-
-      vi.advanceTimersByTime(1999);
-      expect(petView.getCurrentState()).toBe('sleeping');
-
-      vi.advanceTimersByTime(1);
-      expect(petView.getCurrentState()).toBe('walking');
-    });
   });
 
-  describe('state transitions with settings', () => {
-    it.skip('should transition from walking to running based on speed threshold', async () => {
-      // TODO: Implement updateSettings() method in PetView
-      await petView.onOpen();
-
-      // Update speed to trigger running state
-      petView.updateSettings({ movementSpeed: 70 });
-      petView.transitionState('running');
-
-      expect(petView.getCurrentState()).toBe('running');
-
-      const container = petView.containerEl.querySelector('.pet-sprite-container');
-      expect(container?.getAttribute('data-state')).toBe('running');
-    });
-
-    it.skip('should maintain walking state when speed is below threshold', async () => {
-      // TODO: Implement updateSettings() method in PetView
-      await petView.onOpen();
-
-      petView.updateSettings({ movementSpeed: 30 });
-
-      expect(petView.getCurrentState()).toBe('walking');
-
-      const container = petView.containerEl.querySelector('.pet-sprite-container');
-      expect(container?.getAttribute('data-state')).toBe('walking');
-    });
-
-    it.skip('should return to correct movement state after temporary animation', async () => {
-      // TODO: Implement updateSettings() method in PetView
-      await petView.onOpen();
-
-      // Set running speed
-      petView.updateSettings({ movementSpeed: 80 });
-      petView.transitionState('running');
-
-      // Trigger petting
-      petView.transitionState('petting', 'running');
-
-      // Wait for petting to complete
-      vi.advanceTimersByTime(2000);
-
-      // Should return to running, not walking
-      expect(petView.getCurrentState()).toBe('running');
-    });
-  });
 
   describe('complex interaction sequences', () => {
-    it('should handle user opens vault, pet greets, then returns to walking', async () => {
-      await petView.onOpen();
-
-      // User opens vault - trigger greeting
-      petView.transitionState('greeting');
-      expect(petView.getCurrentState()).toBe('greeting');
-
-      // Wait for greeting to complete
-      vi.advanceTimersByTime(2000);
-
-      expect(petView.getCurrentState()).toBe('walking');
-    });
-
     it('should handle user completes task, celebrates, returns to walking', async () => {
       await petView.onOpen();
 
@@ -241,21 +112,8 @@ describe('PetDisplay Integration', () => {
       petView.transitionState('celebration');
       expect(petView.getCurrentState()).toBe('celebration');
 
-      // Wait for celebration to complete
-      vi.advanceTimersByTime(3000);
-
-      expect(petView.getCurrentState()).toBe('walking');
-    });
-
-    it('should handle pet goes to sleep and wakes up walking', async () => {
-      await petView.onOpen();
-
-      // Pet goes to sleep
-      petView.transitionState('sleeping');
-      expect(petView.getCurrentState()).toBe('sleeping');
-
-      // Sleep lasts 5 seconds
-      vi.advanceTimersByTime(5000);
+      // Wait for celebration to complete (4320ms)
+      vi.advanceTimersByTime(4320);
 
       expect(petView.getCurrentState()).toBe('walking');
     });
@@ -267,7 +125,7 @@ describe('PetDisplay Integration', () => {
       petView.transitionState('petting');
       expect(petView.getCurrentState()).toBe('petting');
 
-      // Petting animation lasts 2 seconds
+      // Petting animation lasts 2000ms
       vi.advanceTimersByTime(2000);
 
       expect(petView.getCurrentState()).toBe('walking');
@@ -278,9 +136,9 @@ describe('PetDisplay Integration', () => {
     it('should handle interrupting one animation with another', async () => {
       await petView.onOpen();
 
-      // Start greeting animation
-      petView.transitionState('greeting');
-      expect(petView.getCurrentState()).toBe('greeting');
+      // Start celebration animation
+      petView.transitionState('celebration');
+      expect(petView.getCurrentState()).toBe('celebration');
 
       // Interrupt with petting after 1 second
       vi.advanceTimersByTime(1000);
@@ -291,7 +149,7 @@ describe('PetDisplay Integration', () => {
       vi.advanceTimersByTime(2000);
       expect(petView.getCurrentState()).toBe('walking');
 
-      // Original greeting timer should not fire
+      // Original celebration timer should not fire
       vi.advanceTimersByTime(5000);
       expect(petView.getCurrentState()).toBe('walking');
     });
@@ -300,56 +158,48 @@ describe('PetDisplay Integration', () => {
       await petView.onOpen();
 
       // Rapid sequence of transitions
-      petView.transitionState('greeting');
+      petView.transitionState('celebration');
       vi.advanceTimersByTime(500);
 
       petView.transitionState('petting');
-      vi.advanceTimersByTime(500);
 
-      petView.transitionState('celebration');
-
-      expect(petView.getCurrentState()).toBe('celebration');
+      expect(petView.getCurrentState()).toBe('petting');
 
       // Only the last timer should fire
-      vi.advanceTimersByTime(3000);
+      vi.advanceTimersByTime(2000);
       expect(petView.getCurrentState()).toBe('walking');
     });
 
     it('should handle transition during auto-return', async () => {
       await petView.onOpen();
 
-      petView.transitionState('greeting');
-
-      // Transition to celebration right before greeting would complete
-      vi.advanceTimersByTime(1999);
       petView.transitionState('celebration');
 
-      // Advance past where greeting would have completed
+      // Transition to petting right before celebration would complete
+      vi.advanceTimersByTime(4319);
+      petView.transitionState('petting');
+
+      // Advance past where celebration would have completed
       vi.advanceTimersByTime(1000);
 
-      // Should still be in celebration state
-      expect(petView.getCurrentState()).toBe('celebration');
+      // Should still be in petting state
+      expect(petView.getCurrentState()).toBe('petting');
     });
   });
 
   describe('complete lifecycle scenarios', () => {
-    it('should handle full day simulation: open, greet, tasks, close', async () => {
+    it('should handle full day simulation: open, tasks, close', async () => {
       // Morning: user opens vault
       await petView.onOpen();
       expect(petView.getCurrentState()).toBe('walking');
 
-      // Pet greets user
-      petView.transitionState('greeting');
-      vi.advanceTimersByTime(2000);
-      expect(petView.getCurrentState()).toBe('walking');
-
       // User completes first task
       petView.transitionState('celebration');
-      vi.advanceTimersByTime(3000);
+      vi.advanceTimersByTime(4320);
 
       // User completes daily note
       petView.transitionState('celebration');
-      vi.advanceTimersByTime(3000);
+      vi.advanceTimersByTime(4320);
 
       // Evening: user closes vault
       await petView.onClose();
@@ -359,8 +209,8 @@ describe('PetDisplay Integration', () => {
     it('should maintain consistency across multiple open/close cycles', async () => {
       // First session
       await petView.onOpen();
-      petView.transitionState('greeting');
-      vi.advanceTimersByTime(2000);
+      petView.transitionState('celebration');
+      vi.advanceTimersByTime(4320);
       await petView.onClose();
 
       // Second session
@@ -381,11 +231,9 @@ describe('PetDisplay Integration', () => {
       await petView.onOpen();
 
       const testStates: PetState[] = [
-        'greeting',
         'celebration',
         'petting',
-        'sleeping',
-        'running',
+        'walking',
       ];
 
       for (const state of testStates) {
@@ -411,8 +259,8 @@ describe('PetDisplay Integration', () => {
     it('should maintain synchronization after auto-transitions', async () => {
       await petView.onOpen();
 
-      petView.transitionState('greeting');
-      vi.advanceTimersByTime(2000);
+      petView.transitionState('celebration');
+      vi.advanceTimersByTime(4320);
 
       // All layers should be synchronized to walking
       expect(petView.getCurrentState()).toBe('walking');
@@ -434,11 +282,8 @@ describe('PetDisplay Integration', () => {
 
       const states: PetState[] = [
         'walking',
-        'running',
-        'greeting',
         'celebration',
         'petting',
-        'sleeping',
       ];
 
       for (const state of states) {
@@ -462,23 +307,23 @@ describe('PetDisplay Integration', () => {
       spriteContainer?.remove();
 
       // Transition should not crash
-      expect(() => petView.transitionState('greeting')).not.toThrow();
+      expect(() => petView.transitionState('celebration')).not.toThrow();
 
       // State machine should still track state
-      expect(petView.getCurrentState()).toBe('greeting');
+      expect(petView.getCurrentState()).toBe('celebration');
     });
 
     it('should handle DOM mutations during state transitions', async () => {
       await petView.onOpen();
 
-      petView.transitionState('greeting');
+      petView.transitionState('celebration');
 
       // Simulate external DOM manipulation
       const container = petView.containerEl.querySelector('.obsidian-pets-container');
       container?.setAttribute('data-pet-state', 'corrupted');
 
       // Auto-transition should still work
-      vi.advanceTimersByTime(2000);
+      vi.advanceTimersByTime(4320);
 
       expect(petView.getCurrentState()).toBe('walking');
       expect(container?.getAttribute('data-pet-state')).toBe('walking');
@@ -489,9 +334,8 @@ describe('PetDisplay Integration', () => {
     it('should clean up all timers on close', async () => {
       await petView.onOpen();
 
-      petView.transitionState('greeting');
+      petView.transitionState('celebration');
       petView.transitionState('petting');
-      petView.transitionState('small-celebration');
 
       await petView.onClose();
 
@@ -506,8 +350,7 @@ describe('PetDisplay Integration', () => {
       await petView.onOpen();
 
       // Transition multiple times to potentially add multiple listeners
-      petView.transitionState('greeting');
-      petView.transitionState('small-celebration');
+      petView.transitionState('celebration');
       petView.transitionState('petting');
 
       await petView.onClose();
@@ -519,7 +362,7 @@ describe('PetDisplay Integration', () => {
     it('should handle multiple rapid open/close cycles', async () => {
       for (let i = 0; i < 10; i++) {
         await petView.onOpen();
-        petView.transitionState('greeting');
+        petView.transitionState('celebration');
         vi.advanceTimersByTime(1000);
         await petView.onClose();
       }

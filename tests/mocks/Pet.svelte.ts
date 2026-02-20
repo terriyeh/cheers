@@ -4,6 +4,7 @@
  */
 
 import type { PetState } from '../../src/types/pet';
+import { clampMovementSpeed, calculateGifAnimationDuration } from '../../src/utils/animation';
 
 export default class MockPetComponent {
   private target: HTMLElement;
@@ -30,12 +31,8 @@ export default class MockPetComponent {
 
     // Set initial animation duration if movementSpeed is provided
     if (options.props.movementSpeed !== undefined) {
-      // Clamp movement speed to valid range (0-100)
-      const clampedSpeed = Math.max(0, Math.min(100, options.props.movementSpeed));
-      const isRunning = clampedSpeed > 60;
-      const animationDuration = isRunning
-        ? 1 - ((clampedSpeed - 60) / 40) * 0.6 // 1s to 0.4s
-        : 2 - (clampedSpeed / 60); // 2s to 1s
+      const clampedSpeed = clampMovementSpeed(options.props.movementSpeed);
+      const animationDuration = calculateGifAnimationDuration(clampedSpeed);
       this.container.style.setProperty('--animation-duration', `${animationDuration}s`);
     }
 
@@ -54,7 +51,7 @@ export default class MockPetComponent {
     this.sprite.className = 'pet-sprite';
     this.sprite.setAttribute('role', 'img');
     this.sprite.setAttribute('aria-label', `Pet is ${options.props.state}`);
-    this.sprite.style.backgroundImage = `url(${options.props.spriteSheetPath})`;
+    this.sprite.style.backgroundImage = `url(${options.props.petSpritePath})`;
 
     // Assemble structure
     this.wrapper.appendChild(this.sprite);
@@ -80,18 +77,13 @@ export default class MockPetComponent {
         this.updateInteractiveAttributes(this.props.state, newProps.petName);
       }
 
-      if (newProps.spriteSheetPath !== undefined) {
-        this.sprite.style.backgroundImage = `url(${newProps.spriteSheetPath})`;
+      if (newProps.petSpritePath !== undefined) {
+        this.sprite.style.backgroundImage = `url(${newProps.petSpritePath})`;
       }
 
       if (newProps.movementSpeed !== undefined) {
-        // Clamp movement speed to valid range (0-100)
-        const clampedSpeed = Math.max(0, Math.min(100, newProps.movementSpeed));
-        // Calculate animation duration based on speed
-        const isRunning = clampedSpeed > 60;
-        const animationDuration = isRunning
-          ? 1 - ((clampedSpeed - 60) / 40) * 0.6 // 1s to 0.4s
-          : 2 - (clampedSpeed / 60); // 2s to 1s
+        const clampedSpeed = clampMovementSpeed(newProps.movementSpeed);
+        const animationDuration = calculateGifAnimationDuration(clampedSpeed);
         this.container.style.setProperty('--animation-duration', `${animationDuration}s`);
       }
     };
@@ -125,7 +117,7 @@ export default class MockPetComponent {
   }
 
   private isPettingAllowed(state: PetState): boolean {
-    return state === 'walking' || state === 'running' || state === 'greeting';
+    return state === 'walking';
   }
 
   private updateInteractiveAttributes(state: PetState, petName: string): void {

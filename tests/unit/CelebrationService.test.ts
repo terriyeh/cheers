@@ -388,7 +388,7 @@ describe('CelebrationService', () => {
 			// This celebrates for 100 milestone
 
 			// Wait for celebration to complete
-			vi.advanceTimersByTime(1800);
+			vi.advanceTimersByTime(4320);
 			vi.clearAllMocks();
 
 			// Now at 495 words (between 100 and 500)
@@ -422,7 +422,7 @@ describe('CelebrationService', () => {
 			// This celebrates for 100 milestone first
 
 			// Wait for celebration to complete
-			vi.advanceTimersByTime(1800);
+			vi.advanceTimersByTime(4320);
 			vi.clearAllMocks();
 
 			// Now at 995 words (between 500 and 1000)
@@ -587,7 +587,7 @@ describe('CelebrationService', () => {
 			expect(plugin.petView?.transitionState).not.toHaveBeenCalled();
 		});
 
-		it('should allow celebration after 1.8 seconds', () => {
+		it('should allow celebration after 2.17 seconds', () => {
 			const mockFile1 = { path: 'note1.md', basename: 'note1' } as TFile;
 			const mockFile2 = { path: 'note2.md', basename: 'note2' } as TFile;
 
@@ -601,8 +601,8 @@ describe('CelebrationService', () => {
 
 			vi.clearAllMocks();
 
-			// After 1.8 seconds
-			vi.advanceTimersByTime(1800);
+			// After 2.17 seconds
+			vi.advanceTimersByTime(4320);
 
 			// Second celebration should work
 			createHandler?.(mockFile2);

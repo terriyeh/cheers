@@ -21,8 +21,8 @@ export class PetStateMachine {
 
   /**
    * Initialize state configurations
-   * - Walking/running are continuous until interrupted (duration: 0)
-   * - Temporary states return to walking after their duration
+   * - Walking is continuous until interrupted (duration: 0)
+   * - Celebration and petting are temporary states that return to walking
    */
   private initializeStateConfigs(): PetStateConfigMap {
     return {
@@ -30,25 +30,13 @@ export class PetStateMachine {
         duration: 0, // Continuous until interrupted
         returnsToWalking: false,
       },
-      running: {
-        duration: 0, // Continuous until interrupted
-        returnsToWalking: false,
-      },
-      greeting: {
-        duration: 2000, // 2 seconds
-        returnsToWalking: true, // Returns to walking
-      },
       celebration: {
-        duration: 3000, // 3 seconds
-        returnsToWalking: true, // Returns to walking
+        duration: 4320, // 4.32 seconds (matches fireworks GIF loop)
+        returnsToWalking: true,
       },
       petting: {
-        duration: 2000, // 2 seconds (reduced from 5s - less awkward pause)
-        returnsToWalking: true, // Returns to walking
-      },
-      sleeping: {
         duration: 2000, // 2 seconds
-        returnsToWalking: true, // Returns to walking
+        returnsToWalking: true,
       },
     };
   }
