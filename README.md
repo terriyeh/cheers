@@ -136,7 +136,7 @@ Your companion has 3 animation states using GIF-based animation:
   - Minimal battery drain (<0.1% CPU usage)
   - GIF handles frame animation internally, no sprite sheets
 - **Celebration**: Fireworks animation triggered by vault events (v0.2.0)
-  - Sprite sheet animation (7 frames, 1.8 seconds)
+  - GIF animation (4.32 seconds)
   - Triggered by note creation, task completion, link creation, word milestones
 - **Petting**: Content reaction when you click/tap (available anytime)
   - Heart overlay animation (2 seconds)
