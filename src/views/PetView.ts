@@ -95,7 +95,7 @@ export class PetView extends ItemView {
       this.stateMachine.addListener(this.stateChangeListener);
 
       // Get asset paths with validation
-      const petSpritePath = this.getAssetPath('cat.gif'); // Walking animation GIF
+      const petSpritePath = this.getAssetPath('cat-walking-6fps.gif'); // Walking animation GIF
       const heartSpritePath = this.getAssetPath('heart.png', 'effects');
       const backgroundPath = this.getAssetPath('Background_reg.png', 'backgrounds');
       const celebrationSpritePath = this.getAssetPath('fireworks.gif', 'effects');

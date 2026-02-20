@@ -16,7 +16,7 @@
   /**
    * Path to the pet sprite GIF (passed from PetView)
    */
-  export let petSpritePath: string = 'assets/cat.gif';
+  export let petSpritePath: string = 'assets/cat-walking-6fps.gif';
 
   /**
    * Path to the heart sprite (passed from PetView)
@@ -430,7 +430,7 @@
   /* GIF-based animation system */
   /* GIF handles frame animation internally - no CSS sprite sheet keyframes needed */
   /* Browser natively plays GIF frames, reducing CSS complexity */
-  /* Walking: cat.gif, Celebration: fireworks.gif (both browser-native animation) */
+  /* Walking: cat-walking-6fps.gif, Celebration: fireworks.gif (both browser-native animation) */
 
   /* Apply movement animations - pet moves continuously in all states */
   /* Movement speed is controlled by --movement-duration CSS variable */

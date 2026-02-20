@@ -21,7 +21,7 @@ describe('Pet.svelte Component', () => {
 
   const defaultProps = {
     state: 'walking' as PetState,
-    petSpritePath: 'assets/cat.gif',
+    petSpritePath: 'assets/cat-walking-6fps.gif',
     heartSpritePath: 'assets/heart.png',
     backgroundPath: '',
     celebrationSpritePath: '',
@@ -41,7 +41,7 @@ describe('Pet.svelte Component', () => {
       const component = new MockPetComponent({ target: container, props: defaultProps });
       const sprite = container.querySelector('.pet-sprite') as HTMLElement;
       expect(sprite).toBeTruthy();
-      expect(sprite.style.backgroundImage).toContain('assets/cat.gif');
+      expect(sprite.style.backgroundImage).toContain('assets/cat-walking-6fps.gif');
       component.$destroy();
     });
 
