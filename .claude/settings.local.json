@@ -40,7 +40,17 @@
       "WebFetch(domain:raw.githubusercontent.com)",
       "Bash(dir:*)",
       "Bash(git reset:*)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(git rebase:*)",
+      "Bash(git stash pop:*)",
+      "Bash(node -e:*)",
+      "Bash(xcopy /Y main.js \"C:\\\\Users\\\\Terri\\\\Desktop\\\\vault-pal-test\\\\.obsidian\\\\plugins\\\\vault-pal\"\" && xcopy /Y styles.css \"C:UsersTerriDesktopvault-pal-test.obsidianpluginsvault-pal\"\")",
+      "Bash(xcopy:*)",
+      "Bash(cmd /c:*)",
+      "Bash(powershell -Command:*)",
+      "Bash(gh pr create:*)",
+      "Bash(git rm:*)",
+      "Bash(gh repo view:*)"
     ]
   }
 }

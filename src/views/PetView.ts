@@ -96,9 +96,9 @@ export class PetView extends ItemView {
 
       // Get asset paths with validation
       const petSpritePath = this.getAssetPath('cat.gif'); // Walking animation GIF
-      const heartSpritePath = this.getAssetPath('heart.png');
+      const heartSpritePath = this.getAssetPath('heart.png', 'effects');
       const backgroundPath = this.getAssetPath('Background_reg.png', 'backgrounds');
-      const celebrationSpritePath = this.getAssetPath('fireworks-spritesheet.png', 'effects');
+      const celebrationSpritePath = this.getAssetPath('fireworks.gif', 'effects');
 
       // Get plugin settings for pet name and movement speed (reuse plugin variable from above)
       const petName = plugin?.settings?.petName ?? 'Kit';

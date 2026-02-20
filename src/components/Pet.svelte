@@ -209,7 +209,7 @@
     updateMovementRange();
   }
 
-  // Celebration animation handled by CSS sprite sheet overlay (7-frame fireworks)
+  // Celebration animation handled by GIF overlay (browser-native frame animation)
   // Walking animation handled by GIF (browser-native frame animation)
 
   onMount(() => {
@@ -242,13 +242,11 @@
   onDestroy(() => {
     // Explicit cleanup to help garbage collection
     // ResizeObserver cleanup is handled by onMount return function
-    // Note: GIF animation handled by browser, no cleanup needed
-    // Celebration sprite sheet animation handled by CSS, no interval needed
+    // Note: GIF animations (walking and celebration) handled by browser, no cleanup needed
     containerEl = null;
   });
 
-  // GIF animation is handled natively by the browser
-  // Celebration uses CSS sprite sheet animation (7-frame overlay)
+  // All animations (walking and celebration) are handled natively by the browser via GIF
   // No JavaScript animation loops needed
 </script>
 
@@ -297,9 +295,10 @@
   <!-- Celebration overlay - top third, horizontally centered -->
   {#if showCelebration}
     <div class="celebration-overlay" aria-hidden="true">
-      <div
+      <img
         class="celebration-sprite"
-        style:background-image="url({celebrationSpritePath})"
+        src={celebrationSpritePath}
+        alt=""
       />
     </div>
   {/if}
@@ -415,8 +414,7 @@
   /* GIF-based animation system */
   /* GIF handles frame animation internally - no CSS sprite sheet keyframes needed */
   /* Browser natively plays GIF frames, reducing CSS complexity */
-  /* Future enhancement: Separate GIF files per state (celebration.gif, petting.gif) */
-  /* Current: Single walking.gif for all states */
+  /* Walking: cat.gif, Celebration: fireworks.gif (both browser-native animation) */
 
   /* Apply movement animations - pet moves continuously in all states */
   /* Movement speed is controlled by --movement-duration CSS variable */
@@ -464,16 +462,10 @@
   }
 
   .celebration-sprite {
+    display: block;
     width: 128px;
     height: 128px;
-    background-size: 896px 128px; /* 7 frames × 128px = 896px width, 128px height */
-    background-repeat: no-repeat;
     image-rendering: auto; /* Smooth rendering for celebration effects */
-    animation: celebration-animation 1.8s steps(7) 1;
-  }
-
-  @keyframes celebration-animation {
-    from { background-position: 0 0; }
-    to { background-position: -896px 0; } /* 7 frames × 128px */
+    /* GIF animation is handled natively by the browser */
   }
 </style>
