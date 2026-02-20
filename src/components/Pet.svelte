@@ -295,11 +295,24 @@
     </div>
   </div>
 
-  <!-- Celebration overlay - top third, horizontally centered -->
+  <!-- Celebration overlay - 3-firework display pattern -->
   {#if showCelebration}
     <div class="celebration-overlay" aria-hidden="true">
+      <!-- Center firework (top) -->
       <img
-        class="celebration-sprite"
+        class="celebration-sprite celebration-sprite-center"
+        src={celebrationSpritePath}
+        alt=""
+      />
+      <!-- Left firework (lower) -->
+      <img
+        class="celebration-sprite celebration-sprite-left"
+        src={celebrationSpritePath}
+        alt=""
+      />
+      <!-- Right firework (lower) -->
+      <img
+        class="celebration-sprite celebration-sprite-right"
         src={celebrationSpritePath}
         alt=""
       />
@@ -431,6 +444,14 @@
     animation-delay: -7.5s; /* Sync with position animation */
   }
 
+  /* Pause pet movement during celebration (4.32 seconds) */
+  /* Pet freezes in place while fireworks display plays */
+  /* @see CELEBRATION_OVERLAY_CONSTANTS.CELEBRATION_DURATION_MS in src/utils/celebration-constants.ts */
+  .pet-sprite-container[data-state='celebration'] .pet-position-wrapper,
+  .pet-sprite-container[data-state='celebration'] .pet-flip-wrapper {
+    animation-play-state: paused;
+  }
+
   /* Movement: Full cycle with direction changes at edges (used for both walking and running) */
   @keyframes move-back-and-forth {
     0% {
@@ -454,21 +475,63 @@
     }
   }
 
-  /* Celebration overlay - top third, horizontally centered */
+  /* Celebration overlay - container for 3-firework display */
   .celebration-overlay {
     position: absolute;
-    top: 16.66%; /* Top third = 33.33% / 2 */
-    left: 50%;
-    transform: translateX(-50%);
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
     z-index: 20; /* Above pet */
     pointer-events: none;
   }
 
   .celebration-sprite {
+    position: absolute;
     display: block;
-    width: 128px;
-    height: 128px;
+    width: 128px; /* FIREWORK_DISPLAY_WIDTH - Scales down from 256px native GIF size */
+    height: 128px; /* FIREWORK_DISPLAY_HEIGHT - See celebration-constants.ts */
     image-rendering: auto; /* Smooth rendering for celebration effects */
     /* GIF animation is handled natively by the browser */
+  }
+
+  /* Center firework - top position, horizontally centered, plays immediately */
+  /* @see CELEBRATION_OVERLAY_CONSTANTS in src/utils/celebration-constants.ts */
+  .celebration-sprite-center {
+    top: 80px; /* CENTER_FIREWORK_TOP_PX - Upper third position */
+    left: 50%;
+    transform: translateX(-50%);
+    animation: fadeIn 0.3s ease-in forwards; /* FADE_IN_DURATION_S */
+    animation-delay: 0s; /* CENTER_DELAY_S */
+  }
+
+  /* Left firework - lower position, 200px left of center, plays 0.5s after center */
+  /* @see CELEBRATION_OVERLAY_CONSTANTS in src/utils/celebration-constants.ts */
+  .celebration-sprite-left {
+    top: 120px; /* SIDE_FIREWORK_TOP_PX - Creates 40px depth offset from center */
+    left: calc(50% - 200px - 64px); /* Center - HORIZONTAL_SPACING_PX - HALF_DISPLAY_WIDTH */
+    opacity: 0;
+    animation: fadeIn 0.3s ease-in forwards; /* FADE_IN_DURATION_S */
+    animation-delay: 0.5s; /* LEFT_DELAY_S = STAGGER_INTERVAL_S */
+  }
+
+  /* Right firework - lower position, 200px right of center, plays 0.5s after left */
+  /* @see CELEBRATION_OVERLAY_CONSTANTS in src/utils/celebration-constants.ts */
+  .celebration-sprite-right {
+    top: 120px; /* SIDE_FIREWORK_TOP_PX - Creates 40px depth offset from center */
+    left: calc(50% + 200px - 64px); /* Center + HORIZONTAL_SPACING_PX - HALF_DISPLAY_WIDTH */
+    opacity: 0;
+    animation: fadeIn 0.3s ease-in forwards; /* FADE_IN_DURATION_S */
+    animation-delay: 1s; /* RIGHT_DELAY_S = 2 × STAGGER_INTERVAL_S */
+  }
+
+  /* Fade in animation for staggered fireworks reveal */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
   }
 </style>

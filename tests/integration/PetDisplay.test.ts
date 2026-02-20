@@ -7,6 +7,7 @@ import { vi } from 'vitest';
 import { PetView } from '../../src/views/PetView';
 import { WorkspaceLeaf } from '../mocks/obsidian';
 import type { PetState } from '../../src/types/pet';
+import { CELEBRATION_OVERLAY_CONSTANTS } from '../../src/utils/celebration-constants';
 
 describe('PetDisplay Integration', () => {
   let petView: PetView;
@@ -61,6 +62,29 @@ describe('PetDisplay Integration', () => {
       const container = petView.containerEl.querySelector('.pet-sprite-container');
       expect(container?.getAttribute('data-state')).toBe('petting');
     });
+
+    it('should pause pet movement during celebration state', async () => {
+      await petView.onOpen();
+
+      // Get initial position data
+      const container = petView.containerEl.querySelector('.pet-sprite-container');
+      expect(container?.getAttribute('data-state')).toBe('walking');
+
+      // Transition to celebration
+      petView.transitionState('celebration');
+
+      // Verify data-state changed (this triggers CSS pause)
+      expect(container?.getAttribute('data-state')).toBe('celebration');
+
+      // In real browser, CSS rule applies:
+      // .pet-sprite-container[data-state='celebration'] .pet-position-wrapper {
+      //   animation-play-state: paused;
+      // }
+
+      // After celebration completes, should return to walking
+      vi.advanceTimersByTime(CELEBRATION_OVERLAY_CONSTANTS.CELEBRATION_DURATION_MS);
+      expect(container?.getAttribute('data-state')).toBe('walking');
+    });
   });
 
   describe('settings integration', () => {
@@ -90,7 +114,7 @@ describe('PetDisplay Integration', () => {
       expect(petView.getCurrentState()).toBe('walking');
     });
 
-    it('should play celebration animation for correct duration (4320ms)', async () => {
+    it('should play celebration animation for correct duration (CELEBRATION_OVERLAY_CONSTANTS.CELEBRATION_DURATION_MSms)', async () => {
       await petView.onOpen();
 
       petView.transitionState('celebration');
@@ -112,8 +136,8 @@ describe('PetDisplay Integration', () => {
       petView.transitionState('celebration');
       expect(petView.getCurrentState()).toBe('celebration');
 
-      // Wait for celebration to complete (4320ms)
-      vi.advanceTimersByTime(4320);
+      // Wait for celebration to complete (CELEBRATION_OVERLAY_CONSTANTS.CELEBRATION_DURATION_MSms)
+      vi.advanceTimersByTime(CELEBRATION_OVERLAY_CONSTANTS.CELEBRATION_DURATION_MS);
 
       expect(petView.getCurrentState()).toBe('walking');
     });
@@ -195,11 +219,11 @@ describe('PetDisplay Integration', () => {
 
       // User completes first task
       petView.transitionState('celebration');
-      vi.advanceTimersByTime(4320);
+      vi.advanceTimersByTime(CELEBRATION_OVERLAY_CONSTANTS.CELEBRATION_DURATION_MS);
 
       // User completes daily note
       petView.transitionState('celebration');
-      vi.advanceTimersByTime(4320);
+      vi.advanceTimersByTime(CELEBRATION_OVERLAY_CONSTANTS.CELEBRATION_DURATION_MS);
 
       // Evening: user closes vault
       await petView.onClose();
@@ -210,7 +234,7 @@ describe('PetDisplay Integration', () => {
       // First session
       await petView.onOpen();
       petView.transitionState('celebration');
-      vi.advanceTimersByTime(4320);
+      vi.advanceTimersByTime(CELEBRATION_OVERLAY_CONSTANTS.CELEBRATION_DURATION_MS);
       await petView.onClose();
 
       // Second session
@@ -260,7 +284,7 @@ describe('PetDisplay Integration', () => {
       await petView.onOpen();
 
       petView.transitionState('celebration');
-      vi.advanceTimersByTime(4320);
+      vi.advanceTimersByTime(CELEBRATION_OVERLAY_CONSTANTS.CELEBRATION_DURATION_MS);
 
       // All layers should be synchronized to walking
       expect(petView.getCurrentState()).toBe('walking');
@@ -323,7 +347,7 @@ describe('PetDisplay Integration', () => {
       container?.setAttribute('data-pet-state', 'corrupted');
 
       // Auto-transition should still work
-      vi.advanceTimersByTime(4320);
+      vi.advanceTimersByTime(CELEBRATION_OVERLAY_CONSTANTS.CELEBRATION_DURATION_MS);
 
       expect(petView.getCurrentState()).toBe('walking');
       expect(container?.getAttribute('data-pet-state')).toBe('walking');

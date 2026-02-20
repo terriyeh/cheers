@@ -449,6 +449,79 @@ CelebrationManager.handleEvent()
 
 **Estimated Effort**: 14-17 hours
 
+#### 4.1 Celebration Visual System
+
+**Status**: ✅ Implemented (v0.2.0)
+
+**Architecture**: 3-firework overlay with staggered reveal animation and character pause
+
+**Visual Layout**:
+```
+Container (pet-sprite-container)
+  ├─ Position wrapper (paused during celebration)
+  │   └─ Pet sprite (walking GIF)
+  └─ Celebration overlay (z-index: 20, above pet)
+      ├─ Center firework (top: 80px, centered)
+      ├─ Left firework (top: 120px, -200px from center)
+      └─ Right firework (top: 120px, +200px from center)
+```
+
+**Animation Sequence**:
+1. **State Transition**: `PetStateMachine.transition('celebration')`
+   - Sets `data-state="celebration"` on container
+   - Triggers CSS pause: `animation-play-state: paused`
+   - Pet freezes in place (position and flip animations paused)
+
+2. **Firework Reveal** (staggered fade-in):
+   - `t=0.0s`: Center firework fades in (0.3s duration)
+   - `t=0.5s`: Left firework fades in (0.3s duration)
+   - `t=1.0s`: Right firework fades in (0.3s duration)
+   - Fireworks play for full GIF loop (4.32 seconds total)
+
+3. **Auto-Return**: After 4.32s → `transition('walking')`
+   - Removes `data-state="celebration"`
+   - Pet animations resume (`animation-play-state: running`)
+   - Celebration overlay unmounts (Svelte `{#if}` block)
+
+**Character Pause Behavior**:
+- **Mechanism**: CSS `animation-play-state: paused` on position and flip wrappers
+- **Selector**: `.pet-sprite-container[data-state='celebration'] .pet-position-wrapper`
+- **Why**: Creates visual focus on fireworks, prevents distraction from movement
+- **Duration**: 4.32 seconds (matches `CELEBRATION_DURATION_MS`)
+
+**Positioning Rationale**:
+- **80px/120px vertical**: Creates depth (40px offset between center and sides)
+- **200px horizontal**: Prevents overlap on typical viewports (600px+ width)
+- **Triangular layout**: 1 top, 2 bottom - balanced visual composition
+
+**Constants Reference**:
+All magic numbers extracted to `src/utils/celebration-constants.ts`:
+```typescript
+CELEBRATION_OVERLAY_CONSTANTS = {
+  FIREWORK_GIF_WIDTH: 256,           // Native asset size
+  FIREWORK_DISPLAY_WIDTH: 128,       // CSS scaled size
+  CENTER_FIREWORK_TOP_PX: 80,        // Upper third position
+  SIDE_FIREWORK_TOP_PX: 120,         // Lower position (creates depth)
+  HORIZONTAL_SPACING_PX: 200,        // Side firework offset from center
+  FADE_IN_DURATION_S: 0.3,           // Firework fade-in speed
+  STAGGER_INTERVAL_S: 0.5,           // Delay between fireworks
+  CELEBRATION_DURATION_MS: 4320,     // Total duration (4.32s)
+}
+```
+
+**Files Affected**:
+- ✅ `src/components/Pet.svelte` (celebration overlay rendering)
+- ✅ `src/pet/PetStateMachine.ts` (4.32s auto-return timer)
+- ✅ `src/utils/celebration-constants.ts` (centralized constants)
+- ✅ `assets/dragonfly-spritesheet.png` (256×256 fireworks GIF)
+
+**Testing Coverage**: 5 tests (4 unit, 1 integration)
+- ✅ 3-firework rendering verification
+- ✅ Overlay visibility toggle on state changes
+- ✅ Pause behavior via `data-state` attribute
+- ✅ Component cleanup (memory leak prevention)
+- ✅ End-to-end state machine → pause integration
+
 ---
 
 ### 5. Butterfly Chase Interaction (Phase 2)

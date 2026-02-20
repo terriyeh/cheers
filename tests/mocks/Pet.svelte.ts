@@ -19,6 +19,7 @@ export default class MockPetComponent {
   private wrapper!: HTMLElement;
   private sprite!: HTMLElement;
   private heartOverlay: HTMLElement | null = null;
+  private celebrationOverlay: HTMLElement | null = null;
 
   constructor(options: { target: HTMLElement; props: any }) {
     this.target = options.target;
@@ -61,6 +62,9 @@ export default class MockPetComponent {
     // Add heart overlay if in petting state
     this.updateHeartOverlay(options.props.state);
 
+    // Add celebration overlay if in celebration state
+    this.updateCelebrationOverlay(options.props.state);
+
     // Set method for updating props
     this.$set = (newProps: any) => {
       this.updateCount++;
@@ -71,6 +75,7 @@ export default class MockPetComponent {
         this.sprite.setAttribute('aria-label', `Pet is ${newProps.state}`);
         this.updateInteractiveAttributes(newProps.state, this.props.petName);
         this.updateHeartOverlay(newProps.state);
+        this.updateCelebrationOverlay(newProps.state);
       }
 
       if (newProps.petName !== undefined) {
@@ -85,6 +90,10 @@ export default class MockPetComponent {
         const clampedSpeed = clampMovementSpeed(newProps.movementSpeed);
         const animationDuration = calculateGifAnimationDuration(clampedSpeed);
         this.container.style.setProperty('--animation-duration', `${animationDuration}s`);
+      }
+
+      if (newProps.celebrationSpritePath !== undefined) {
+        this.updateCelebrationOverlay(this.props.state);
       }
     };
 
@@ -152,6 +161,44 @@ export default class MockPetComponent {
       // Remove heart overlay
       this.heartOverlay.remove();
       this.heartOverlay = null;
+    }
+  }
+
+  private updateCelebrationOverlay(state: PetState): void {
+    // Remove existing overlay
+    if (this.celebrationOverlay) {
+      this.celebrationOverlay.remove();
+      this.celebrationOverlay = null;
+    }
+
+    // Add overlay if in celebration state and path is provided
+    if (state === 'celebration' && this.props.celebrationSpritePath) {
+      this.celebrationOverlay = document.createElement('div');
+      this.celebrationOverlay.className = 'celebration-overlay';
+      this.celebrationOverlay.setAttribute('aria-hidden', 'true');
+
+      // Center firework
+      const centerSprite = document.createElement('img');
+      centerSprite.className = 'celebration-sprite celebration-sprite-center';
+      centerSprite.src = this.props.celebrationSpritePath;
+      centerSprite.alt = '';
+
+      // Left firework
+      const leftSprite = document.createElement('img');
+      leftSprite.className = 'celebration-sprite celebration-sprite-left';
+      leftSprite.src = this.props.celebrationSpritePath;
+      leftSprite.alt = '';
+
+      // Right firework
+      const rightSprite = document.createElement('img');
+      rightSprite.className = 'celebration-sprite celebration-sprite-right';
+      rightSprite.src = this.props.celebrationSpritePath;
+      rightSprite.alt = '';
+
+      this.celebrationOverlay.appendChild(centerSprite);
+      this.celebrationOverlay.appendChild(leftSprite);
+      this.celebrationOverlay.appendChild(rightSprite);
+      this.container.appendChild(this.celebrationOverlay);
     }
   }
 

@@ -5,6 +5,7 @@
 
 import type { PetState, StateChangeEvent } from '../../src/types/pet';
 import { calculateMovementDuration as utilCalculateMovementDuration } from '../../src/utils/animation';
+import { CELEBRATION_OVERLAY_CONSTANTS } from '../../src/utils/celebration-constants';
 
 /**
  * All valid pet states
@@ -31,10 +32,11 @@ export const PERMANENT_STATES: PetState[] = ['walking'];
 /**
  * State durations in milliseconds
  * Note: walking duration is 0 (continuous), celebration and petting have fixed durations
+ * @see CELEBRATION_OVERLAY_CONSTANTS.CELEBRATION_DURATION_MS in src/utils/celebration-constants.ts
  */
 export const STATE_DURATIONS: Record<PetState, number> = {
   walking: 0, // Continuous until interrupted
-  celebration: 4320, // 4.32 seconds (matches fireworks GIF loop)
+  celebration: CELEBRATION_OVERLAY_CONSTANTS.CELEBRATION_DURATION_MS, // 4.32 seconds (matches fireworks GIF loop)
   petting: 2000, // 2 seconds
 };
 
@@ -103,7 +105,7 @@ export function createUserInteractionSequence(): {
     { state: 'walking', duration: 0, description: 'Pet walks continuously' },
     {
       state: 'celebration',
-      duration: 4320,
+      duration: CELEBRATION_OVERLAY_CONSTANTS.CELEBRATION_DURATION_MS,
       description: 'User completes task',
     },
     { state: 'walking', duration: 0, description: 'Return to walking' },

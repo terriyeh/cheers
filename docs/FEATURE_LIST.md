@@ -98,11 +98,11 @@ A plugin you feel, not think about.
 - (Complete) 1 background
 - (Complete) Vault event listeners + celebration triggers
 - (In Progress) Main character animations (walk, pet, celebrate)
-- Production heart and fireworkds animation 
-- Toggle on/off companions (0-2)
+- Production heart and fireworkds (complete) animation 
 - Butterfly chase interaction
-- Cart approach behavior
 - Cosmetic Foundation
+- Toggle on/off companions (0-2)
+- Cart approach behavior
 
 ### Phase 3 (Future)
 - Rare random butterfly

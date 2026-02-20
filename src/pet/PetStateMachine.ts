@@ -4,6 +4,7 @@ import type {
   StateChangeEvent,
   StateChangeListener,
 } from '../types/pet';
+import { CELEBRATION_OVERLAY_CONSTANTS } from '../utils/celebration-constants';
 
 /**
  * Pet State Machine
@@ -23,6 +24,7 @@ export class PetStateMachine {
    * Initialize state configurations
    * - Walking is continuous until interrupted (duration: 0)
    * - Celebration and petting are temporary states that return to walking
+   * @see CELEBRATION_OVERLAY_CONSTANTS in src/utils/celebration-constants.ts
    */
   private initializeStateConfigs(): PetStateConfigMap {
     return {
@@ -31,7 +33,7 @@ export class PetStateMachine {
         returnsToWalking: false,
       },
       celebration: {
-        duration: 4320, // 4.32 seconds (matches fireworks GIF loop)
+        duration: CELEBRATION_OVERLAY_CONSTANTS.CELEBRATION_DURATION_MS, // 4.32 seconds (matches fireworks GIF loop)
         returnsToWalking: true,
       },
       petting: {
