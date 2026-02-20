@@ -81,11 +81,11 @@ describe('PetStateMachine', () => {
   });
 
   describe('automatic return to walking', () => {
-    it('should return to walking after celebration duration (2170ms)', () => {
+    it('should return to walking after celebration duration (3720ms)', () => {
       stateMachine.transition('celebration');
       expect(stateMachine.getCurrentState()).toBe('celebration');
 
-      vi.advanceTimersByTime(2170);
+      vi.advanceTimersByTime(3720);
 
       expect(stateMachine.getCurrentState()).toBe('walking');
     });
@@ -210,7 +210,7 @@ describe('PetStateMachine', () => {
       stateMachine.transition('celebration');
       expect(listener).toHaveBeenCalledTimes(1);
 
-      vi.advanceTimersByTime(2170);
+      vi.advanceTimersByTime(3720);
 
       expect(listener).toHaveBeenCalledTimes(2);
       expect(listener).toHaveBeenNthCalledWith(2, {
@@ -245,7 +245,7 @@ describe('PetStateMachine', () => {
       expect(stateMachine.getCurrentState()).toBe('celebration');
 
       stateMachine.cleanup();
-      vi.advanceTimersByTime(2170);
+      vi.advanceTimersByTime(3720);
 
       // Should still be celebration, not walking, because timer was cleared
       expect(stateMachine.getCurrentState()).toBe('celebration');
@@ -355,7 +355,7 @@ describe('PetStateMachine', () => {
 
     it('should maintain state when timer expires but already in walking', () => {
       stateMachine.transition('celebration');
-      vi.advanceTimersByTime(2170);
+      vi.advanceTimersByTime(3720);
 
       expect(stateMachine.getCurrentState()).toBe('walking');
 
@@ -387,9 +387,9 @@ describe('PetStateMachine', () => {
   });
 
   describe('state configuration verification', () => {
-    it('should have correct duration for celebration state (2170ms)', () => {
+    it('should have correct duration for celebration state (3720ms)', () => {
       stateMachine.transition('celebration');
-      vi.advanceTimersByTime(2169);
+      vi.advanceTimersByTime(3719);
       expect(stateMachine.getCurrentState()).toBe('celebration');
 
       vi.advanceTimersByTime(1);
@@ -435,8 +435,8 @@ describe('PetStateMachine', () => {
       stateMachine.transition('celebration');
       expect(stateMachine.getCurrentState()).toBe('celebration');
 
-      // Wait for celebration to complete (2170ms)
-      vi.advanceTimersByTime(2170);
+      // Wait for celebration to complete (3720ms)
+      vi.advanceTimersByTime(3720);
 
       // Should have returned to walking after celebration completed
       expect(stateMachine.getCurrentState()).toBe('walking');
