@@ -216,7 +216,7 @@ describe('PetView', () => {
 
       await petView.onClose();
 
-      vi.advanceTimersByTime(3720);
+      vi.advanceTimersByTime(2880);
 
       // getCurrentState should return null after close
       expect(petView.getCurrentState()).toBeNull();
@@ -266,7 +266,7 @@ describe('PetView', () => {
       petView.transitionState('celebration');
       expect(petView.getCurrentState()).toBe('celebration');
 
-      vi.advanceTimersByTime(3720);
+      vi.advanceTimersByTime(2880);
 
       expect(petView.getCurrentState()).toBe('walking');
       const container = petView.containerEl.querySelector('.obsidian-pets-container');
@@ -326,7 +326,7 @@ describe('PetView', () => {
       await petView.onOpen();
 
       petView.transitionState('celebration');
-      vi.advanceTimersByTime(3720);
+      vi.advanceTimersByTime(2880);
 
       const container = petView.containerEl.querySelector('.obsidian-pets-container');
       const component = petView.containerEl.querySelector('.pet-sprite-container');

@@ -388,7 +388,7 @@ describe('CelebrationService', () => {
 			// This celebrates for 100 milestone
 
 			// Wait for celebration to complete
-			vi.advanceTimersByTime(3720);
+			vi.advanceTimersByTime(2880);
 			vi.clearAllMocks();
 
 			// Now at 495 words (between 100 and 500)
@@ -422,7 +422,7 @@ describe('CelebrationService', () => {
 			// This celebrates for 100 milestone first
 
 			// Wait for celebration to complete
-			vi.advanceTimersByTime(3720);
+			vi.advanceTimersByTime(2880);
 			vi.clearAllMocks();
 
 			// Now at 995 words (between 500 and 1000)
@@ -602,7 +602,7 @@ describe('CelebrationService', () => {
 			vi.clearAllMocks();
 
 			// After 2.17 seconds
-			vi.advanceTimersByTime(3720);
+			vi.advanceTimersByTime(2880);
 
 			// Second celebration should work
 			createHandler?.(mockFile2);
