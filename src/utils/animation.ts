@@ -47,7 +47,8 @@ export function clampMovementSpeed(speed: number): number {
  */
 export function calculateGifAnimationDuration(speed: number): number {
   const clampedSpeed = clampMovementSpeed(speed);
-  return GIF_ANIMATION_CONSTANTS.MAX_DURATION - (clampedSpeed / 100);
+  const { MAX_DURATION, MIN_DURATION } = GIF_ANIMATION_CONSTANTS;
+  return MAX_DURATION - (clampedSpeed / 100) * (MAX_DURATION - MIN_DURATION);
 }
 
 /**
@@ -86,5 +87,11 @@ export function calculateMovementDuration(
 ): number {
   const speedInPixelsPerSecond = calculateSpeedInPixelsPerSecond(speed, petWidth);
   const actualDistance = containerWidth - petWidth;
+
+  // Prevent division by zero - fallback to slowest speed
+  if (speedInPixelsPerSecond <= 0 || actualDistance <= 0) {
+    return ANIMATION_CONSTANTS.MAX_DURATION;
+  }
+
   return actualDistance / speedInPixelsPerSecond;
 }

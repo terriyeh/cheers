@@ -116,7 +116,10 @@
     // Calculate duration to maintain constant speed in px/s
     // Linear speed scaling: duration = distance / speed
     // Ensures movement speed (px/s) is consistent regardless of container width
-    movementDuration = actualDistance / speedInPixelsPerSecond;
+    // Prevent division by zero - fallback to slowest speed
+    movementDuration = speedInPixelsPerSecond > 0 && actualDistance > 0
+      ? actualDistance / speedInPixelsPerSecond
+      : ANIMATION_CONSTANTS.MAX_DURATION;
 
     // Set CSS custom properties for keyframes and positioning
     containerEl.style.setProperty('--container-width', `${containerWidth}px`);
