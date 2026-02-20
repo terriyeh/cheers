@@ -34,7 +34,7 @@ export const PERMANENT_STATES: PetState[] = ['walking'];
  */
 export const STATE_DURATIONS: Record<PetState, number> = {
   walking: 0, // Continuous until interrupted
-  celebration: 1800, // 1.8 seconds (matches fireworks animation)
+  celebration: 2170, // 2.17 seconds (matches fireworks GIF loop)
   petting: 2000, // 2 seconds
 };
 
@@ -103,7 +103,7 @@ export function createUserInteractionSequence(): {
     { state: 'walking', duration: 0, description: 'Pet walks continuously' },
     {
       state: 'celebration',
-      duration: 1800,
+      duration: 2170,
       description: 'User completes task',
     },
     { state: 'walking', duration: 0, description: 'Return to walking' },

@@ -31,7 +31,7 @@ export class PetStateMachine {
         returnsToWalking: false,
       },
       celebration: {
-        duration: 1800, // 1.8 seconds (matches fireworks animation)
+        duration: 2170, // 2.17 seconds (matches fireworks GIF loop)
         returnsToWalking: true,
       },
       petting: {
