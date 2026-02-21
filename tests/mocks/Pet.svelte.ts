@@ -47,12 +47,12 @@ export default class MockPetComponent {
     this.wrapper.addEventListener('click', this.handleClick.bind(this));
     this.wrapper.addEventListener('keydown', this.handleKeyDown.bind(this));
 
-    // Pet sprite
-    this.sprite = document.createElement('div');
+    // Pet sprite - use img element to match real component
+    this.sprite = document.createElement('img');
     this.sprite.className = 'pet-sprite';
-    this.sprite.setAttribute('role', 'img');
-    this.sprite.setAttribute('aria-label', `Pet is ${options.props.state}`);
-    this.sprite.style.backgroundImage = `url(${options.props.petSpritePath})`;
+    this.sprite.setAttribute('alt', `Pet is ${options.props.state}`);
+    this.sprite.setAttribute('src', this.getCurrentSpritePath(options.props));
+    (this.sprite as HTMLImageElement).src = this.getCurrentSpritePath(options.props);
 
     // Assemble structure
     this.wrapper.appendChild(this.sprite);
@@ -70,9 +70,22 @@ export default class MockPetComponent {
       this.updateCount++;
       this.props = { ...this.props, ...newProps };
 
+      // Update sprite src if state changes or any sprite path changes
+      const needsSpriteUpdate =
+        newProps.state !== undefined ||
+        newProps.walkingSpritePath !== undefined ||
+        newProps.pettingSpritePath !== undefined ||
+        newProps.celebrationSpritePath !== undefined;
+
+      if (needsSpriteUpdate) {
+        const newSpritePath = this.getCurrentSpritePath(this.props);
+        (this.sprite as HTMLImageElement).src = newSpritePath;
+        this.sprite.setAttribute('src', newSpritePath);
+      }
+
       if (newProps.state !== undefined) {
         this.container.dataset.state = newProps.state;
-        this.sprite.setAttribute('aria-label', `Pet is ${newProps.state}`);
+        this.sprite.setAttribute('alt', `Pet is ${newProps.state}`);
         this.updateInteractiveAttributes(newProps.state, this.props.petName);
         this.updateHeartOverlay(newProps.state);
         this.updateCelebrationOverlay(newProps.state);
@@ -82,17 +95,13 @@ export default class MockPetComponent {
         this.updateInteractiveAttributes(this.props.state, newProps.petName);
       }
 
-      if (newProps.petSpritePath !== undefined) {
-        this.sprite.style.backgroundImage = `url(${newProps.petSpritePath})`;
-      }
-
       if (newProps.movementSpeed !== undefined) {
         const clampedSpeed = clampMovementSpeed(newProps.movementSpeed);
         const animationDuration = calculateGifAnimationDuration(clampedSpeed);
         this.container.style.setProperty('--animation-duration', `${animationDuration}s`);
       }
 
-      if (newProps.celebrationSpritePath !== undefined) {
+      if (newProps.fireworksSpritePath !== undefined) {
         this.updateCelebrationOverlay(this.props.state);
       }
     };
@@ -123,6 +132,22 @@ export default class MockPetComponent {
       this.container.remove();
       this.eventHandlers.clear();
     };
+  }
+
+  /**
+   * Get the current sprite path based on state (matches real component logic)
+   * Celebration: celebrationSpritePath
+   * Petting: pettingSpritePath
+   * Walking: walkingSpritePath
+   */
+  private getCurrentSpritePath(props: any): string {
+    if (props.state === 'celebration') {
+      return props.celebrationSpritePath || props.walkingSpritePath;
+    } else if (props.state === 'petting') {
+      return props.pettingSpritePath || props.walkingSpritePath;
+    } else {
+      return props.walkingSpritePath;
+    }
   }
 
   private isPettingAllowed(state: PetState): boolean {
@@ -171,8 +196,8 @@ export default class MockPetComponent {
       this.celebrationOverlay = null;
     }
 
-    // Add overlay if in celebration state and path is provided
-    if (state === 'celebration' && this.props.celebrationSpritePath) {
+    // Add overlay if in celebration state and fireworks path is provided
+    if (state === 'celebration' && this.props.fireworksSpritePath) {
       this.celebrationOverlay = document.createElement('div');
       this.celebrationOverlay.className = 'celebration-overlay';
       this.celebrationOverlay.setAttribute('aria-hidden', 'true');
@@ -180,19 +205,19 @@ export default class MockPetComponent {
       // Center firework
       const centerSprite = document.createElement('img');
       centerSprite.className = 'celebration-sprite celebration-sprite-center';
-      centerSprite.src = this.props.celebrationSpritePath;
+      centerSprite.src = this.props.fireworksSpritePath;
       centerSprite.alt = '';
 
       // Left firework
       const leftSprite = document.createElement('img');
       leftSprite.className = 'celebration-sprite celebration-sprite-left';
-      leftSprite.src = this.props.celebrationSpritePath;
+      leftSprite.src = this.props.fireworksSpritePath;
       leftSprite.alt = '';
 
       // Right firework
       const rightSprite = document.createElement('img');
       rightSprite.className = 'celebration-sprite celebration-sprite-right';
-      rightSprite.src = this.props.celebrationSpritePath;
+      rightSprite.src = this.props.fireworksSpritePath;
       rightSprite.alt = '';
 
       this.celebrationOverlay.appendChild(centerSprite);

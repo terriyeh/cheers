@@ -15,7 +15,11 @@ export const ANIMATION_CONSTANTS = {
   /** Reference container width for speed calibration (pixels) */
   REFERENCE_CONTAINER_WIDTH: 800,
   /** Default pet width (pixels) - used as fallback before GIF loads */
-  DEFAULT_PET_WIDTH: 128,
+  DEFAULT_PET_WIDTH: 100,
+  /** Fixed display size for pet sprites (pixels) - all pet GIFs render at this size */
+  PET_DISPLAY_SIZE: 100,
+  /** Fixed display size for celebration fireworks (pixels) - scales down from 256px native GIF */
+  CELEBRATION_DISPLAY_SIZE: 128,
 } as const;
 
 /**

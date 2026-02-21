@@ -318,7 +318,7 @@ export function getCurrentSeason(): Season {
 /**
  * Path to the pet sprite GIF (passed from PetView)
  */
-export let petSpritePath: string = 'assets/cat.gif';
+export let petSpritePath: string = 'assets/cat-walking-6fps.gif';
 ```
 
 **How It Works**:
@@ -369,7 +369,7 @@ $: movementDuration = actualDistance / speedInPixelsPerSecond;
 
 **Files Affected**:
 - ✏️ `src/components/Pet.svelte` (speed calculation logic)
-- ✏️ `src/views/PetView.ts` (uses cat.gif instead of sprite sheet)
+- ✏️ `src/views/PetView.ts` (uses cat-walking-6fps.gif GIF animation)
 
 **Estimated Effort**: Already implemented
 

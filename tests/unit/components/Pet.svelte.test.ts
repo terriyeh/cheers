@@ -21,10 +21,11 @@ describe('Pet.svelte Component', () => {
 
   const defaultProps = {
     state: 'walking' as PetState,
-    petSpritePath: 'assets/cat.gif',
-    heartSpritePath: 'assets/heart.png',
+    walkingSpritePath: 'assets/cat-walking-6fps.gif',
+    pettingSpritePath: 'assets/cat-petting-6fps.gif',
+    celebrationSpritePath: 'assets/cat-celebrating-6fps.gif',
+    fireworksSpritePath: 'assets/effects/fireworks.gif',
     backgroundPath: '',
-    celebrationSpritePath: '',
     petName: 'Kit',
     movementSpeed: 60,
   };
@@ -37,11 +38,11 @@ describe('Pet.svelte Component', () => {
       component.$destroy();
     });
 
-    it('should render pet sprite with correct background image', () => {
+    it('should render pet sprite with correct src', () => {
       const component = new MockPetComponent({ target: container, props: defaultProps });
-      const sprite = container.querySelector('.pet-sprite') as HTMLElement;
+      const sprite = container.querySelector('.pet-sprite') as HTMLImageElement;
       expect(sprite).toBeTruthy();
-      expect(sprite.style.backgroundImage).toContain('assets/cat.gif');
+      expect(sprite.getAttribute('src')).toContain('assets/cat-walking-6fps.gif');
       component.$destroy();
     });
 
@@ -172,35 +173,117 @@ describe('Pet.svelte Component', () => {
     });
   });
 
-  describe('heart overlay', () => {
-    it('should show heart overlay during petting state', () => {
-      const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'petting' } });
-      const heartOverlay = container.querySelector('.heart-overlay');
-      expect(heartOverlay).toBeTruthy();
-      component.$destroy();
-    });
-
-    it('should not show heart overlay during walking state', () => {
+  describe('sprite path switching', () => {
+    it('should use walking sprite during walking state', () => {
       const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'walking' } });
-      const heartOverlay = container.querySelector('.heart-overlay');
-      expect(heartOverlay).toBeFalsy();
+      const sprite = container.querySelector('.pet-sprite') as HTMLImageElement;
+      expect(sprite.getAttribute('src')).toContain('cat-walking-6fps.gif');
       component.$destroy();
     });
 
-    it('should hide heart overlay when transitioning from petting to walking', () => {
+    it('should use petting sprite during petting state', () => {
+      const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'petting' } });
+      const sprite = container.querySelector('.pet-sprite') as HTMLImageElement;
+      expect(sprite.getAttribute('src')).toContain('cat-petting-6fps.gif');
+      component.$destroy();
+    });
+
+    it('should use celebration sprite during celebration state (plus fireworks overlay)', () => {
+      const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'celebration' } });
+      const sprite = container.querySelector('.pet-sprite') as HTMLImageElement;
+      expect(sprite.getAttribute('src')).toContain('cat-celebrating-6fps.gif');
+      component.$destroy();
+    });
+
+    it('should switch sprite when transitioning from petting to walking', () => {
       const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'petting' } });
 
-      // Initially should show heart
-      let heartOverlay = container.querySelector('.heart-overlay');
-      expect(heartOverlay).toBeTruthy();
+      // Initially should show petting sprite
+      let sprite = container.querySelector('.pet-sprite') as HTMLImageElement;
+      expect(sprite.getAttribute('src')).toContain('cat-petting-6fps.gif');
 
       // Transition to walking
       component.$set({ state: 'walking' });
 
-      // Heart should be hidden
-      heartOverlay = container.querySelector('.heart-overlay');
-      expect(heartOverlay).toBeFalsy();
+      // Should now show walking sprite
+      sprite = container.querySelector('.pet-sprite') as HTMLImageElement;
+      expect(sprite.getAttribute('src')).toContain('cat-walking-6fps.gif');
       component.$destroy();
+    });
+  });
+
+  describe('celebration overlay', () => {
+    it('should render 3 firework sprites during celebration state', () => {
+      const component = new MockPetComponent({
+        target: container,
+        props: {
+          ...defaultProps,
+          state: 'celebration',
+          fireworksSpritePath: 'assets/effects/fireworks.gif'
+        }
+      });
+
+      const celebrationOverlay = container.querySelector('.celebration-overlay');
+      expect(celebrationOverlay).toBeTruthy();
+
+      const fireworkSprites = container.querySelectorAll('.celebration-sprite');
+      expect(fireworkSprites.length).toBe(3);
+
+      // Verify each sprite has the correct class
+      expect(container.querySelector('.celebration-sprite-center')).toBeTruthy();
+      expect(container.querySelector('.celebration-sprite-left')).toBeTruthy();
+      expect(container.querySelector('.celebration-sprite-right')).toBeTruthy();
+
+      component.$destroy();
+    });
+
+    it('should show celebration overlay only during celebration state', () => {
+      const component = new MockPetComponent({
+        target: container,
+        props: {
+          ...defaultProps,
+          state: 'walking',
+          fireworksSpritePath: 'assets/effects/fireworks.gif'
+        }
+      });
+
+      // Walking state - no overlay
+      let overlay = container.querySelector('.celebration-overlay');
+      expect(overlay).toBeFalsy();
+
+      // Transition to celebration
+      component.$set({ state: 'celebration' });
+      overlay = container.querySelector('.celebration-overlay');
+      expect(overlay).toBeTruthy();
+
+      // Transition to petting
+      component.$set({ state: 'petting' });
+      overlay = container.querySelector('.celebration-overlay');
+      expect(overlay).toBeFalsy();
+
+      component.$destroy();
+    });
+
+    it('should clean up celebration overlay when component is destroyed', () => {
+      const component = new MockPetComponent({
+        target: container,
+        props: {
+          ...defaultProps,
+          state: 'celebration',
+          fireworksSpritePath: 'assets/effects/fireworks.gif'
+        }
+      });
+
+      // Verify overlay exists
+      let overlay = container.querySelector('.celebration-overlay');
+      expect(overlay).toBeTruthy();
+
+      // Destroy component
+      component.$destroy();
+
+      // Verify cleanup
+      overlay = container.querySelector('.celebration-overlay');
+      expect(overlay).toBeFalsy();
     });
   });
 
@@ -285,13 +368,6 @@ describe('Pet.svelte Component', () => {
       component.$destroy();
     });
 
-    it('should have aria-hidden="true" on heart overlay', () => {
-      const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'petting' } });
-      const heartOverlay = container.querySelector('.heart-overlay') as HTMLElement;
-      expect(heartOverlay.getAttribute('aria-hidden')).toBe('true');
-      component.$destroy();
-    });
-
     it('should have aria-disabled="false" when petting is allowed', () => {
       const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'walking' } });
       const wrapper = container.querySelector('.pet-sprite-wrapper') as HTMLElement;
@@ -339,76 +415,7 @@ describe('Pet.svelte Component', () => {
     });
   });
 
-  describe('heart overlay positioning and animation', () => {
-    it('should have heart overlay with correct positioning classes', () => {
-      const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'petting' } });
-      const heartOverlay = container.querySelector('.heart-overlay') as HTMLElement;
-      expect(heartOverlay).toBeTruthy();
-      expect(heartOverlay.className).toBe('heart-overlay');
-      component.$destroy();
-    });
-
-    it('should contain heart image with correct src', () => {
-      const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'petting' } });
-      const heartImg = container.querySelector('.heart-overlay img') as HTMLImageElement;
-      expect(heartImg).toBeTruthy();
-      expect(heartImg.src).toContain('heart.png');
-      component.$destroy();
-    });
-  });
-
-  describe('celebration overlay', () => {
-    it('should render 3 firework sprites during celebration state', () => {
-      const component = new MockPetComponent({
-        target: container,
-        props: {
-          ...defaultProps,
-          state: 'celebration',
-          celebrationSpritePath: 'assets/effects/fireworks.gif'
-        }
-      });
-
-      const celebrationOverlay = container.querySelector('.celebration-overlay');
-      expect(celebrationOverlay).toBeTruthy();
-
-      const fireworkSprites = container.querySelectorAll('.celebration-sprite');
-      expect(fireworkSprites.length).toBe(3);
-
-      // Verify each sprite has the correct class
-      expect(container.querySelector('.celebration-sprite-center')).toBeTruthy();
-      expect(container.querySelector('.celebration-sprite-left')).toBeTruthy();
-      expect(container.querySelector('.celebration-sprite-right')).toBeTruthy();
-
-      component.$destroy();
-    });
-
-    it('should show celebration overlay only during celebration state', () => {
-      const component = new MockPetComponent({
-        target: container,
-        props: {
-          ...defaultProps,
-          state: 'walking',
-          celebrationSpritePath: 'assets/effects/fireworks.gif'
-        }
-      });
-
-      // Walking state - no overlay
-      let overlay = container.querySelector('.celebration-overlay');
-      expect(overlay).toBeFalsy();
-
-      // Transition to celebration
-      component.$set({ state: 'celebration' });
-      overlay = container.querySelector('.celebration-overlay');
-      expect(overlay).toBeTruthy();
-
-      // Transition to petting
-      component.$set({ state: 'petting' });
-      overlay = container.querySelector('.celebration-overlay');
-      expect(overlay).toBeFalsy();
-
-      component.$destroy();
-    });
-
+  describe('celebration state', () => {
     it('should apply celebration data-state to container during celebration', () => {
       const component = new MockPetComponent({
         target: container,
@@ -422,28 +429,6 @@ describe('Pet.svelte Component', () => {
       // This data-state attribute is critical for animation-play-state: paused
 
       component.$destroy();
-    });
-
-    it('should clean up celebration overlay when component is destroyed', () => {
-      const component = new MockPetComponent({
-        target: container,
-        props: {
-          ...defaultProps,
-          state: 'celebration',
-          celebrationSpritePath: 'assets/effects/fireworks.gif'
-        }
-      });
-
-      // Verify overlay exists
-      let overlay = container.querySelector('.celebration-overlay');
-      expect(overlay).toBeTruthy();
-
-      // Destroy component
-      component.$destroy();
-
-      // Verify cleanup
-      overlay = container.querySelector('.celebration-overlay');
-      expect(overlay).toBeFalsy();
     });
   });
 });

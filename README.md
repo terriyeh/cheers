@@ -139,8 +139,23 @@ Your companion has 3 animation states using GIF-based animation:
   - GIF animation (4.32 seconds)
   - Triggered by note creation, task completion, link creation, word milestones
 - **Petting**: Content reaction when you click/tap (available anytime)
-  - Heart overlay animation (2 seconds)
+  - GIF-based petting animation
   - Returns to walking state after petting
+
+**GIF-Based Animation System:**
+
+Each pet state uses a separate animated GIF file for smooth, browser-native animation:
+
+- **Pet Sprites** (100px × 100px display size):
+  - `cat-walking-6fps.gif` - Looping walk cycle
+  - `cat-petting-6fps.gif` - Content reaction animation
+  - `cat-celebrating-6fps.gif` - Character celebrates
+- **Visual Effects** (128px × 128px display size):
+  - `fireworks.gif` - 3-firework overlay during celebrations
+- **Background Scene**:
+  - `Background_reg.png` - Tileable garden path (128px height)
+
+All frame animation is handled natively by the browser (no sprite sheets or CSS keyframes needed). This approach reduces complexity and ensures consistent performance across devices.
 
 **Movement System Features:**
 - Configurable speed (0-100% slider)
@@ -279,8 +294,14 @@ obsidian-pets/
 │       ├── pet.ts
 │       └── settings.ts
 ├── assets/
-│   ├── pet-sprite-sheet.png
-│   └── heart.png
+│   ├── cat-walking-6fps.gif       # Walking animation GIF
+│   ├── cat-petting-6fps.gif       # Petting animation GIF
+│   ├── cat-celebrating-6fps.gif   # Celebration animation GIF
+│   ├── effects/
+│   │   ├── fireworks.gif          # Celebration fireworks overlay
+│   │   └── heart.png              # Legacy asset (unused)
+│   └── backgrounds/
+│       └── Background_reg.png     # Default garden scene
 ├── styles.css
 ├── manifest.json
 └── package.json
@@ -292,8 +313,8 @@ obsidian-pets/
 
 ### Current Version (0.1.0 - Foundation + Movement)
 
-- ✅ Pet companion with 7 animation states
-- ✅ CSS-based walking/running system with speed control
+- ✅ Pet companion with 3 animation states (walking, petting, celebration)
+- ✅ CSS-based movement system with speed control (0-100%)
 - ✅ Petting interaction (click/tap anytime)
 - ✅ Welcome modal and settings
 - ✅ Mobile touch support with battery optimization

@@ -7,6 +7,7 @@ import { vi } from 'vitest';
 import { PetView, VIEW_TYPE_PET } from '../../src/views/PetView';
 import { WorkspaceLeaf, App } from '../mocks/obsidian';
 import type { PetState } from '../../src/types/pet';
+import { CELEBRATION_OVERLAY_CONSTANTS } from '../../src/utils/celebration-constants';
 
 describe('PetView', () => {
   let petView: PetView;
@@ -216,7 +217,7 @@ describe('PetView', () => {
 
       await petView.onClose();
 
-      vi.advanceTimersByTime(4320);
+      vi.advanceTimersByTime(CELEBRATION_OVERLAY_CONSTANTS.CELEBRATION_DURATION_MS);
 
       // getCurrentState should return null after close
       expect(petView.getCurrentState()).toBeNull();
@@ -266,7 +267,7 @@ describe('PetView', () => {
       petView.transitionState('celebration');
       expect(petView.getCurrentState()).toBe('celebration');
 
-      vi.advanceTimersByTime(4320);
+      vi.advanceTimersByTime(CELEBRATION_OVERLAY_CONSTANTS.CELEBRATION_DURATION_MS);
 
       expect(petView.getCurrentState()).toBe('walking');
       const container = petView.containerEl.querySelector('.obsidian-pets-container');
@@ -326,7 +327,7 @@ describe('PetView', () => {
       await petView.onOpen();
 
       petView.transitionState('celebration');
-      vi.advanceTimersByTime(4320);
+      vi.advanceTimersByTime(CELEBRATION_OVERLAY_CONSTANTS.CELEBRATION_DURATION_MS);
 
       const container = petView.containerEl.querySelector('.obsidian-pets-container');
       const component = petView.containerEl.querySelector('.pet-sprite-container');

@@ -36,11 +36,11 @@ describe('PetDisplay Integration', () => {
       expect(petView.containerEl.querySelector('.pet-sprite')).toBeTruthy();
     });
 
-    it('should have correct initial aria label', async () => {
+    it('should have correct initial alt text', async () => {
       await petView.onOpen();
 
-      const sprite = petView.containerEl.querySelector('.pet-sprite');
-      expect(sprite?.getAttribute('aria-label')).toBe('Pet is walking');
+      const sprite = petView.containerEl.querySelector('.pet-sprite') as HTMLImageElement;
+      expect(sprite?.getAttribute('alt')).toBe('Pet is walking');
     });
   });
 
@@ -274,9 +274,9 @@ describe('PetDisplay Integration', () => {
         const spriteContainer = petView.containerEl.querySelector('.pet-sprite-container');
         expect(spriteContainer?.getAttribute('data-state')).toBe(state);
 
-        // Aria label
-        const sprite = petView.containerEl.querySelector('.pet-sprite');
-        expect(sprite?.getAttribute('aria-label')).toBe(`Pet is ${state}`);
+        // Alt text on sprite img element
+        const sprite = petView.containerEl.querySelector('.pet-sprite') as HTMLImageElement;
+        expect(sprite?.getAttribute('alt')).toBe(`Pet is ${state}`);
       }
     });
 
@@ -295,13 +295,13 @@ describe('PetDisplay Integration', () => {
       const spriteContainer = petView.containerEl.querySelector('.pet-sprite-container');
       expect(spriteContainer?.getAttribute('data-state')).toBe('walking');
 
-      const sprite = petView.containerEl.querySelector('.pet-sprite');
-      expect(sprite?.getAttribute('aria-label')).toBe('Pet is walking');
+      const sprite = petView.containerEl.querySelector('.pet-sprite') as HTMLImageElement;
+      expect(sprite?.getAttribute('alt')).toBe('Pet is walking');
     });
   });
 
   describe('accessibility verification', () => {
-    it('should have proper ARIA labels for all states', async () => {
+    it('should have proper alt text for all states', async () => {
       await petView.onOpen();
 
       const states: PetState[] = [
@@ -315,9 +315,10 @@ describe('PetDisplay Integration', () => {
           petView.transitionState(state);
         }
 
-        const sprite = petView.containerEl.querySelector('.pet-sprite');
-        expect(sprite?.getAttribute('role')).toBe('img');
-        expect(sprite?.getAttribute('aria-label')).toBe(`Pet is ${state}`);
+        const sprite = petView.containerEl.querySelector('.pet-sprite') as HTMLImageElement;
+        // <img> elements have implicit role="img", no need to set it explicitly
+        expect(sprite?.tagName).toBe('IMG');
+        expect(sprite?.getAttribute('alt')).toBe(`Pet is ${state}`);
       }
     });
   });

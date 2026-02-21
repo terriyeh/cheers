@@ -4,6 +4,7 @@ import { PetStateMachine } from '../pet/PetStateMachine';
 import PetComponent from '../components/Pet.svelte';
 import type ObsidianPetsPlugin from '../main';
 import { WelcomeModal } from '../modals/WelcomeModal';
+import { PET_SPRITES, EFFECT_SPRITES, BACKGROUNDS, ASSET_DIRECTORIES } from '../utils/asset-paths';
 
 // Build-time constant injected by esbuild
 declare const __DEV__: boolean;
@@ -94,11 +95,12 @@ export class PetView extends ItemView {
       };
       this.stateMachine.addListener(this.stateChangeListener);
 
-      // Get asset paths with validation
-      const petSpritePath = this.getAssetPath('cat.gif'); // Walking animation GIF
-      const heartSpritePath = this.getAssetPath('heart.png', 'effects');
-      const backgroundPath = this.getAssetPath('Background_reg.png', 'backgrounds');
-      const celebrationSpritePath = this.getAssetPath('fireworks.gif', 'effects');
+      // Get asset paths with validation using centralized constants
+      const walkingSpritePath = this.getAssetPath(PET_SPRITES.WALKING);
+      const pettingSpritePath = this.getAssetPath(PET_SPRITES.PETTING);
+      const celebrationSpritePath = this.getAssetPath(PET_SPRITES.CELEBRATING);
+      const fireworksSpritePath = this.getAssetPath(EFFECT_SPRITES.FIREWORKS, ASSET_DIRECTORIES.EFFECTS);
+      const backgroundPath = this.getAssetPath(BACKGROUNDS.DEFAULT, ASSET_DIRECTORIES.BACKGROUNDS);
 
       // Get plugin settings for pet name and movement speed (reuse plugin variable from above)
       const petName = plugin?.settings?.petName ?? 'Kit';
@@ -109,10 +111,11 @@ export class PetView extends ItemView {
         target: this.containerDiv,
         props: {
           state: this.stateMachine.getCurrentState(),
-          petSpritePath: petSpritePath,
-          heartSpritePath: heartSpritePath,
-          backgroundPath: backgroundPath,
+          walkingSpritePath: walkingSpritePath,
+          pettingSpritePath: pettingSpritePath,
           celebrationSpritePath: celebrationSpritePath,
+          fireworksSpritePath: fireworksSpritePath,
+          backgroundPath: backgroundPath,
           petName: petName,
           movementSpeed: movementSpeed,
         },
