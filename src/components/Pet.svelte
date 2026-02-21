@@ -7,6 +7,7 @@
     calculateGifAnimationDuration,
     calculateSpeedInPixelsPerSecond,
   } from '../utils/animation';
+  import { PET_SPRITES, EFFECT_SPRITES } from '../utils/asset-paths';
 
   /**
    * Current state of the pet
@@ -14,24 +15,29 @@
   export let state: PetState = 'walking';
 
   /**
-   * Path to the pet sprite GIF (passed from PetView)
+   * Path to the walking sprite GIF (passed from PetView)
    */
-  export let petSpritePath: string = 'assets/cat-walking-6fps.gif';
+  export let walkingSpritePath: string = `assets/${PET_SPRITES.WALKING}`;
 
   /**
-   * Path to the heart sprite (passed from PetView)
+   * Path to the petting sprite GIF (passed from PetView)
    */
-  export let heartSpritePath: string = 'assets/heart.png';
+  export let pettingSpritePath: string = `assets/${PET_SPRITES.PETTING}`;
+
+  /**
+   * Path to the celebration sprite GIF (passed from PetView)
+   */
+  export let celebrationSpritePath: string = `assets/${PET_SPRITES.CELEBRATING}`;
+
+  /**
+   * Path to the fireworks overlay GIF (passed from PetView)
+   */
+  export let fireworksSpritePath: string = `assets/effects/${EFFECT_SPRITES.FIREWORKS}`;
 
   /**
    * Path to the background scene (passed from PetView)
    */
   export let backgroundPath: string = '';
-
-  /**
-   * Path to celebration sprite sheet
-   */
-  export let celebrationSpritePath: string = '';
 
   /**
    * Pet's name (from settings)
@@ -56,8 +62,21 @@
   let spriteWidth = ANIMATION_CONSTANTS.DEFAULT_PET_WIDTH; // Default fallback (natural GIF width)
   let spriteHeight = ANIMATION_CONSTANTS.DEFAULT_PET_WIDTH; // Default fallback (natural GIF height)
 
-  // Reactive pet width based on loaded GIF dimensions
-  $: petWidth = spriteWidth;
+  // Fixed display width for consistent sizing
+  const petWidth = ANIMATION_CONSTANTS.PET_DISPLAY_SIZE;
+
+  /**
+   * Select the appropriate sprite GIF based on current state
+   * Each state has its own GIF animation
+   * Walking: cat-walking-6fps.gif
+   * Petting: cat-petting-6fps.gif
+   * Celebration: cat-celebrating-6fps.gif (plus fireworks overlay)
+   */
+  $: petSpritePath = state === 'celebration'
+    ? celebrationSpritePath
+    : state === 'petting'
+    ? pettingSpritePath
+    : walkingSpritePath;
 
   /**
    * Clamp movement speed to valid range (0-100)
@@ -74,7 +93,7 @@
   /**
    * Calculate base speed in pixels per second using reference container width
    * This ensures consistent movement speed regardless of actual container size
-   * Uses dynamically detected sprite width for accurate calculations
+   * Uses fixed 100px display width for calculations (PET_DISPLAY_SIZE)
    */
   $: speedInPixelsPerSecond = calculateSpeedInPixelsPerSecond(clampedSpeed, petWidth);
 
@@ -82,8 +101,8 @@
   let movementDuration = 15; // Default fallback value
 
   /**
-   * Handle GIF image load - detect dimensions dynamically
-   * This allows any GIF size to work without manual configuration
+   * Handle GIF image load - verify image loaded successfully
+   * GIF is displayed at fixed 100x100 size regardless of natural dimensions
    * GIF animation is handled by browser, no frame management needed
    */
   function handleSpriteLoad(): void {
@@ -91,7 +110,7 @@
       spriteWidth = spriteImgElement.naturalWidth;
       spriteHeight = spriteImgElement.naturalHeight;
 
-      // Recalculate movement range with new GIF dimensions
+      // Recalculate movement range with fixed display size
       updateMovementRange();
     }
   }
@@ -99,7 +118,7 @@
   /**
    * Calculate movement range for adaptive edge-to-edge movement
    * Also calculates duration based on constant speed to maintain consistent px/s across window sizes
-   * Uses dynamically detected GIF width for accurate boundary calculations
+   * Uses fixed 100px display width for boundary calculations (PET_DISPLAY_SIZE)
    */
   function updateMovementRange(): void {
     if (!containerEl) return;
@@ -107,7 +126,7 @@
     const containerWidth = containerEl.offsetWidth;
 
     // Maximum left position (container width - pet width)
-    // This gives true edge-to-edge movement using dynamically detected GIF width
+    // This gives true edge-to-edge movement using fixed 100px display width
     const maxLeft = containerWidth - petWidth;
 
     // Calculate actual distance for this container
@@ -126,6 +145,8 @@
     containerEl.style.setProperty('--max-left', `${maxLeft}px`);
     containerEl.style.setProperty('--movement-duration', `${movementDuration}s`);
     containerEl.style.setProperty('--pet-width', `${petWidth}px`);
+    containerEl.style.setProperty('--pet-display-size', `${ANIMATION_CONSTANTS.PET_DISPLAY_SIZE}px`);
+    containerEl.style.setProperty('--celebration-display-size', `${ANIMATION_CONSTANTS.CELEBRATION_DISPLAY_SIZE}px`);
   }
 
   /**
@@ -203,7 +224,6 @@
   $: ariaLabel = pettingEnabled
     ? `Pet ${petName}`
     : `Pet ${petName} (currently busy)`;
-  $: showHeart = state === 'petting';
   $: showCelebration = state === 'celebration';
 
   // Recalculate movement duration when speed changes
@@ -275,8 +295,8 @@
         on:click={handlePetInteraction}
         on:keydown={handleKeyDown}
         on:touchend={handleTouchEnd}>
-        <!-- Animated GIF with dynamic dimension detection -->
-        <!-- Image renders at natural size; dimensions detected for calculations only -->
+        <!-- Animated GIF that changes based on state -->
+        <!-- Walking: cat-walking-6fps.gif, Petting: cat-petting-6fps.gif -->
         <img
           bind:this={spriteImgElement}
           on:load={handleSpriteLoad}
@@ -284,13 +304,6 @@
           src={petSpritePath}
           alt={`Pet is ${state}`}
         />
-
-        <!-- Heart overlay during petting state -->
-        {#if showHeart}
-          <div class="heart-overlay" aria-hidden="true">
-            <img src={heartSpritePath} alt="" />
-          </div>
-        {/if}
       </div>
     </div>
   </div>
@@ -301,19 +314,19 @@
       <!-- Center firework (top) -->
       <img
         class="celebration-sprite celebration-sprite-center"
-        src={celebrationSpritePath}
+        src={fireworksSpritePath}
         alt=""
       />
       <!-- Left firework (lower) -->
       <img
         class="celebration-sprite celebration-sprite-left"
-        src={celebrationSpritePath}
+        src={fireworksSpritePath}
         alt=""
       />
       <!-- Right firework (lower) -->
       <img
         class="celebration-sprite celebration-sprite-right"
-        src={celebrationSpritePath}
+        src={fireworksSpritePath}
         alt=""
       />
     </div>
@@ -347,7 +360,7 @@
   /* Position cat on the road in the background, re-check when changing backgrounds */
   .pet-position-wrapper {
     position: absolute;
-    bottom: 64px; /* Offset from bottom - aligns with center of 128px background */
+    bottom: 64px; /* Offset from bottom - aligns pet (100px) with center of background path */
     left: 0;
   }
 
@@ -382,55 +395,21 @@
     border-radius: 4px;
   }
 
-  /* Disabled state appearance - but not during sleeping */
-  .pet-sprite-container:not([data-state='sleeping']) .pet-sprite-wrapper[aria-disabled="true"] {
-    opacity: 0.7;
-  }
-
   .pet-sprite {
-    /* Width and height set dynamically via inline styles based on loaded image dimensions */
     display: block;
+    width: var(--pet-display-size, 100px); /* Fixed display width for consistent sizing (PET_DISPLAY_SIZE) */
+    height: var(--pet-display-size, 100px); /* Fixed display height for consistent sizing (PET_DISPLAY_SIZE) */
     image-rendering: pixelated; /* Keep pixel art crisp */
     image-rendering: -moz-crisp-edges;
     image-rendering: crisp-edges;
   }
 
-  /* Heart overlay positioned top-right diagonal */
-  .heart-overlay {
-    position: absolute;
-    top: -8px;
-    right: -8px;
-    z-index: 10;
-    animation: floatUp 2s ease-out forwards;
-    pointer-events: none;
-  }
-
-  .heart-overlay img {
-    width: 32px;
-    height: 32px;
-    display: block;
-  }
-
-  /* Float upward animation for heart - fades out while rising */
-  @keyframes floatUp {
-    0% {
-      opacity: 0;
-      transform: translateY(0) scale(0.8);
-    }
-    15% {
-      opacity: 1;
-      transform: translateY(-5px) scale(1);
-    }
-    100% {
-      opacity: 0;
-      transform: translateY(-40px) scale(1.1);
-    }
-  }
-
   /* GIF-based animation system */
   /* GIF handles frame animation internally - no CSS sprite sheet keyframes needed */
   /* Browser natively plays GIF frames, reducing CSS complexity */
-  /* Walking: cat-walking-6fps.gif, Celebration: fireworks.gif (both browser-native animation) */
+  /* GIF changes based on state: walking or petting */
+  /* Walking: cat-walking-6fps.gif, Petting: cat-petting-6fps.gif */
+  /* Celebration uses fireworks overlay (fireworks.gif) */
 
   /* Apply movement animations - pet moves continuously in all states */
   /* Movement speed is controlled by --movement-duration CSS variable */
@@ -444,11 +423,14 @@
     animation-delay: -7.5s; /* Sync with position animation */
   }
 
-  /* Pause pet movement during celebration (4.32 seconds) */
-  /* Pet freezes in place while fireworks display plays */
+  /* Pause pet movement during celebration and petting */
+  /* During celebration: Pet freezes in place while fireworks display plays (4.32 seconds) */
+  /* During petting: Pet pauses to enjoy being petted */
   /* @see CELEBRATION_OVERLAY_CONSTANTS.CELEBRATION_DURATION_MS in src/utils/celebration-constants.ts */
   .pet-sprite-container[data-state='celebration'] .pet-position-wrapper,
-  .pet-sprite-container[data-state='celebration'] .pet-flip-wrapper {
+  .pet-sprite-container[data-state='celebration'] .pet-flip-wrapper,
+  .pet-sprite-container[data-state='petting'] .pet-position-wrapper,
+  .pet-sprite-container[data-state='petting'] .pet-flip-wrapper {
     animation-play-state: paused;
   }
 
@@ -459,7 +441,7 @@
     }
     50% {
       /* Right edge - dynamically calculated, fallback uses CSS custom property */
-      left: var(--max-left, calc(100% - var(--pet-width, 128px)));
+      left: var(--max-left, calc(100% - var(--pet-width, 100px)));
     }
     100% {
       left: 0px; /* Back to left edge */
@@ -489,8 +471,8 @@
   .celebration-sprite {
     position: absolute;
     display: block;
-    width: 128px; /* FIREWORK_DISPLAY_WIDTH - Scales down from 256px native GIF size */
-    height: 128px; /* FIREWORK_DISPLAY_HEIGHT - See celebration-constants.ts */
+    width: var(--celebration-display-size, 128px); /* FIREWORK_DISPLAY_WIDTH - Scales down from 256px native GIF size */
+    height: var(--celebration-display-size, 128px); /* FIREWORK_DISPLAY_HEIGHT - See celebration-constants.ts */
     image-rendering: auto; /* Smooth rendering for celebration effects */
     /* GIF animation is handled natively by the browser */
   }

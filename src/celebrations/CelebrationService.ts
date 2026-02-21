@@ -14,6 +14,7 @@
 
 import type { TFile, Editor, EventRef } from 'obsidian';
 import type ObsidianPetsPlugin from '../main';
+import { CELEBRATION_OVERLAY_CONSTANTS } from '../utils/celebration-constants';
 
 /**
  * Celebration event types for cooldown tracking
@@ -24,10 +25,10 @@ type CelebrationEventType = 'note-create' | 'task-complete' | 'link-create' | 'w
  * CelebrationService manages celebration triggers and cooldowns
  */
 export class CelebrationService {
-	// Constants for timing and limits (must match CSS animation duration)
+	// Constants for timing and limits
 	private static readonly EDITOR_DEBOUNCE_MS = 500;
-	private static readonly CELEBRATION_DURATION_MS = 1800; // Must match CSS animation
 	private static readonly MAX_CONTENT_LENGTH = 1000000; // 1MB of text (~500 pages)
+	// Note: Celebration duration uses CELEBRATION_OVERLAY_CONSTANTS.CELEBRATION_DURATION_MS (4320ms)
 
 	private plugin: ObsidianPetsPlugin;
 
@@ -271,10 +272,11 @@ export class CelebrationService {
 			}
 
 			// Success - schedule flag reset after celebration animation completes
+			// Uses canonical celebration duration (4320ms / 4.32 seconds)
 			this.celebrationTimeout = window.setTimeout(() => {
 				this.isCelebrating = false;
 				this.celebrationTimeout = undefined;
-			}, CelebrationService.CELEBRATION_DURATION_MS);
+			}, CELEBRATION_OVERLAY_CONSTANTS.CELEBRATION_DURATION_MS);
 
 			console.debug(`[CelebrationService] Celebration triggered for ${eventType}`);
 		} catch (error) {

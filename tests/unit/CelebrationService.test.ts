@@ -7,6 +7,7 @@ import { vi } from 'vitest';
 import type { App, TFile, Editor, Vault, Workspace } from 'obsidian';
 import type ObsidianPetsPlugin from '../../src/main';
 import type { ObsidianPetsSettings } from '../../src/types/settings';
+import { CELEBRATION_OVERLAY_CONSTANTS } from '../../src/utils/celebration-constants';
 
 // Mock types for testing
 interface MockPlugin {
@@ -388,7 +389,7 @@ describe('CelebrationService', () => {
 			// This celebrates for 100 milestone
 
 			// Wait for celebration to complete
-			vi.advanceTimersByTime(4320);
+			vi.advanceTimersByTime(CELEBRATION_OVERLAY_CONSTANTS.CELEBRATION_DURATION_MS);
 			vi.clearAllMocks();
 
 			// Now at 495 words (between 100 and 500)
@@ -422,7 +423,7 @@ describe('CelebrationService', () => {
 			// This celebrates for 100 milestone first
 
 			// Wait for celebration to complete
-			vi.advanceTimersByTime(4320);
+			vi.advanceTimersByTime(CELEBRATION_OVERLAY_CONSTANTS.CELEBRATION_DURATION_MS);
 			vi.clearAllMocks();
 
 			// Now at 995 words (between 500 and 1000)
@@ -602,7 +603,7 @@ describe('CelebrationService', () => {
 			vi.clearAllMocks();
 
 			// After 2.17 seconds
-			vi.advanceTimersByTime(4320);
+			vi.advanceTimersByTime(CELEBRATION_OVERLAY_CONSTANTS.CELEBRATION_DURATION_MS);
 
 			// Second celebration should work
 			createHandler?.(mockFile2);
