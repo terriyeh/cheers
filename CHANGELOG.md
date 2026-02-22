@@ -96,6 +96,14 @@ Research into VS Code Pets (2.26M installs) and the Obsidian pet plugin landscap
 
 ## [Unreleased]
 
+### Changed - MVP Scope Redefined (2026-02-22)
+
+- Word count celebrations: replaced incremental milestone list (100, 500, 1000, 3500, 5000) with per-note goal (set via `word-goal` frontmatter) and per-day goal (configured in settings); at least one required when word count celebration is enabled
+- Toast notifications added as per-trigger option alongside fireworks; each celebration type now has independent Fireworks and Toast toggles, both on by default
+- Dashboard view added to v1.0 scope: Stats tab within pet panel, concentric word count rings (daily outer, per-note inner), daily activity tallies for enabled celebration types
+- Butterfly chase moved from v1.0 to v1.1
+- Companion system moved from v1.0 to v1.2; ships alongside cosmetics and seasonal assets due to shared rendering complexity
+
 ### Changed - Animation and Movement System Simplification (2026-02-18)
 
 **Animation System Migration (Sprite Sheets → GIF)**:
