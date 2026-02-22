@@ -10,7 +10,7 @@ Your vault companion that celebrates you.
 
 ## Overview
 
-Obsidian Pets transforms your vault into a delightful space by celebrating your writing journey. Your companion notices when you create notes, reach word count milestones, check off tasks, and engage with your knowledge base—responding with ambient celebrations that make your vault feel alive.
+Obsidian Pets transforms your vault into a delightful space by celebrating your writing journey. Your companion notices when you create notes, reach word count goals, check off tasks, and engage with your knowledge base—responding with ambient celebrations that make your vault feel alive.
 
 **Philosophy:** *Feeling the plugin, not thinking about it.*
 
@@ -33,14 +33,14 @@ We're not here to:
 
 We're here to:
 - ✅ Celebrate when you create a daily note
-- ✅ Cheer when you reach word count milestones
+- ✅ Cheer when you reach your word count goals
 - ✅ Notice when you check off tasks
 - ✅ Respond to your vault activities with joy
 - ✅ Provide ambient emotional support
 
 ### Key Features
 
-- **Vault-Aware Celebrations** ✅ IMPLEMENTED (v0.2.0, Feb 12 2026): Pet celebrates note creation, task completion, link creation, and word milestones
+- **Vault-Aware Celebrations** ✅ IMPLEMENTED (v0.2.0, Feb 12 2026): Pet celebrates note creation, task completion, link creation, and word count goals
 - **Interactive Pet Companion** ✅ IMPLEMENTED: 3 animation states with GIF-based animations
   - Walking, celebration, petting
   - CSS-based movement system with speed control
@@ -48,8 +48,11 @@ We're here to:
 - **Ambient Presence** ✅ IMPLEMENTED: Pet walks across panel with configurable speed (0-100%)
   - Linear speed scaling (0% = 33s duration, 100% = 6s duration)
   - GPU-accelerated CSS animations (<0.1% CPU)
-- **User-Configurable Triggers** ✅ IMPLEMENTED (v0.2.0): Individual toggles for each celebration type + custom word count milestones
-- **Pets Live Their Lives Alongside Yours** 🚧 PLANNED (v0.4.0+): Multi-pet with emergent behaviors and relationships
+- **User-Configurable Triggers** ✅ IMPLEMENTED (v0.2.0): Individual toggles for each celebration type, with independent fireworks and toast controls
+- **Toast Notifications** 🚧 PLANNED (v1.0): Per-trigger toast messages when your pet cheers — on by default, toggleable per celebration type
+- **Progress Dashboard** 🚧 PLANNED (v1.0): Stats tab within the pet panel — concentric word count rings and daily activity tallies for enabled celebration types
+- **Butterfly Chase** 🚧 PLANNED (v1.1): Release a butterfly and watch your pet chase it
+- **Crew & Cosmetics** 🚧 PLANNED (v1.2): Optional companion pets + accessories (hats, scarves) + seasonal backgrounds
 - **Privacy-First** ✅ IMPLEMENTED: Fully local, no network calls, no telemetry
 - **Mobile Support** ✅ IMPLEMENTED: Touch-enabled for phones and tablets, battery-optimized
 
@@ -93,10 +96,11 @@ You can change these settings later using **Command Palette → "Edit Pet Settin
 ### 3. Start Writing
 
 Your pet celebrates when you:
-- ✅ **Create any new note** - Fireworks animation
-- ✅ **Check off task checkboxes** - Fireworks animation
-- ✅ **Add links between notes** (wiki `[[link]]` or markdown `[link](url)`) - Fireworks animation
-- ✅ **Reach word count milestones** (default: 100, 500, 1000, 3500, 5000 words) - Fireworks animation
+- ✅ **Create any new note** - Fireworks + toast
+- ✅ **Check off task checkboxes** - Fireworks + toast
+- ✅ **Add links between notes** (wiki `[[link]]` or markdown `[link](url)`) - Fireworks + toast
+- ✅ **Reach your daily word goal** (configured in settings) - Fireworks + toast
+- ✅ **Reach your per-note word goal** (set `word-goal: [number]` in note frontmatter) - Fireworks + toast
 
 Each action triggers a celebration animation—no input required from you. Just write, and your pet celebrates alongside you. Configure which celebrations you want in Settings.
 
@@ -106,18 +110,21 @@ Each action triggers a celebration animation—no input required from you. Just 
 
 ### Built-in Celebrations
 
-| Action | Animation | Configurable |
-|--------|-----------|--------------|
-| **Create any note** (.md files) | Fireworks | ✅ On/Off |
-| **Check off task** (`- [x]`) | Fireworks | ✅ On/Off |
-| **Add a link** (`[[wiki]]` or `[markdown](url)`) | Fireworks | ✅ On/Off |
-| **Word count milestone** (configurable thresholds) | Fireworks | ✅ Custom thresholds |
+| Action | Fireworks | Toast | Configurable |
+|--------|-----------|-------|--------------|
+| **Create any note** (.md files) | ✅ On/Off | ✅ On/Off | Per-trigger |
+| **Check off task** (`- [x]`) | ✅ On/Off | ✅ On/Off | Per-trigger |
+| **Add a link** (`[[wiki]]` or `[markdown](url)`) | ✅ On/Off | ✅ On/Off | Per-trigger |
+| **Reach daily word goal** (vault-wide, resets midnight) | ✅ On/Off | ✅ On/Off | Goal set in settings |
+| **Reach per-note word goal** (`word-goal` frontmatter) | ✅ On/Off | ✅ On/Off | Goal set per note |
 
 ### Customization
 
 Configure celebrations in **Settings → Obsidian Pets → Celebrations**:
 - **Individual toggles**: Enable/disable each celebration type independently
-- **Word count milestones**: Set custom thresholds (default: 100, 500, 1000, 3500, 5000 words)
+- **Per-trigger controls**: Each type has independent Fireworks and Toast toggles (both on by default)
+- **Daily word goal**: Set your target words per day in settings (vault-wide, resets at midnight)
+- **Per-note word goal**: Add `word-goal: [number]` to any note's frontmatter to set a target for that document
 - **Race condition prevention**: Only one celebration plays at a time (prevents overlapping animations)
 - **Smart detection**: Only celebrates increases (won't trigger when unchecking tasks or removing links)
 
@@ -137,7 +144,7 @@ Your companion has 3 animation states using GIF-based animation:
   - GIF handles frame animation internally, no sprite sheets
 - **Celebration**: Fireworks animation triggered by vault events (v0.2.0)
   - GIF animation (4.32 seconds)
-  - Triggered by note creation, task completion, link creation, word milestones
+  - Triggered by note creation, task completion, link creation, word count goals
 - **Petting**: Content reaction when you click/tap (available anytime)
   - GIF-based petting animation
   - Returns to walking state after petting
@@ -210,16 +217,16 @@ Obsidian Pets works beautifully alongside other plugins to create your perfect w
 
 Open **Settings → Obsidian Pets → Celebrations** to configure:
 
-**Individual Toggles:**
+**Individual Toggles** (each type has independent Fireworks and Toast controls):
 - ✅ **Note creation** - Celebrate when creating new .md files
 - ✅ **Task completion** - Celebrate when checking off checkboxes (`- [x]`)
 - ✅ **Link creation** - Celebrate when adding wiki links or markdown links
-- ✅ **Word milestones** - Celebrate when reaching word count thresholds
+- ✅ **Word count goals** - Celebrate when reaching your daily or per-note goal
 
-**Word Milestone Configuration** (shown only when word milestones enabled):
-- Enter comma-separated numbers (e.g., `100, 500, 1000, 3500, 5000`)
-- Auto-validates: removes duplicates, sorts ascending, filters invalid numbers
-- Celebrates once per milestone per document (won't re-celebrate same milestone)
+**Word Count Goal Configuration** (shown only when word count goals enabled):
+- **Daily goal**: Set a target number of words to write per day across your vault (resets at midnight)
+- **Per-note goal**: Add `word-goal: [number]` to any note's frontmatter to set a target for that document
+- At least one goal type must be configured when word count celebrations are enabled
 
 ---
 
@@ -311,44 +318,38 @@ obsidian-pets/
 
 ## Roadmap
 
-### Current Version (0.1.0 - Foundation + Movement)
+### Current (Foundation + Celebrations)
 
 - ✅ Pet companion with 3 animation states (walking, petting, celebration)
 - ✅ CSS-based movement system with speed control (0-100%)
 - ✅ Petting interaction (click/tap anytime)
-- ✅ Welcome modal and settings
+- ✅ Garden background scene
+- ✅ Vault event listeners — note creation, task completion, link creation
+- ✅ Fireworks celebration animations
+- ✅ User-configurable triggers with per-type toggles
+- ✅ Welcome modal and settings persistence
 - ✅ Mobile touch support with battery optimization
 - ✅ GPU-accelerated animations (60 FPS, <0.1% CPU)
 
-### v0.2.0 - Celebration System (In Progress)
+### v1.0 — MVP (Community Plugin Submission)
 
-- 🚧 Vault event listeners (note creation, tasks, links)
-- 🚧 Celebration animations with emoji speech bubbles
-- 🚧 User-configurable triggers
-- 🚧 Word count milestone tracking
-- 🚧 Cooldown system (prevent spam)
+- 🚧 Toast notifications — per-trigger, on by default, independent of fireworks
+- 🚧 Word count goals — daily goal (settings) and per-note goal (frontmatter), replacing milestone list
+- 🚧 Progress dashboard — Stats tab within the pet panel:
+  - Concentric word count rings (daily outer, per-note inner)
+  - Daily activity tallies for enabled celebration types
+- 🚧 Settings page — all settings accessible via Plugin Settings tab
 
-### v0.3.0 - Enhanced Experience
+### v1.1 — Interactivity + Vault Health
 
-- 📅 Custom celebration messages (user-entered text)
-- 📅 Celebration banner UI (toast notifications)
-- 📅 Additional movement patterns (zigzag, bounce, figure-8)
-- 📅 Speed variation (±10% randomization)
-- 📅 Background themes
-- 📅 Celebration sound effects (optional)
+- 📅 Butterfly chase — release a butterfly, watch your pet chase it
+- 📅 Dangling links tally on dashboard — unresolved `[[links]]`; fixing them counts as progress
 
-### v0.4.0+ - Multi-Pet & Relationships
+### v1.2 — Scene & Cosmetics
 
-**Architecture Strategy: CSS for Rendering, JavaScript for Logic**
-
-- 📅 **Phase 2.5:** Multi-pet (CSS-only, no awareness)
-- 📅 **Phase 3:** Position tracking + simple behaviors (celebrate together when nearby)
-- 📅 **Phase 4:** Following/chasing with basic AI
-- 📅 **Phase 5:** Neural network for emergent behavior (experimental)
-- 📅 Multiple pet types (cat, dog, bunny, etc.)
-- 📅 Seasonal celebration packs ($1.99)
-- 📅 Premium backgrounds ($1.99)
-- 📅 Community-contributed pets
+- 📅 Companion pets (0–2 optional companions, crew celebrating together)
+- 📅 Cosmetics system — hats, scarves, accessories with layered sprite rendering
+- 📅 Seasonal backgrounds — spring, summer, autumn, winter scenes
 
 ---
 
@@ -375,7 +376,7 @@ obsidian-pets/
 - Check **Settings → Obsidian Pets → Celebrations** to verify triggers are enabled
 - Celebrations use race condition prevention (only one at a time) - not cooldowns
 - Link celebrations require content inside brackets (won't trigger on empty `[[]]`)
-- Word milestones celebrate once per threshold per document
+- Word count goal celebrations fire when you hit 100% of your daily or per-note goal
 - Restart Obsidian if celebrations stop working after plugin update
 
 ### Welcome modal doesn't appear

@@ -75,20 +75,20 @@ Research into VS Code Pets (2.26M installs) and the Obsidian pet plugin landscap
 
 ### Next Steps
 
-**v0.2.0 - Celebration System (Simple & Focused):**
-- Vault event listeners (note creation, tasks, links, word counts)
-- Emoji speech bubbles for celebrations (no text messages)
-- User-configurable celebration triggers
-- Milestone tracking with cooldowns
-- Settings UI for customization
-- State remapping (remove "talking"/"listening" states)
+**v1.0 - MVP (Community Plugin Submission):**
+- Toast notifications — per-trigger (fireworks + toast independent toggles), on by default
+- Word count goals — daily goal (settings) + per-note goal (frontmatter), replacing milestone list
+- Progress dashboard — Stats tab in pet panel with concentric word count rings and daily activity tallies
+- Settings page — all settings accessible via Plugin Settings tab
 
-**v0.3.0+ - Enhanced Experience:**
-- Custom celebration messages (user-entered text)
-- Celebration banner UI (toast notifications)
-- Immersion behaviors (pets react to each other)
-- Relationships (multiple pets interact like VS Code Pets friends)
-- Adventures (background changes)
+**v1.1 - Interactivity + Vault Health:**
+- Butterfly chase interaction (user-triggered)
+- Dangling links tally on dashboard
+
+**v1.2 - Scene & Cosmetics:**
+- Companion pets (0–2 optional, crew celebrating together)
+- Cosmetics system (hats, scarves, accessories)
+- Seasonal background assets (spring, summer, autumn, winter)
 
 **Note:** Companion music feature removed - recommend pairing with [Soundscapes plugin](https://github.com/andrewmcgivery/obsidian-soundscapes) instead
 

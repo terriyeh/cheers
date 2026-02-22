@@ -1,9 +1,10 @@
-# Obsidian Pets - Feature List
+# Cheers! (working title) — Feature List
+# Public plugin name: Obsidian Pets
 
 ## Vision
-Creator of delightful moments in your vault. 
+Creator of delightful moments in your vault.
 
-Celebrates your vault engagaement and progression. 
+Celebrates your vault engagement and progression.
 
 A plugin you feel, not think about.
 
@@ -31,55 +32,77 @@ A plugin you feel, not think about.
 - **Cart approach**: Pets periodically approach cart → pause → return to walking (ambient behavior)
 - **Celebrations**: Vault events trigger celebration animation state + separate fireworks animation
 
-### 4. Vault-Aware Celebrations (Phase 2)
+### 4. Vault-Aware Celebrations
 - **Triggers** (user-configurable on/off):
   - Daily note creation
   - Any note creation
   - Link creation
   - Task completion
-  - Word count milestones (custom thresholds)
+  - Word count goals (see below)
+- **Per-trigger options** (independent toggles for each trigger type):
+  - **Fireworks**: Show fireworks overlay animation (on by default)
+  - **Toast**: Show Obsidian notice/toast message (on by default)
+- **Word count goal types** (at least one required when word count celebration is enabled):
+  - **Per-note goal**: Set via frontmatter in the note (`word-goal: 10000`). Celebrates when note reaches 100% of goal.
+  - **Per-day goal**: Single number in plugin settings (vault-wide total words written today, resets at midnight). Celebrates when daily total reaches 100% of goal.
+  - **Consideration (not decided)**: Also celebrate at 50% of each goal to keep the pet lively during longer sessions.
 - **Cooldown system**: Prevent celebration spam
 - **Animation**: Play celebration sprite state when triggered
 
-### 5. Seasonal Transformation
+### 5. Dashboard View
+- **Access**: Tab toggle within the same plugin panel, following Obsidian Files core plugin tab pattern (tabs at top of view)
+- **Tabs**: [Pet] and [Stats], switch between views without opening a separate panel
+- **Concentric word count rings**:
+  - **Outer ring**: Daily word count progress toward daily goal. Always shown when word count celebration is enabled.
+  - **Inner ring**: Per-note word count progress toward `word-goal` frontmatter value. Only renders when the current note has a `word-goal` set — absent otherwise (not an empty ring).
+- **Activity tallies** (shown only for celebration types that are toggled ON):
+  - Tasks completed today
+  - Notes created today
+  - Links created today
+- **Dangling links tally**: Deferred to V1.1. Framing: each unresolved `[[link]]` you fill counts as +1 progress.
+- **All counters reset at midnight**
+
+### 6. Seasonal Transformation
 - **Fountain states**: 4 variations painted into background (flowing → sparkling → reflective → frozen)
 - **Ambient elements**: Butterflies → fireflies → leaves → snowflakes (painted in)
 - **Lighting**: Different atmospheric lighting per season (painted into backgrounds)
 - **Cart decorations**: Seasonal wreaths/decorations (painted into backgrounds)
 - [TBD, may not do] **Automatic switching**: Season detection based on current date
 
-### 6. Cosmetics System
+### 7. Cosmetics System
 - **Slots**: 3 per main pet (hat, scarf, accessory)
 - **Application**: Layered sprite rendering (base + cosmetic layers)
 - **Storage**: Save equipped cosmetics to settings
 - [TBD, may not do] **Preview**: Show cosmetics in settings UI
 
-### 7. Settings & Persistence
+### 8. Settings & Persistence
 - **Pet settings**:
   - Pet name (1-30 characters, alphanumeric + spaces)
-  - [Existing, remove] User name (0-30 characters, optional)
   - Companion count (0, 1, or 2)
   - Movement speed (0-100%)
-- **Celebration settings** (Phase 2):
-  - Toggle for each trigger type (daily notes, tasks, etc.)
-  - Custom word count thresholds
+- **Celebration settings**:
+  - Toggle for each trigger type (daily notes, tasks, links, word count)
+  - Per-trigger fireworks toggle (on/off, default on)
+  - Per-trigger toast toggle (on/off, default on)
+  - Daily word goal (number, required when word count celebration is on)
+  - Per-note word goal: set in note frontmatter (`word-goal: [number]`), not in plugin settings
 - **Data storage**: Local JSON via Obsidian Plugin API
 
-### 8. UI Components
-- **Pet panel**: Sidebar view with garden scene + pet(s)
+### 9. UI Components
+- **Plugin panel**: Sidebar view with two tabs — Pet tab (garden scene + pet) and Stats tab (dashboard)
 - **Welcome modal**: First-run setup (pet name, celebration events)
-- **Settings modal**: Edit pet settings (accessible via command palette) -> change to editing in Plugin Settings page
+- **Settings page**: Plugin Settings tab (Settings → Obsidian Pets) — not a modal
 - **Butterfly button**: Clickable icon to release butterfly
-- **Speed slider**: Control movement speed (in settings or panel)
+- **Speed slider**: Control movement speed (in settings)
 
-### 9. Performance
+### 10. Performance
 - **GPU acceleration**: CSS animations on compositor thread
 - **Mobile optimization**: Touch-enabled, battery-efficient
 - **Frame rate**: 60 FPS target
 - **CPU usage**: <0.1% target (CSS handles animation)
 
-### 10. Technical Constraints
-- **No dynamic lighting system** (deferred to Phase 4+)
+### 11. Technical Constraints
+- **No dynamic lighting system** (deferred to V1.2+)
 - **No multi-layer rendering engine** (backgrounds are single images)
 - **No mix-and-match seasonal elements** (entire scene swaps)
 - **Privacy-first**: No network calls, fully local
@@ -88,41 +111,44 @@ A plugin you feel, not think about.
 
 ## Phase Breakdown
 
-### Phase 1 (Complete)
+### V1.0 — MVP (Community Plugin Submission)
+**Complete:**
 - Movement system (CSS-based walking)
-- Basic pet gifs for each state
+- Basic pet GIFs for each state (walk, celebrate, pet)
 - Petting interaction
+- Background scene (garden path)
+- Vault event listeners + celebration triggers (note creation, task completion, link creation)
+- Main character animations (walk, pet, celebrate)
+- Production fireworks animation
 - Settings persistence
 
-### Phase 2 (In Progress)
-- (Complete) 1 background
-- (Complete) Vault event listeners + celebration triggers
-- (In Progress) Main character animations (walk, pet, celebrate)
-- Production heart and fireworkds (complete) animation 
-- Butterfly chase interaction
-- Cosmetic Foundation
-- Toggle on/off companions (0-2)
-- Cart approach behavior
+**Remaining:**
+- Toast notification system (per-trigger toast toggle, on by default, independent of fireworks)
+- Replace word milestone list with per-note goal (frontmatter) + per-day goal (settings)
+- Dashboard view (Pet/Stats tab toggle, concentric rings, activity tallies)
+- Settings page: ensure all settings accessible via Plugin Settings tab (not modal-only)
 
-### Phase 3 (Future)
-- Rare random butterfly
-- Additional cosmetics
+### V1.1 — Interactivity + Vault Health
+- Butterfly chase interaction (user-triggered, pets chase then return to walking)
+- Dangling links tally on dashboard (unresolved `[[links]]` count; reducing them is progress)
 
-### Phase 4+ (Deferred)
-- Dynamic lighting
-- Movement pattern variety
-- Pet species variety
-- Sound effects
+### V1.2 — Scene & Cosmetics
+- Companion system (0–2 companions; crew celebrating together, lively scene feel)
+- Cosmetics system (hat, scarf, accessory slots with layered sprite rendering)
+- Seasonal background assets (spring, summer, autumn, winter scenes)
+- Note: companions + cosmetics + seasonal ship together due to shared rendering complexity (multi-entity positioning, layered sprites)
 
 ---
 
 ## Architecture Implications
 
 1. **Background**: Image asset management + CSS swap logic
-2. **Sprites**: Sprite sheet management + CSS animation keyframes
+2. **Sprites**: GIF-based animation per state
 3. **State machine**: Pet animation state transitions
-4. **Event system**: Vault listeners → celebration triggers
-5. **Settings**: Modal UI + data persistence layer
-6. **Companion system**: CSS sprite duplication (positioning logic)
-7. **Seasonal detection**: Date-based season calculator
-8. **Cosmetics**: Layered sprite rendering system
+4. **Event system**: Vault listeners → celebration triggers → fireworks + toast
+5. **Word count tracking**: Delta accumulation per file for daily total; frontmatter reader for per-note goal
+6. **Dashboard**: Tab-switched view within same panel; SVG concentric rings (pure CSS/SVG, no charting library); daily counters with midnight reset
+7. **Settings**: Plugin Settings tab UI + data persistence layer
+8. **Companion system**: Multi-entity positioning logic (V1.2)
+9. **Cosmetics**: Layered sprite rendering system (V1.2)
+10. **Seasonal detection**: Date-based season calculator (V1.2)
