@@ -31,7 +31,7 @@ export const EFFECT_SPRITES = {
  */
 export const BACKGROUNDS = {
 	/** Default garden scene with path */
-	DEFAULT: 'Background_reg.png',
+	DEFAULT: 'background-reg.png',
 	/** Alternative moon world scene */
 	MOON_WORLD: 'moon-world.gif',
 } as const;

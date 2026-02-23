@@ -346,8 +346,8 @@
     overflow: hidden; /* Contain pet within view */
 
     /* Background scene - tiled horizontally, no vertical scaling */
-    /* Maintains natural image dimensions, tiles left-right, anchored to bottom */
-    background-size: auto auto;
+    /* Display size constrained to 400x400 per tile, tiles left-right, anchored to bottom */
+    background-size: 400px 400px;
     background-position: bottom center;
     background-repeat: repeat-x;
 
