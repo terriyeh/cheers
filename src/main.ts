@@ -2,7 +2,7 @@ import { Plugin, Notice } from 'obsidian';
 import type { WorkspaceLeaf } from 'obsidian';
 import { PetView, VIEW_TYPE_PET } from './views/PetView';
 import type { PetState } from './types/pet';
-import type { ObsidianPetsSettings } from './types/settings';
+import type { ObsidianPetsSettings, DailyWordData } from './types/settings';
 import { DEFAULT_SETTINGS, VALIDATION_RULES } from './types/settings';
 import { WelcomeModal } from './modals/WelcomeModal';
 import { CelebrationService } from './celebrations/CelebrationService';
@@ -31,6 +31,7 @@ declare global {
 export default class ObsidianPetsPlugin extends Plugin {
 	settings: ObsidianPetsSettings = DEFAULT_SETTINGS;
 	petView?: PetView;
+	dailyWordData: DailyWordData = this.getDefaultDailyData();
 	private celebrationService?: CelebrationService;
 
 	async onload() {
@@ -258,6 +259,24 @@ Available states:
 			validated.hasCompletedWelcome = DEFAULT_SETTINGS.hasCompletedWelcome;
 		}
 
+		// Validate celebrations sub-object exists
+		if (typeof validated.celebrations !== 'object' || validated.celebrations === null) {
+			validated.celebrations = { ...DEFAULT_SETTINGS.celebrations };
+		} else {
+			// Validate dailyWordGoal: must be null or a finite positive integer ≤ 100,000
+			const { dailyWordGoal } = validated.celebrations;
+			if (
+				dailyWordGoal !== null &&
+				(typeof dailyWordGoal !== 'number' ||
+					!Number.isFinite(dailyWordGoal) ||
+					!Number.isInteger(dailyWordGoal) ||
+					dailyWordGoal <= 0 ||
+					dailyWordGoal > 100_000)
+			) {
+				validated.celebrations.dailyWordGoal = DEFAULT_SETTINGS.celebrations.dailyWordGoal;
+			}
+		}
+
 		return validated;
 	}
 
@@ -266,14 +285,43 @@ Available states:
 	 */
 	async loadSettings() {
 		const loadedData = await this.loadData();
-		const mergedSettings = Object.assign({}, DEFAULT_SETTINGS, loadedData);
+		const { daily, ...settingsData } = (loadedData ?? {}) as any;
+		const mergedSettings = Object.assign({}, DEFAULT_SETTINGS, settingsData);
 		this.settings = this.validateSettings(mergedSettings);
+		this.dailyWordData = this.loadDailyWordData(daily);
 	}
 
 	/**
-	 * Save settings to disk
+	 * Save settings and daily word data to disk
 	 */
 	async saveSettings() {
-		await this.saveData(this.settings);
+		await this.saveData({ ...this.settings, daily: this.dailyWordData });
+	}
+
+	getLocalDateString(): string {
+		const d = new Date();
+		return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+	}
+
+	private getDefaultDailyData(): DailyWordData {
+		return {
+			date: this.getLocalDateString(),
+			wordsAddedToday: 0,
+			goalCelebrated: false,
+		};
+	}
+
+	private loadDailyWordData(stored: unknown): DailyWordData {
+		const today = this.getLocalDateString();
+		if (!stored || typeof stored !== 'object' || (stored as any).date !== today) {
+			return this.getDefaultDailyData();
+		}
+		return {
+			date: today,
+			wordsAddedToday: typeof (stored as any).wordsAddedToday === 'number'
+				? Math.max(0, Math.floor((stored as any).wordsAddedToday))
+				: 0,
+			goalCelebrated: (stored as any).goalCelebrated === true,
+		};
 	}
 }

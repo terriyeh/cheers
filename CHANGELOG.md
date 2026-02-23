@@ -166,7 +166,7 @@ Research into VS Code Pets (2.26M installs) and the Obsidian pet plugin landscap
 - GIF animation (4.32 seconds duration)
 - Fireworks celebration sprite (`assets/effects/fireworks.gif`)
 - Celebration overlay positioned in top third of view, horizontally centered
-- Background scene (`assets/backgrounds/Background_reg.png` - 128KB)
+- Background scene (`assets/backgrounds/background-reg.png` - 128KB)
 - Browser-native GIF animation for smooth playback
 
 **Testing:**
