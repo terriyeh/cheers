@@ -27,7 +27,7 @@ type CelebrationEventType = 'note-create' | 'task-complete' | 'link-create' | 'w
  */
 export class CelebrationService {
 	// Constants for timing and limits
-	private static readonly EDITOR_DEBOUNCE_MS = 500;
+	private static readonly EDITOR_DEBOUNCE_MS = 100;
 	private static readonly MAX_CONTENT_LENGTH = 1000000; // 1MB of text (~500 pages)
 	// Note: Celebration duration uses CELEBRATION_OVERLAY_CONSTANTS.CELEBRATION_DURATION_MS (4320ms)
 
@@ -234,8 +234,13 @@ export class CelebrationService {
 		// (including the word-goal field itself) from inflating the body word count.
 		// \r?\n handles both Unix and Windows line endings. {0,5000} caps the match
 		// to prevent a linear scan on large files with unclosed frontmatter delimiters.
-		const bodyContent = content.replace(/^---\r?\n[\s\S]{0,5000}?\r?\n---\r?\n?/, '');
-		const currentWordCount = bodyContent.split(/\s+/).filter(w => w.length > 0).length;
+		const withoutFrontmatter = content.replace(/^---\r?\n[\s\S]{0,5000}?\r?\n---\r?\n?/, '');
+		// Strip Obsidian %% comment %% blocks — users don't consider these "written words".
+		// {0,10000} caps the match on unclosed comment delimiters.
+		const bodyContent = withoutFrontmatter.replace(/%%[\s\S]{0,10000}?%%/g, '');
+		// Match-based counting: treats hyphenated words (well-known) and numbers (1,000)
+		// as single tokens, consistent with user intuition.
+		const currentWordCount = (bodyContent.match(/(?:[0-9]+(?:(?:,|\.)[0-9]+)*|[-A-Za-z\u00C0-\u024F\u0370-\u03FF])+/g) || []).length;
 		const filePath = file.path;
 
 		// First observation of this file this session → set baseline, skip goal checks.
