@@ -100,8 +100,8 @@ Research into VS Code Pets (2.26M installs) and the Obsidian pet plugin landscap
 
 - Status bar notification: brief message appears at the left of the status bar for 3 seconds after each celebration trigger
   - Enable via Settings → Obsidian Pets → Celebrations → "Show status bar notification" (off by default)
-  - Messages: "✨ A new note has enriched your vault", "✅ You got that done!", "🔗 A new link has enriched your vault", "🏆 Congrats! You reached your writing goal!"
-  - Global toggle (not per-trigger) — one switch controls all celebration types
+  - Messages use the pet's name: "✨ [pet] is energized by a fresh new note", "✅ Hooray! [pet] is doing a happy dance", "🔗 [pet] loves a fresh new link", "🏆 Woohoo! [pet] is celebrating your writing goal!"
+  - No separate toggle — fires automatically whenever an enabled trigger fires
   - Independent of fireworks: fires even when fireworks are blocked by race condition prevention
 
 ### Added - Word Count Goals (2026-02-23)

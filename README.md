@@ -49,7 +49,7 @@ We're here to:
   - Linear speed scaling (0% = 33s duration, 100% = 6s duration)
   - GPU-accelerated CSS animations (<0.1% CPU)
 - **User-Configurable Triggers** ✅ IMPLEMENTED (v0.2.0): Individual toggles for each celebration type, with independent fireworks and status bar controls
-- **Status Bar Notifications** ✅ IMPLEMENTED: Brief message in the status bar for each celebration — enable in Settings → Obsidian Pets (off by default)
+- **Status Bar Notifications** ✅ IMPLEMENTED: Brief message in the status bar for each celebration — fires automatically with every enabled trigger
 - **Progress Dashboard** 🚧 PLANNED (v1.0): Stats tab within the pet panel — concentric word count rings and daily activity tallies for enabled celebration types
 - **Butterfly Chase** 🚧 PLANNED (v1.1): Release a butterfly and watch your pet chase it
 - **Crew & Cosmetics** 🚧 PLANNED (v1.2): Optional companion pets + accessories (hats, scarves) + seasonal backgrounds
@@ -112,17 +112,17 @@ Each action triggers a celebration animation—no input required from you. Just 
 
 | Action | Fireworks | Status Bar | Configurable |
 |--------|-----------|------------|--------------|
-| **Create any note** (.md files) | ✅ On/Off | ✅ Global toggle | Per-trigger |
-| **Check off task** (`- [x]`) | ✅ On/Off | ✅ Global toggle | Per-trigger |
-| **Add a link** (`[[wiki]]` or `[markdown](url)`) | ✅ On/Off | ✅ Global toggle | Per-trigger |
-| **Reach daily word goal** (vault-wide, resets midnight) | ✅ On/Off | ✅ Global toggle | Goal set in settings |
-| **Reach per-note word goal** (`word-goal` frontmatter) | ✅ On/Off | ✅ Global toggle | Goal set per note |
+| **Create any note** (.md files) | ✅ On/Off | ✅ Always on | Per-trigger |
+| **Check off task** (`- [x]`) | ✅ On/Off | ✅ Always on | Per-trigger |
+| **Add a link** (`[[wiki]]` or `[markdown](url)`) | ✅ On/Off | ✅ Always on | Per-trigger |
+| **Reach daily word goal** (vault-wide, resets midnight) | ✅ On/Off | ✅ Always on | Goal set in settings |
+| **Reach per-note word goal** (`word-goal` frontmatter) | ✅ On/Off | ✅ Always on | Goal set per note |
 
 ### Customization
 
 Configure celebrations in **Settings → Obsidian Pets → Celebrations**:
 - **Individual toggles**: Enable/disable each celebration type independently
-- **Status bar notification**: Single global toggle — enable to show a brief message (bottom-left) for every celebration (off by default)
+- **Status bar notification**: A brief message appears in the status bar (bottom-left) automatically with every celebration — no separate toggle needed
 - **Daily word goal**: Set your target words per day in settings (vault-wide, resets at midnight)
 - **Per-note word goal**: Add `word-goal: [number]` to any note's frontmatter to set a target for that document
 - **Race condition prevention**: Only one celebration plays at a time (prevents overlapping animations)
@@ -224,7 +224,7 @@ Open **Settings → Obsidian Pets → Celebrations** to configure:
 - ✅ **Word count goals** - Celebrate when reaching your daily or per-note goal
 
 **Status Bar Notification:**
-- **Show status bar notification** — toggle on to show a brief message in the status bar (bottom-left) for 3 seconds after each celebration; off by default
+- Fires automatically with each celebration trigger — no toggle required. Messages use your pet's name (e.g. "✨ Kit is energized by a fresh new note")
 
 **Word Count Goal Configuration** (shown only when word count goals enabled):
 - **Daily goal**: Set a target number of words to write per day across your vault (resets at midnight)
@@ -336,7 +336,7 @@ obsidian-pets/
 
 ### v1.0 — MVP (Community Plugin Submission)
 
-- ✅ Status bar notifications — global toggle (Settings → Obsidian Pets), off by default; shows brief message per celebration type
+- ✅ Status bar notifications — fires automatically with every enabled trigger; messages use the pet's name
 - ✅ Word count goals — daily goal (settings) and per-note goal (`word-goal` frontmatter), replacing milestone list
 - 🚧 Progress dashboard — Stats tab within the pet panel:
   - Concentric word count rings (daily outer, per-note inner)

@@ -64,12 +64,15 @@ export class CelebrationService {
 	// Status bar notification
 	private statusBarItem: HTMLElement | null = null;
 	private statusBarClearTimeout: number | undefined;
-	private static readonly STATUS_BAR_MESSAGES: Record<CelebrationEventType, string> = {
-		'note-create':   '✨ A new note has enriched your vault',
-		'task-complete': '✅ You got that done!',
-		'link-create':   '🔗 A new link has enriched your vault',
-		'word-goal':     '🏆 Congrats! You reached your writing goal!',
-	};
+	private static getStatusBarMessage(eventType: CelebrationEventType, petName: string): string {
+		const messages: Record<CelebrationEventType, string> = {
+			'note-create':   `✨ ${petName} is energized by a fresh new note`,
+			'task-complete': `✅ Hooray! ${petName} is doing a happy dance`,
+			'link-create':   `🔗 ${petName} loves a fresh new link`,
+			'word-goal':     `🏆 Woohoo! ${petName} is celebrating your writing goal!`,
+		};
+		return messages[eventType];
+	}
 
 	constructor(plugin: ObsidianPetsPlugin, statusBarItem: HTMLElement | null = null) {
 		this.plugin = plugin;
@@ -235,18 +238,20 @@ export class CelebrationService {
 	/**
 	 * Count words in raw editor content using Obsidian's approach:
 	 * strip non-prose content, then count whitespace-separated tokens.
+	 *
+	 * ReDoS defence — two layers:
+	 *   1. Callers must gate on MAX_CONTENT_LENGTH before calling (see processEditorChange).
+	 *   2. Each regex uses a bounded quantifier ({0,N}) so the worst-case match
+	 *      work per pattern is O(N), not exponential.
 	 */
 	static countWords(content: string): number {
-		// Strip YAML frontmatter. \r?\n handles both line endings.
-		// {0,5000} caps the match to prevent runaway on unclosed delimiters.
+		// Strip YAML frontmatter. Bounded to 5 000 chars — prevents runaway on unclosed delimiters.
 		let body = content.replace(/^---\r?\n[\s\S]{0,5000}?\r?\n---\r?\n?/, '');
-		// Strip fenced code blocks — code is not prose.
-		// {0,20000} caps on unclosed fences.
+		// Strip fenced code blocks. Bounded to 20 000 chars per block.
 		body = body.replace(/```[\s\S]{0,20000}?```/g, '');
-		// Strip inline code.
+		// Strip inline code. [^`\n]* is already linear (no nested quantifiers).
 		body = body.replace(/`[^`\n]*`/g, '');
-		// Strip Obsidian comment blocks (%% ... %%).
-		// {0,10000} caps on unclosed delimiters.
+		// Strip Obsidian comment blocks (%% ... %%). Bounded to 10 000 chars per block.
 		body = body.replace(/%%[\s\S]{0,10000}?%%/g, '');
 		// Count whitespace-separated tokens — matches Obsidian's built-in word count algorithm.
 		return (body.match(/\S+/g) || []).length;
@@ -354,13 +359,13 @@ export class CelebrationService {
 	 * @param eventType - Type of celebration event (for logging)
 	 */
 	private celebrate(eventType: CelebrationEventType): void {
-		// Status bar fires unconditionally — independent of fireworks state
-		if (this.plugin.settings.celebrations.showStatusBar && this.statusBarItem) {
+		// Status bar fires whenever the trigger fires — tied to the trigger toggle, not a separate setting
+		if (this.statusBarItem) {
 			if (this.statusBarClearTimeout !== undefined) {
 				window.clearTimeout(this.statusBarClearTimeout);
 				this.statusBarClearTimeout = undefined;
 			}
-			this.statusBarItem.setText(CelebrationService.STATUS_BAR_MESSAGES[eventType]);
+			this.statusBarItem.setText(CelebrationService.getStatusBarMessage(eventType, this.plugin.settings.petName));
 			this.statusBarItem.show();
 			this.statusBarClearTimeout = window.setTimeout(() => {
 				this.statusBarItem?.setText('');

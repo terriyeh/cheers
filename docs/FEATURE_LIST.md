@@ -41,7 +41,7 @@ A plugin you feel, not think about.
   - Word count goals (see below)
 - **Per-trigger options** (independent toggles for each trigger type):
   - **Fireworks**: Show fireworks overlay animation (on by default)
-  - **Status bar notification**: Show a brief message in the status bar for 3 seconds (global toggle, off by default)
+  - **Status bar notification**: Show a brief message in the status bar for 3 seconds (fires automatically with each enabled trigger)
 - **Word count goal types** (at least one required when word count celebration is enabled):
   - **Per-note goal**: Set via frontmatter in the note (`word-goal: 10000`). Celebrates when note reaches 100% of goal.
   - **Per-day goal**: Single number in plugin settings (vault-wide total words written today, resets at midnight). Celebrates when daily total reaches 100% of goal.
@@ -83,7 +83,7 @@ A plugin you feel, not think about.
 - **Celebration settings**:
   - Toggle for each trigger type (daily notes, tasks, links, word count)
   - Per-trigger fireworks toggle (on/off, default on)
-  - Status bar notification toggle (global on/off, default off)
+  - Status bar notification: fires automatically when a celebration trigger fires (no separate toggle)
   - Daily word goal (number, required when word count celebration is on)
   - Per-note word goal: set in note frontmatter (`word-goal: [number]`), not in plugin settings
 - **Data storage**: Local JSON via Obsidian Plugin API

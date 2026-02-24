@@ -79,7 +79,6 @@ describe('CelebrationService', () => {
 					onLinkCreate: true,
 					onWordGoal: false,
 					dailyWordGoal: null,
-					showStatusBar: false,
 				},
 			},
 			petView: {
@@ -913,14 +912,19 @@ describe('CelebrationService', () => {
 			return { path: filePath, basename: filePath.replace('.md', ''), extension: 'md' } as TFile;
 		}
 
-		it('does not call setText when showStatusBar is false (default)', () => {
-			const createHandler = getCreateHandler();
-			createHandler?.(makeFile());
-			expect(mockStatusBarItem.setText).not.toHaveBeenCalled();
-		});
+		// Build expected messages from the mock pet name so tests stay correct if the mock changes
+		function expectedMsg(eventType: 'note-create' | 'task-complete' | 'link-create' | 'word-goal'): string {
+			const n = plugin.settings.petName;
+			const map = {
+				'note-create':   `✨ ${n} is energized by a fresh new note`,
+				'task-complete': `✅ Hooray! ${n} is doing a happy dance`,
+				'link-create':   `🔗 ${n} loves a fresh new link`,
+				'word-goal':     `🏆 Woohoo! ${n} is celebrating your writing goal!`,
+			};
+			return map[eventType];
+		}
 
 		it('does not throw and does not call setText when statusBarItem is null', () => {
-			plugin.settings.celebrations.showStatusBar = true;
 			// Create a fresh vault/workspace so we can retrieve this service's handlers cleanly
 			const freshVault = { on: vi.fn().mockReturnValue({} as any), off: vi.fn(), offref: vi.fn() };
 			const freshWorkspace = { on: vi.fn().mockReturnValue({} as any), off: vi.fn() };
@@ -938,15 +942,10 @@ describe('CelebrationService', () => {
 			nullService.cleanup();
 		});
 
-		describe('when showStatusBar is true', () => {
-			beforeEach(() => {
-				plugin.settings.celebrations.showStatusBar = true;
-			});
-
-			it('shows correct message and calls .show() on note-create', () => {
+		it('shows correct message and calls .show() on note-create', () => {
 				const createHandler = getCreateHandler();
 				createHandler?.(makeFile());
-				expect(mockStatusBarItem.setText).toHaveBeenCalledWith('✨ A new note has enriched your vault');
+				expect(mockStatusBarItem.setText).toHaveBeenCalledWith(expectedMsg('note-create'));
 				expect(mockStatusBarItem.show).toHaveBeenCalled();
 			});
 
@@ -967,7 +966,7 @@ describe('CelebrationService', () => {
 					{ file: mockFile }
 				);
 				vi.advanceTimersByTime(100);
-				expect(mockStatusBarItem.setText).toHaveBeenCalledWith('🏆 Congrats! You reached your writing goal!');
+				expect(mockStatusBarItem.setText).toHaveBeenCalledWith(expectedMsg('word-goal'));
 				expect(mockStatusBarItem.show).toHaveBeenCalled();
 			});
 
@@ -979,7 +978,7 @@ describe('CelebrationService', () => {
 				const editorWithLink = { getValue: vi.fn().mockReturnValue('[[my-note]]') } as unknown as Editor;
 				editorChangeHandler?.(editorWithLink, { file: null });
 				vi.advanceTimersByTime(100);
-				expect(mockStatusBarItem.setText).toHaveBeenCalledWith('🔗 A new link has enriched your vault');
+				expect(mockStatusBarItem.setText).toHaveBeenCalledWith(expectedMsg('link-create'));
 				expect(mockStatusBarItem.show).toHaveBeenCalled();
 			});
 
@@ -1009,7 +1008,7 @@ describe('CelebrationService', () => {
 				// Fireworks blocked by isCelebrating guard
 				expect(plugin.petView?.transitionState).not.toHaveBeenCalled();
 				// Status bar NOT blocked — fires before the guard
-				expect(mockStatusBarItem.setText).toHaveBeenCalledWith('✨ A new note has enriched your vault');
+				expect(mockStatusBarItem.setText).toHaveBeenCalledWith(expectedMsg('note-create'));
 				expect(mockStatusBarItem.show).toHaveBeenCalled();
 			});
 
@@ -1045,9 +1044,9 @@ describe('CelebrationService', () => {
 					(call: any) => call[0] === 'editor-change'
 				)?.[1];
 
-				// First event: note-create shows '✨ A new note has enriched your vault'
+				// First event: note-create
 				createHandler?.(makeFile());
-				expect(mockStatusBarItem.setText).toHaveBeenCalledWith('✨ A new note has enriched your vault');
+				expect(mockStatusBarItem.setText).toHaveBeenCalledWith(expectedMsg('note-create'));
 
 				// While isCelebrating, task completion fires status bar before the guard
 				const editorWithTask = { getValue: vi.fn().mockReturnValue('- [x] Done') } as unknown as Editor;
@@ -1055,13 +1054,11 @@ describe('CelebrationService', () => {
 				vi.advanceTimersByTime(100); // trigger debounce
 
 				// Last setText call should be the task-complete message
-				expect(mockStatusBarItem.setText).toHaveBeenLastCalledWith('✅ You got that done!');
-			});
+				expect(mockStatusBarItem.setText).toHaveBeenLastCalledWith(expectedMsg('task-complete'));
 		});
 
 		describe('cleanup', () => {
 			it('cleanup() cancels the pending hide timeout', () => {
-				plugin.settings.celebrations.showStatusBar = true;
 				const createHandler = getCreateHandler();
 
 				// Trigger status bar — starts a 3s hide timeout

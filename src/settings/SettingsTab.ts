@@ -53,19 +53,6 @@ export class ObsidianPetsSettingTab extends PluginSettingTab {
 			cls: 'setting-item-description',
 		});
 
-		// Status bar notification
-		new Setting(containerEl)
-			.setName('Show status bar notification')
-			.setDesc('Show a brief message in the status bar when a celebration triggers, even when the sidebar is closed.')
-			.addToggle((toggle) =>
-				toggle
-					.setValue(this.plugin.settings.celebrations.showStatusBar)
-					.onChange(async (value) => {
-						this.plugin.settings.celebrations.showStatusBar = value;
-						await this.plugin.saveSettings();
-					})
-			);
-
 		// Note Creation
 		new Setting(containerEl)
 			.setName('Note creation')

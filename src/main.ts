@@ -282,9 +282,9 @@ Available states:
 			) {
 				validated.celebrations.dailyWordGoal = DEFAULT_SETTINGS.celebrations.dailyWordGoal;
 			}
-			// Validate showStatusBar: must be a boolean
-			if (typeof validated.celebrations.showStatusBar !== 'boolean') {
-				validated.celebrations.showStatusBar = DEFAULT_SETTINGS.celebrations.showStatusBar;
+			// Clean up legacy field from older settings files
+			if ('showStatusBar' in validated.celebrations) {
+				delete (validated.celebrations as any).showStatusBar;
 			}
 		}
 
