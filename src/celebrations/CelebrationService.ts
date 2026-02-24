@@ -288,6 +288,12 @@ export class CelebrationService {
 		// A crash before the goal fires will lose the session's partial word count.
 		if (daily.wordsAddedToday >= dailyWordGoal) {
 			daily.goalCelebrated = true;
+			// Persist immediately. `goalCelebrated` is set synchronously above so this
+			// can only fire once per session — no risk of concurrent saves.
+			// If the save fails, the in-memory flag still blocks re-celebration this session;
+			// on restart the flag resets and the user may see one extra celebration, which
+			// is acceptable. Using void+catch keeps the call chain synchronous so the
+			// isCelebrating guard in celebrate() works correctly.
 			void this.plugin.saveSettings().catch(err =>
 				console.error('[CelebrationService] Failed to persist daily word data:', err)
 			);
