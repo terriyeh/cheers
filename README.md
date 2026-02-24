@@ -48,8 +48,8 @@ We're here to:
 - **Ambient Presence** ✅ IMPLEMENTED: Pet walks across panel with configurable speed (0-100%)
   - Linear speed scaling (0% = 33s duration, 100% = 6s duration)
   - GPU-accelerated CSS animations (<0.1% CPU)
-- **User-Configurable Triggers** ✅ IMPLEMENTED (v0.2.0): Individual toggles for each celebration type, with independent fireworks and toast controls
-- **Toast Notifications** 🚧 PLANNED (v1.0): Per-trigger toast messages when your pet cheers — on by default, toggleable per celebration type
+- **User-Configurable Triggers** ✅ IMPLEMENTED (v0.2.0): Individual toggles for each celebration type, with independent fireworks and status bar controls
+- **Status Bar Notifications** ✅ IMPLEMENTED: Brief message in the status bar for each celebration — fires automatically with every enabled trigger
 - **Progress Dashboard** 🚧 PLANNED (v1.0): Stats tab within the pet panel — concentric word count rings and daily activity tallies for enabled celebration types
 - **Butterfly Chase** 🚧 PLANNED (v1.1): Release a butterfly and watch your pet chase it
 - **Crew & Cosmetics** 🚧 PLANNED (v1.2): Optional companion pets + accessories (hats, scarves) + seasonal backgrounds
@@ -96,11 +96,11 @@ You can change these settings later using **Command Palette → "Edit Pet Settin
 ### 3. Start Writing
 
 Your pet celebrates when you:
-- ✅ **Create any new note** - Fireworks + toast
-- ✅ **Check off task checkboxes** - Fireworks + toast
-- ✅ **Add links between notes** (wiki `[[link]]` or markdown `[link](url)`) - Fireworks + toast
-- ✅ **Reach your daily word goal** (configured in settings) - Fireworks + toast
-- ✅ **Reach your per-note word goal** (set `word-goal: [number]` in note frontmatter) - Fireworks + toast
+- ✅ **Create any new note** - Fireworks (+ status bar message if enabled)
+- ✅ **Check off task checkboxes** - Fireworks (+ status bar message if enabled)
+- ✅ **Add links between notes** (wiki `[[link]]` or markdown `[link](url)`) - Fireworks (+ status bar message if enabled)
+- ✅ **Reach your daily word goal** (configured in settings) - Fireworks (+ status bar message if enabled)
+- ✅ **Reach your per-note word goal** (set `word-goal: [number]` in note frontmatter) - Fireworks (+ status bar message if enabled)
 
 Each action triggers a celebration animation—no input required from you. Just write, and your pet celebrates alongside you. Configure which celebrations you want in Settings.
 
@@ -110,19 +110,19 @@ Each action triggers a celebration animation—no input required from you. Just 
 
 ### Built-in Celebrations
 
-| Action | Fireworks | Toast | Configurable |
-|--------|-----------|-------|--------------|
-| **Create any note** (.md files) | ✅ On/Off | ✅ On/Off | Per-trigger |
-| **Check off task** (`- [x]`) | ✅ On/Off | ✅ On/Off | Per-trigger |
-| **Add a link** (`[[wiki]]` or `[markdown](url)`) | ✅ On/Off | ✅ On/Off | Per-trigger |
-| **Reach daily word goal** (vault-wide, resets midnight) | ✅ On/Off | ✅ On/Off | Goal set in settings |
-| **Reach per-note word goal** (`word-goal` frontmatter) | ✅ On/Off | ✅ On/Off | Goal set per note |
+| Action | Fireworks | Status Bar | Configurable |
+|--------|-----------|------------|--------------|
+| **Create any note** (.md files) | ✅ On/Off | ✅ Always on | Per-trigger |
+| **Check off task** (`- [x]`) | ✅ On/Off | ✅ Always on | Per-trigger |
+| **Add a link** (`[[wiki]]` or `[markdown](url)`) | ✅ On/Off | ✅ Always on | Per-trigger |
+| **Reach daily word goal** (vault-wide, resets midnight) | ✅ On/Off | ✅ Always on | Goal set in settings |
+| **Reach per-note word goal** (`word-goal` frontmatter) | ✅ On/Off | ✅ Always on | Goal set per note |
 
 ### Customization
 
 Configure celebrations in **Settings → Obsidian Pets → Celebrations**:
 - **Individual toggles**: Enable/disable each celebration type independently
-- **Per-trigger controls**: Each type has independent Fireworks and Toast toggles (both on by default)
+- **Status bar notification**: A brief message appears in the status bar (bottom-left) automatically with every celebration — no separate toggle needed
 - **Daily word goal**: Set your target words per day in settings (vault-wide, resets at midnight)
 - **Per-note word goal**: Add `word-goal: [number]` to any note's frontmatter to set a target for that document
 - **Race condition prevention**: Only one celebration plays at a time (prevents overlapping animations)
@@ -217,11 +217,14 @@ Obsidian Pets works beautifully alongside other plugins to create your perfect w
 
 Open **Settings → Obsidian Pets → Celebrations** to configure:
 
-**Individual Toggles** (each type has independent Fireworks and Toast controls):
+**Individual Toggles** (enable/disable each celebration type independently):
 - ✅ **Note creation** - Celebrate when creating new .md files
 - ✅ **Task completion** - Celebrate when checking off checkboxes (`- [x]`)
 - ✅ **Link creation** - Celebrate when adding wiki links or markdown links
 - ✅ **Word count goals** - Celebrate when reaching your daily or per-note goal
+
+**Status Bar Notification:**
+- Fires automatically with each celebration trigger — no toggle required. Messages use your pet's name (e.g. "✨ Kit is energized by a fresh new note")
 
 **Word Count Goal Configuration** (shown only when word count goals enabled):
 - **Daily goal**: Set a target number of words to write per day across your vault (resets at midnight)
@@ -333,8 +336,8 @@ obsidian-pets/
 
 ### v1.0 — MVP (Community Plugin Submission)
 
-- 🚧 Toast notifications — per-trigger, on by default, independent of fireworks
-- 🚧 Word count goals — daily goal (settings) and per-note goal (frontmatter), replacing milestone list
+- ✅ Status bar notifications — fires automatically with every enabled trigger; messages use the pet's name
+- ✅ Word count goals — daily goal (settings) and per-note goal (`word-goal` frontmatter), replacing milestone list
 - 🚧 Progress dashboard — Stats tab within the pet panel:
   - Concentric word count rings (daily outer, per-note inner)
   - Daily activity tallies for enabled celebration types

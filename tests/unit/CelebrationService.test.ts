@@ -7,7 +7,7 @@ import { vi } from 'vitest';
 import type { App, TFile, Editor, Vault, Workspace } from 'obsidian';
 import type ObsidianPetsPlugin from '../../src/main';
 import type { ObsidianPetsSettings, DailyWordData } from '../../src/types/settings';
-import { CELEBRATION_OVERLAY_CONSTANTS } from '../../src/utils/celebration-constants';
+import { CELEBRATION_OVERLAY_CONSTANTS, STATUS_BAR_NOTIFICATION_DURATION_MS } from '../../src/utils/celebration-constants';
 
 // Mock types for testing
 interface MockPlugin {
@@ -29,11 +29,19 @@ function localDateString(): string {
 	return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
+interface MockStatusBarItem {
+	setText: ReturnType<typeof vi.fn>;
+	addClass: ReturnType<typeof vi.fn>;
+	show: ReturnType<typeof vi.fn>;
+	hide: ReturnType<typeof vi.fn>;
+}
+
 describe('CelebrationService', () => {
 	let plugin: MockPlugin;
 	let mockVault: Partial<Vault>;
 	let mockWorkspace: Partial<Workspace>;
 	let service: CelebrationService;
+	let mockStatusBarItem: MockStatusBarItem;
 
 	beforeEach(() => {
 		vi.useFakeTimers();
@@ -85,7 +93,14 @@ describe('CelebrationService', () => {
 			getLocalDateString: vi.fn().mockImplementation(localDateString),
 		};
 
-		service = new CelebrationService(plugin as unknown as ObsidianPetsPlugin);
+		mockStatusBarItem = {
+			setText: vi.fn(),
+			addClass: vi.fn(),
+			show: vi.fn(),
+			hide: vi.fn(),
+		};
+
+		service = new CelebrationService(plugin as unknown as ObsidianPetsPlugin, mockStatusBarItem as unknown as HTMLElement);
 	});
 
 	afterEach(() => {
@@ -363,6 +378,49 @@ describe('CelebrationService', () => {
 			vi.advanceTimersByTime(100);
 
 			expect(plugin.petView?.transitionState).not.toHaveBeenCalled();
+		});
+	});
+
+	describe('countWords()', () => {
+		it('counts simple whitespace-separated tokens', () => {
+			expect(CelebrationService.countWords('one two three')).toBe(3);
+		});
+
+		it('counts contractions as one word', () => {
+			expect(CelebrationService.countWords("don't won't it's")).toBe(3);
+		});
+
+		it('counts hyphenated words as one token', () => {
+			expect(CelebrationService.countWords('well-known up-to-date')).toBe(2);
+		});
+
+		it('strips YAML frontmatter before counting', () => {
+			const note = '---\nword-goal: 500\ntitle: My Note\n---\none two three';
+			expect(CelebrationService.countWords(note)).toBe(3);
+		});
+
+		it('strips fenced code blocks before counting', () => {
+			const note = 'intro\n```js\nconst x = 1;\n```\noutro';
+			expect(CelebrationService.countWords(note)).toBe(2);
+		});
+
+		it('strips inline code before counting', () => {
+			const note = 'use `const x = 1` here';
+			expect(CelebrationService.countWords(note)).toBe(2);
+		});
+
+		it('strips Obsidian comment blocks before counting', () => {
+			const note = 'hello %% hidden comment %% world';
+			expect(CelebrationService.countWords(note)).toBe(2);
+		});
+
+		it('returns 0 for empty string', () => {
+			expect(CelebrationService.countWords('')).toBe(0);
+		});
+
+		it('returns 0 for frontmatter-only content', () => {
+			const note = '---\nfoo: bar\n---\n';
+			expect(CelebrationService.countWords(note)).toBe(0);
 		});
 	});
 
@@ -840,6 +898,184 @@ describe('CelebrationService', () => {
 			);
 
 			consoleSpy.mockRestore();
+		});
+	});
+	describe('status bar notifications', () => {
+
+		function getCreateHandler() {
+			return (mockVault.on as any).mock.calls.find(
+				(call: any) => call[0] === 'create'
+			)?.[1];
+		}
+
+		function makeFile(filePath = 'test.md') {
+			return { path: filePath, basename: filePath.replace('.md', ''), extension: 'md' } as TFile;
+		}
+
+		// Build expected messages from the mock pet name so tests stay correct if the mock changes
+		function expectedMsg(eventType: 'note-create' | 'task-complete' | 'link-create' | 'word-goal'): string {
+			const n = plugin.settings.petName;
+			const map = {
+				'note-create':   `✨ ${n} is energized by a fresh new note`,
+				'task-complete': `✅ Hooray! ${n} is doing a happy dance`,
+				'link-create':   `🔗 ${n} loves a fresh new link`,
+				'word-goal':     `🏆 Woohoo! ${n} is celebrating your writing goal!`,
+			};
+			return map[eventType];
+		}
+
+		it('does not throw and does not call setText when statusBarItem is null', () => {
+			// Create a fresh vault/workspace so we can retrieve this service's handlers cleanly
+			const freshVault = { on: vi.fn().mockReturnValue({} as any), off: vi.fn(), offref: vi.fn() };
+			const freshWorkspace = { on: vi.fn().mockReturnValue({} as any), off: vi.fn() };
+			const freshPlugin = {
+				...plugin,
+				app: { ...plugin.app, vault: freshVault, workspace: freshWorkspace },
+			};
+			// Construct without statusBarItem — exercises the null guard
+			const nullService = new CelebrationService(freshPlugin as unknown as ObsidianPetsPlugin);
+			const createHandler = (freshVault.on as any).mock.calls.find(
+				(call: any) => call[0] === 'create'
+			)?.[1];
+			expect(() => createHandler?.(makeFile())).not.toThrow();
+			expect(mockStatusBarItem.setText).not.toHaveBeenCalled();
+			nullService.cleanup();
+		});
+
+		it('shows correct message and calls .show() on note-create', () => {
+				const createHandler = getCreateHandler();
+				createHandler?.(makeFile());
+				expect(mockStatusBarItem.setText).toHaveBeenCalledWith(expectedMsg('note-create'));
+				expect(mockStatusBarItem.show).toHaveBeenCalled();
+			});
+
+			it('shows correct message on word-goal', () => {
+				plugin.settings.celebrations.onWordGoal = true;
+				plugin.settings.celebrations.dailyWordGoal = 3;
+				const editorChangeHandler = (mockWorkspace.on as any).mock.calls.find(
+					(call: any) => call[0] === 'editor-change'
+				)?.[1];
+				const mockFile = makeFile();
+				// Establish baseline
+				editorChangeHandler?.({ getValue: vi.fn().mockReturnValue('') }, { file: mockFile });
+				vi.advanceTimersByTime(100);
+				vi.clearAllMocks();
+				// Cross the daily goal (delta = 3)
+				editorChangeHandler?.(
+					{ getValue: vi.fn().mockReturnValue('one two three') },
+					{ file: mockFile }
+				);
+				vi.advanceTimersByTime(100);
+				expect(mockStatusBarItem.setText).toHaveBeenCalledWith(expectedMsg('word-goal'));
+				expect(mockStatusBarItem.show).toHaveBeenCalled();
+			});
+
+			it('shows correct message on link-create', () => {
+				plugin.settings.celebrations.onLinkCreate = true;
+				const editorChangeHandler = (mockWorkspace.on as any).mock.calls.find(
+					(call: any) => call[0] === 'editor-change'
+				)?.[1];
+				const editorWithLink = { getValue: vi.fn().mockReturnValue('[[my-note]]') } as unknown as Editor;
+				editorChangeHandler?.(editorWithLink, { file: null });
+				vi.advanceTimersByTime(100);
+				expect(mockStatusBarItem.setText).toHaveBeenCalledWith(expectedMsg('link-create'));
+				expect(mockStatusBarItem.show).toHaveBeenCalled();
+			});
+
+						it('calls .hide() and clears text after STATUS_BAR_NOTIFICATION_DURATION_MS', () => {
+				const createHandler = getCreateHandler();
+				createHandler?.(makeFile());
+				expect(mockStatusBarItem.show).toHaveBeenCalled();
+
+				vi.advanceTimersByTime(STATUS_BAR_NOTIFICATION_DURATION_MS + 1);
+
+				expect(mockStatusBarItem.setText).toHaveBeenLastCalledWith('');
+				expect(mockStatusBarItem.hide).toHaveBeenCalled();
+			});
+
+			it('fires status bar even when isCelebrating is true (sidebar-closed scenario)', () => {
+				const createHandler = getCreateHandler();
+
+				// First event — sets isCelebrating = true
+				createHandler?.(makeFile('first.md'));
+				expect(plugin.petView?.transitionState).toHaveBeenCalledWith('celebration');
+
+				vi.clearAllMocks();
+
+				// Second event while isCelebrating is still true
+				createHandler?.(makeFile('second.md'));
+
+				// Fireworks blocked by isCelebrating guard
+				expect(plugin.petView?.transitionState).not.toHaveBeenCalled();
+				// Status bar NOT blocked — fires before the guard
+				expect(mockStatusBarItem.setText).toHaveBeenCalledWith(expectedMsg('note-create'));
+				expect(mockStatusBarItem.show).toHaveBeenCalled();
+			});
+
+			it('resets the clear timer when a second event fires before timeout expires', () => {
+				const createHandler = getCreateHandler();
+
+				// First event
+				createHandler?.(makeFile());
+				expect(mockStatusBarItem.show).toHaveBeenCalledTimes(1);
+
+				vi.advanceTimersByTime(2000); // 2s into 3s window
+				expect(mockStatusBarItem.hide).not.toHaveBeenCalled();
+
+				mockStatusBarItem.show.mockClear();
+				mockStatusBarItem.hide.mockClear();
+				mockStatusBarItem.setText.mockClear();
+
+				// Second event fires before 3s timer expires — resets the timer
+				// (status bar fires before isCelebrating guard, so guard state is irrelevant here)
+				createHandler?.(makeFile('second.md'));
+				expect(mockStatusBarItem.show).toHaveBeenCalled();
+
+				vi.advanceTimersByTime(2000); // 2s into second event's 3s window — still visible
+				expect(mockStatusBarItem.hide).not.toHaveBeenCalled();
+
+				vi.advanceTimersByTime(1001); // now past 3s from second event — hidden
+				expect(mockStatusBarItem.hide).toHaveBeenCalled();
+			});
+
+			it('shows most recent message when rapid events fire', () => {
+				const createHandler = getCreateHandler();
+				const editorChangeHandler = (mockWorkspace.on as any).mock.calls.find(
+					(call: any) => call[0] === 'editor-change'
+				)?.[1];
+
+				// First event: note-create
+				createHandler?.(makeFile());
+				expect(mockStatusBarItem.setText).toHaveBeenCalledWith(expectedMsg('note-create'));
+
+				// While isCelebrating, task completion fires status bar before the guard
+				const editorWithTask = { getValue: vi.fn().mockReturnValue('- [x] Done') } as unknown as Editor;
+				editorChangeHandler?.(editorWithTask, { file: null });
+				vi.advanceTimersByTime(100); // trigger debounce
+
+				// Last setText call should be the task-complete message
+				expect(mockStatusBarItem.setText).toHaveBeenLastCalledWith(expectedMsg('task-complete'));
+		});
+
+		describe('cleanup', () => {
+			it('cleanup() cancels the pending hide timeout', () => {
+				const createHandler = getCreateHandler();
+
+				// Trigger status bar — starts a 3s hide timeout
+				createHandler?.(makeFile());
+				expect(mockStatusBarItem.show).toHaveBeenCalled();
+
+				// Cleanup cancels the pending timeout
+				service.cleanup();
+
+				// cleanup() hides the element immediately
+				expect(mockStatusBarItem.hide).toHaveBeenCalledTimes(1);
+				expect(mockStatusBarItem.setText).toHaveBeenCalledWith('');
+
+				// Advance past the duration — no additional hide calls (timeout was cancelled)
+				vi.advanceTimersByTime(STATUS_BAR_NOTIFICATION_DURATION_MS + 100);
+				expect(mockStatusBarItem.hide).toHaveBeenCalledTimes(1);
+			});
 		});
 	});
 });
