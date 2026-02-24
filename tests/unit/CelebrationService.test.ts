@@ -6,7 +6,7 @@
 import { vi } from 'vitest';
 import type { App, TFile, Editor, Vault, Workspace } from 'obsidian';
 import type ObsidianPetsPlugin from '../../src/main';
-import type { ObsidianPetsSettings } from '../../src/types/settings';
+import type { ObsidianPetsSettings, DailyWordData } from '../../src/types/settings';
 import { CELEBRATION_OVERLAY_CONSTANTS } from '../../src/utils/celebration-constants';
 
 // Mock types for testing
@@ -16,10 +16,18 @@ interface MockPlugin {
 	petView?: {
 		transitionState: (state: string) => boolean;
 	};
+	dailyWordData: DailyWordData;
+	saveSettings: () => Promise<void>;
+	getLocalDateString: () => string;
 }
 
 // We'll import CelebrationService once it's created
 import { CelebrationService } from '../../src/celebrations/CelebrationService';
+
+function localDateString(): string {
+	const d = new Date();
+	return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
 
 describe('CelebrationService', () => {
 	let plugin: MockPlugin;
@@ -48,6 +56,9 @@ describe('CelebrationService', () => {
 			app: {
 				vault: mockVault,
 				workspace: mockWorkspace,
+				metadataCache: {
+					getFileCache: vi.fn().mockReturnValue(null),
+				},
 			} as unknown as App,
 			settings: {
 				petName: 'Kit',
@@ -58,13 +69,20 @@ describe('CelebrationService', () => {
 					onNoteCreate: true,
 					onTaskComplete: true,
 					onLinkCreate: true,
-					onWordMilestone: true,
-					wordMilestones: [100, 500, 1000],
+					onWordGoal: false,
+					dailyWordGoal: null,
 				},
 			},
 			petView: {
 				transitionState: vi.fn().mockReturnValue(true),
 			},
+			dailyWordData: {
+				date: localDateString(),
+				wordsAddedToday: 0,
+				goalCelebrated: false,
+			},
+			saveSettings: vi.fn().mockResolvedValue(undefined),
+			getLocalDateString: vi.fn().mockImplementation(localDateString),
 		};
 
 		service = new CelebrationService(plugin as unknown as ObsidianPetsPlugin);
@@ -172,16 +190,16 @@ describe('CelebrationService', () => {
 
 			// First call: no checked tasks
 			mockEditor.getValue = vi.fn().mockReturnValue('- [ ] Complete this task');
-			editorChangeHandler?.(mockEditor);
+			editorChangeHandler?.(mockEditor, { file: null });
 
 			vi.clearAllMocks();
 
 			// Second call: task is now checked
 			mockEditor.getValue = vi.fn().mockReturnValue('- [x] Complete this task');
 
-			// Debounced handler should trigger after 500ms
-			editorChangeHandler?.(mockEditor);
-			vi.advanceTimersByTime(500);
+			// Debounced handler should trigger after 100ms
+			editorChangeHandler?.(mockEditor, { file: null });
+			vi.advanceTimersByTime(100);
 
 			expect(plugin.petView?.transitionState).toHaveBeenCalledWith('celebration');
 		});
@@ -197,8 +215,8 @@ describe('CelebrationService', () => {
 
 			// Initial state: 1 task checked
 			mockEditor.getValue = vi.fn().mockReturnValue('- [x] Task 1\n- [ ] Task 2\n- [ ] Task 3');
-			editorChangeHandler?.(mockEditor);
-			vi.advanceTimersByTime(500);
+			editorChangeHandler?.(mockEditor, { file: null });
+			vi.advanceTimersByTime(100);
 			// First increase detected and celebrated
 			expect(plugin.petView?.transitionState).toHaveBeenCalledWith('celebration');
 
@@ -208,8 +226,8 @@ describe('CelebrationService', () => {
 			mockEditor.getValue = vi
 				.fn()
 				.mockReturnValue('- [x] Task 1\n- [x] Task 2\n- [x] Task 3');
-			editorChangeHandler?.(mockEditor);
-			vi.advanceTimersByTime(500);
+			editorChangeHandler?.(mockEditor, { file: null });
+			vi.advanceTimersByTime(100);
 
 			// Second celebration blocked while celebrating (by design)
 			expect(plugin.petView?.transitionState).not.toHaveBeenCalled();
@@ -225,8 +243,8 @@ describe('CelebrationService', () => {
 			const editorChangeHandler = (mockWorkspace.on as any).mock.calls.find(
 				(call: any) => call[0] === 'editor-change'
 			)?.[1];
-			editorChangeHandler?.(mockEditor);
-			vi.advanceTimersByTime(500);
+			editorChangeHandler?.(mockEditor, { file: null });
+			vi.advanceTimersByTime(100);
 
 			expect(plugin.petView?.transitionState).not.toHaveBeenCalled();
 		});
@@ -242,15 +260,15 @@ describe('CelebrationService', () => {
 
 			// Initial state: 2 tasks checked
 			mockEditor.getValue = vi.fn().mockReturnValue('- [x] Task 1\n- [x] Task 2');
-			editorChangeHandler?.(mockEditor);
-			vi.advanceTimersByTime(500);
+			editorChangeHandler?.(mockEditor, { file: null });
+			vi.advanceTimersByTime(100);
 
 			vi.clearAllMocks();
 
 			// One task unchecked (count decreased from 2 to 1)
 			mockEditor.getValue = vi.fn().mockReturnValue('- [ ] Task 1\n- [x] Task 2');
-			editorChangeHandler?.(mockEditor);
-			vi.advanceTimersByTime(500);
+			editorChangeHandler?.(mockEditor, { file: null });
+			vi.advanceTimersByTime(100);
 
 			expect(plugin.petView?.transitionState).not.toHaveBeenCalled();
 		});
@@ -268,15 +286,15 @@ describe('CelebrationService', () => {
 
 			// Initial state: no links
 			mockEditor.getValue = vi.fn().mockReturnValue('Some text without links');
-			editorChangeHandler?.(mockEditor);
-			vi.advanceTimersByTime(500);
+			editorChangeHandler?.(mockEditor, { file: null });
+			vi.advanceTimersByTime(100);
 
 			vi.clearAllMocks();
 
 			// Link added
 			mockEditor.getValue = vi.fn().mockReturnValue('Some text with [[a link]]');
-			editorChangeHandler?.(mockEditor);
-			vi.advanceTimersByTime(500);
+			editorChangeHandler?.(mockEditor, { file: null });
+			vi.advanceTimersByTime(100);
 
 			expect(plugin.petView?.transitionState).toHaveBeenCalledWith('celebration');
 		});
@@ -292,15 +310,15 @@ describe('CelebrationService', () => {
 
 			// Initial state: no links
 			mockEditor.getValue = vi.fn().mockReturnValue('Some text');
-			editorChangeHandler?.(mockEditor);
-			vi.advanceTimersByTime(500);
+			editorChangeHandler?.(mockEditor, { file: null });
+			vi.advanceTimersByTime(100);
 
 			vi.clearAllMocks();
 
 			// Markdown link added
 			mockEditor.getValue = vi.fn().mockReturnValue('Some [text](https://example.com)');
-			editorChangeHandler?.(mockEditor);
-			vi.advanceTimersByTime(500);
+			editorChangeHandler?.(mockEditor, { file: null });
+			vi.advanceTimersByTime(100);
 
 			expect(plugin.petView?.transitionState).toHaveBeenCalledWith('celebration');
 		});
@@ -317,8 +335,8 @@ describe('CelebrationService', () => {
 			)?.[1];
 
 			mockEditor.getValue = vi.fn().mockReturnValue('Text with [[link]]');
-			editorChangeHandler?.(mockEditor);
-			vi.advanceTimersByTime(500);
+			editorChangeHandler?.(mockEditor, { file: null });
+			vi.advanceTimersByTime(100);
 
 			expect(plugin.petView?.transitionState).not.toHaveBeenCalled();
 		});
@@ -334,190 +352,343 @@ describe('CelebrationService', () => {
 
 			// Initial state: 2 links
 			mockEditor.getValue = vi.fn().mockReturnValue('[[Link 1]] and [[Link 2]]');
-			editorChangeHandler?.(mockEditor);
-			vi.advanceTimersByTime(500);
+			editorChangeHandler?.(mockEditor, { file: null });
+			vi.advanceTimersByTime(100);
 
 			vi.clearAllMocks();
 
 			// One link removed
 			mockEditor.getValue = vi.fn().mockReturnValue('[[Link 1]] only');
-			editorChangeHandler?.(mockEditor);
-			vi.advanceTimersByTime(500);
+			editorChangeHandler?.(mockEditor, { file: null });
+			vi.advanceTimersByTime(100);
 
 			expect(plugin.petView?.transitionState).not.toHaveBeenCalled();
 		});
 	});
 
-	describe('word count milestone celebration', () => {
-		it('should celebrate when crossing 100 word threshold', () => {
-			const mockEditor = {
-				getValue: vi.fn(),
-			} as unknown as Editor;
-
-			const editorChangeHandler = (mockWorkspace.on as any).mock.calls.find(
+	describe('word count goal celebration', () => {
+		// Helper to get the editor-change handler
+		function getEditorChangeHandler() {
+			return (mockWorkspace.on as any).mock.calls.find(
 				(call: any) => call[0] === 'editor-change'
 			)?.[1];
+		}
 
-			// Initial state: 95 words
-			mockEditor.getValue = vi.fn().mockReturnValue('word '.repeat(95));
-			editorChangeHandler?.(mockEditor);
-			vi.advanceTimersByTime(500);
+		function makeEditor(content: string): Editor {
+			return { getValue: vi.fn().mockReturnValue(content) } as unknown as Editor;
+		}
 
-			vi.clearAllMocks();
+		describe('per-day goal', () => {
+			it('first edit of a file initialises baseline without celebrating or saving', () => {
+				plugin.settings.celebrations.onWordGoal = true;
+				plugin.settings.celebrations.dailyWordGoal = 5;
 
-			// Crossed 100 word threshold
-			mockEditor.getValue = vi.fn().mockReturnValue('word '.repeat(105));
-			editorChangeHandler?.(mockEditor);
-			vi.advanceTimersByTime(500);
+				const mockFile = { path: 'test.md' } as TFile;
+				const handler = getEditorChangeHandler();
 
-			expect(plugin.petView?.transitionState).toHaveBeenCalledWith('celebration');
+				// First edit — word count already at 6 (above goal), but it's the baseline
+				handler?.(makeEditor('one two three four five six'), { file: mockFile });
+				vi.advanceTimersByTime(100);
+
+				expect(plugin.petView?.transitionState).not.toHaveBeenCalled();
+				expect(plugin.saveSettings).not.toHaveBeenCalled();
+			});
+
+			it('celebrates when cumulative words written today crosses daily goal', () => {
+				plugin.settings.celebrations.onWordGoal = true;
+				plugin.settings.celebrations.dailyWordGoal = 5;
+
+				const mockFile = { path: 'test.md' } as TFile;
+				const handler = getEditorChangeHandler();
+
+				// Establish baseline at 3 words
+				handler?.(makeEditor('one two three'), { file: mockFile });
+				vi.advanceTimersByTime(100);
+
+				// Add 2 words (delta=2, total=2 — below goal)
+				handler?.(makeEditor('one two three four five'), { file: mockFile });
+				vi.advanceTimersByTime(100);
+				expect(plugin.petView?.transitionState).not.toHaveBeenCalled();
+
+				// Add 3 more words (delta=3, total=5 — crosses goal)
+				handler?.(makeEditor('one two three four five six seven eight'), { file: mockFile });
+				vi.advanceTimersByTime(100);
+
+				expect(plugin.petView?.transitionState).toHaveBeenCalledWith('celebration');
+			});
+
+			it('calls saveSettings when daily goal is crossed', () => {
+				plugin.settings.celebrations.onWordGoal = true;
+				plugin.settings.celebrations.dailyWordGoal = 3;
+
+				const mockFile = { path: 'test.md' } as TFile;
+				const handler = getEditorChangeHandler();
+
+				handler?.(makeEditor(''), { file: mockFile });
+				vi.advanceTimersByTime(100);
+
+				handler?.(makeEditor('one two three'), { file: mockFile });
+				vi.advanceTimersByTime(100);
+
+				expect(plugin.saveSettings).toHaveBeenCalledTimes(1);
+			});
+
+			it('does not celebrate daily goal when dailyWordGoal is null', () => {
+				plugin.settings.celebrations.onWordGoal = true;
+				plugin.settings.celebrations.dailyWordGoal = null;
+
+				const mockFile = { path: 'test.md' } as TFile;
+				const handler = getEditorChangeHandler();
+
+				handler?.(makeEditor(''), { file: mockFile });
+				vi.advanceTimersByTime(100);
+
+				handler?.(makeEditor('word '.repeat(1000).trim()), { file: mockFile });
+				vi.advanceTimersByTime(100);
+
+				expect(plugin.petView?.transitionState).not.toHaveBeenCalled();
+			});
+
+			it('does not check goals when onWordGoal is false', () => {
+				plugin.settings.celebrations.onWordGoal = false;
+				plugin.settings.celebrations.dailyWordGoal = 5;
+
+				const mockFile = { path: 'test.md' } as TFile;
+				const handler = getEditorChangeHandler();
+
+				handler?.(makeEditor(''), { file: mockFile });
+				vi.advanceTimersByTime(100);
+
+				handler?.(makeEditor('one two three four five six'), { file: mockFile });
+				vi.advanceTimersByTime(100);
+
+				expect(plugin.petView?.transitionState).not.toHaveBeenCalled();
+			});
+
+			it('does not re-celebrate daily goal once goalCelebrated is true', () => {
+				plugin.settings.celebrations.onWordGoal = true;
+				plugin.settings.celebrations.dailyWordGoal = 5;
+
+				const mockFile = { path: 'test.md' } as TFile;
+				const handler = getEditorChangeHandler();
+
+				// Baseline
+				handler?.(makeEditor(''), { file: mockFile });
+				vi.advanceTimersByTime(100);
+
+				// Cross goal
+				handler?.(makeEditor('one two three four five'), { file: mockFile });
+				vi.advanceTimersByTime(100);
+				expect(plugin.petView?.transitionState).toHaveBeenCalledWith('celebration');
+				vi.advanceTimersByTime(CELEBRATION_OVERLAY_CONSTANTS.CELEBRATION_DURATION_MS);
+				vi.clearAllMocks();
+
+				// Add more words — should NOT celebrate again
+				handler?.(makeEditor('one two three four five six seven'), { file: mockFile });
+				vi.advanceTimersByTime(100);
+
+				expect(plugin.petView?.transitionState).not.toHaveBeenCalled();
+			});
+
+			it('resets daily word count when date has changed (midnight rollover)', () => {
+				plugin.settings.celebrations.onWordGoal = true;
+				plugin.settings.celebrations.dailyWordGoal = 5;
+				// Stale date with nearly-full count
+				plugin.dailyWordData.date = '2020-01-01';
+				plugin.dailyWordData.wordsAddedToday = 4;
+
+				const mockFile = { path: 'test.md' } as TFile;
+				const handler = getEditorChangeHandler();
+
+				// Baseline
+				handler?.(makeEditor(''), { file: mockFile });
+				vi.advanceTimersByTime(100);
+
+				// Add 4 words. Without reset: 4+4=8 >= 5 → would celebrate.
+				// With midnight reset: 0+4=4 < 5 → no celebration.
+				handler?.(makeEditor('one two three four'), { file: mockFile });
+				vi.advanceTimersByTime(100);
+
+				expect(plugin.petView?.transitionState).not.toHaveBeenCalled();
+			});
+
+			it('skips word goal checks entirely when file context is null', () => {
+				plugin.settings.celebrations.onWordGoal = true;
+				plugin.settings.celebrations.dailyWordGoal = 5;
+
+				const handler = getEditorChangeHandler();
+
+				handler?.(makeEditor(''), { file: null });
+				vi.advanceTimersByTime(100);
+
+				handler?.(makeEditor('one two three four five six'), { file: null });
+				vi.advanceTimersByTime(100);
+
+				expect(plugin.petView?.transitionState).not.toHaveBeenCalled();
+				expect(plugin.saveSettings).not.toHaveBeenCalled();
+			});
 		});
 
-		it('should celebrate when crossing 500 word threshold', () => {
-			const mockEditor = {
-				getValue: vi.fn(),
-			} as unknown as Editor;
+		describe('per-note goal', () => {
+			it('celebrates when note body word count crosses word-goal frontmatter value', () => {
+				plugin.settings.celebrations.onWordGoal = true;
+				(plugin.app.metadataCache.getFileCache as any).mockReturnValue({
+					frontmatter: { 'word-goal': 5 },
+				});
 
-			const editorChangeHandler = (mockWorkspace.on as any).mock.calls.find(
-				(call: any) => call[0] === 'editor-change'
-			)?.[1];
+				const mockFile = { path: 'test.md' } as TFile;
+				const handler = getEditorChangeHandler();
 
-			// Establish previous state: already past 100 milestone
-			mockEditor.getValue = vi.fn().mockReturnValue('word '.repeat(101));
-			editorChangeHandler?.(mockEditor);
-			vi.advanceTimersByTime(500);
-			// This celebrates for 100 milestone
+				// Baseline: 3 words
+				handler?.(makeEditor('one two three'), { file: mockFile });
+				vi.advanceTimersByTime(100);
+				vi.clearAllMocks();
 
-			// Wait for celebration to complete
-			vi.advanceTimersByTime(CELEBRATION_OVERLAY_CONSTANTS.CELEBRATION_DURATION_MS);
-			vi.clearAllMocks();
+				// Cross goal: prev=3 < goal=5, current=6 >= goal=5
+				handler?.(makeEditor('one two three four five six'), { file: mockFile });
+				vi.advanceTimersByTime(100);
 
-			// Now at 495 words (between 100 and 500)
-			mockEditor.getValue = vi.fn().mockReturnValue('word '.repeat(495));
-			editorChangeHandler?.(mockEditor);
-			vi.advanceTimersByTime(500);
+				expect(plugin.petView?.transitionState).toHaveBeenCalledWith('celebration');
+			});
 
-			vi.clearAllMocks();
+			it('does not celebrate if prevCount was already at or above goal (no crossing)', () => {
+				plugin.settings.celebrations.onWordGoal = true;
+				(plugin.app.metadataCache.getFileCache as any).mockReturnValue({
+					frontmatter: { 'word-goal': 5 },
+				});
 
-			// Crossed 500 word threshold
-			mockEditor.getValue = vi.fn().mockReturnValue('word '.repeat(510));
-			editorChangeHandler?.(mockEditor);
-			vi.advanceTimersByTime(500);
+				const mockFile = { path: 'test.md' } as TFile;
+				const handler = getEditorChangeHandler();
 
-			expect(plugin.petView?.transitionState).toHaveBeenCalledWith('celebration');
+				// Baseline: already 7 words (above goal)
+				handler?.(makeEditor('one two three four five six seven'), { file: mockFile });
+				vi.advanceTimersByTime(100);
+				vi.clearAllMocks();
+
+				// Edit to 8 words — prev=7 >= goal=5, no crossing
+				handler?.(makeEditor('one two three four five six seven eight'), { file: mockFile });
+				vi.advanceTimersByTime(100);
+
+				expect(plugin.petView?.transitionState).not.toHaveBeenCalled();
+			});
+
+			it('does not celebrate per-note goal when no word-goal frontmatter present', () => {
+				plugin.settings.celebrations.onWordGoal = true;
+				// metadataCache.getFileCache returns null — default mock setup
+
+				const mockFile = { path: 'test.md' } as TFile;
+				const handler = getEditorChangeHandler();
+
+				handler?.(makeEditor(''), { file: mockFile });
+				vi.advanceTimersByTime(100);
+
+				handler?.(makeEditor('one two three four five six'), { file: mockFile });
+				vi.advanceTimersByTime(100);
+
+				expect(plugin.petView?.transitionState).not.toHaveBeenCalled();
+			});
+
+			it('does not celebrate per-note goal on first observation of file (baseline init)', () => {
+				plugin.settings.celebrations.onWordGoal = true;
+				(plugin.app.metadataCache.getFileCache as any).mockReturnValue({
+					frontmatter: { 'word-goal': 5 },
+				});
+
+				const mockFile = { path: 'test.md' } as TFile;
+				const handler = getEditorChangeHandler();
+
+				// First edit: count already above goal — should NOT celebrate
+				handler?.(makeEditor('one two three four five six'), { file: mockFile });
+				vi.advanceTimersByTime(100);
+
+				expect(plugin.petView?.transitionState).not.toHaveBeenCalled();
+			});
+
+			it('excludes YAML frontmatter text from body word count', () => {
+				plugin.settings.celebrations.onWordGoal = true;
+				plugin.settings.celebrations.dailyWordGoal = 3;
+
+				const mockFile = { path: 'test.md' } as TFile;
+				const handler = getEditorChangeHandler();
+
+				// Baseline: frontmatter-only note (no body words)
+				const frontmatterOnly = '---\nword-goal: 500\ntitle: My Note\ntags: [writing]\n---\n';
+				handler?.(makeEditor(frontmatterOnly), { file: mockFile });
+				vi.advanceTimersByTime(100);
+				vi.clearAllMocks();
+
+				// Add 2 body words. Frontmatter words must NOT count.
+				// delta = 2, wordsAddedToday = 2 < goal = 3 → no celebration
+				const withTwoBodyWords = '---\nword-goal: 500\ntitle: My Note\ntags: [writing]\n---\none two';
+				handler?.(makeEditor(withTwoBodyWords), { file: mockFile });
+				vi.advanceTimersByTime(100);
+
+				expect(plugin.petView?.transitionState).not.toHaveBeenCalled();
+			});
 		});
 
-		it('should celebrate when crossing 1000 word threshold', () => {
-			const mockEditor = {
-				getValue: vi.fn(),
-			} as unknown as Editor;
 
-			const editorChangeHandler = (mockWorkspace.on as any).mock.calls.find(
-				(call: any) => call[0] === 'editor-change'
-			)?.[1];
 
-			// Establish previous state: already past 100 and 500 milestones
-			mockEditor.getValue = vi.fn().mockReturnValue('word '.repeat(501));
-			editorChangeHandler?.(mockEditor);
-			vi.advanceTimersByTime(500);
-			// This celebrates for 100 milestone first
+		it('excludes Obsidian %% comment %% blocks from body word count', () => {
+			plugin.settings.celebrations.onWordGoal = true;
+			plugin.settings.celebrations.dailyWordGoal = 3;
 
-			// Wait for celebration to complete
-			vi.advanceTimersByTime(CELEBRATION_OVERLAY_CONSTANTS.CELEBRATION_DURATION_MS);
+			const mockFile = { path: 'test.md' } as TFile;
+			const handler = getEditorChangeHandler();
+
+			// Baseline: empty note
+			handler?.(makeEditor(''), { file: mockFile });
+			vi.advanceTimersByTime(100);
 			vi.clearAllMocks();
 
-			// Now at 995 words (between 500 and 1000)
-			mockEditor.getValue = vi.fn().mockReturnValue('word '.repeat(995));
-			editorChangeHandler?.(mockEditor);
-			vi.advanceTimersByTime(500);
-
-			vi.clearAllMocks();
-
-			// Crossed 1000 word threshold
-			mockEditor.getValue = vi.fn().mockReturnValue('word '.repeat(1010));
-			editorChangeHandler?.(mockEditor);
-			vi.advanceTimersByTime(500);
-
-			expect(plugin.petView?.transitionState).toHaveBeenCalledWith('celebration');
-		});
-
-		it('should not celebrate if onWordMilestone is disabled', () => {
-			plugin.settings.celebrations.onWordMilestone = false;
-
-			const mockEditor = {
-				getValue: vi.fn(),
-			} as unknown as Editor;
-
-			const editorChangeHandler = (mockWorkspace.on as any).mock.calls.find(
-				(call: any) => call[0] === 'editor-change'
-			)?.[1];
-
-			mockEditor.getValue = vi.fn().mockReturnValue('word '.repeat(105));
-			editorChangeHandler?.(mockEditor);
-			vi.advanceTimersByTime(500);
+			// Add content: 2 visible words + comment with 3 hidden words.
+			// Comment words must NOT count toward goal. delta = 2 < goal = 3 → no celebration.
+			handler?.(makeEditor('visible %% hidden comment words %% text'), { file: mockFile });
+			vi.advanceTimersByTime(100);
 
 			expect(plugin.petView?.transitionState).not.toHaveBeenCalled();
 		});
+		describe('cleanup', () => {
+			it('cleanup() clears fileWordCounts and perNoteGoalCelebrated', () => {
+				plugin.settings.celebrations.onWordGoal = true;
+				plugin.settings.celebrations.dailyWordGoal = 100; // high — won't trigger
+				(plugin.app.metadataCache.getFileCache as any).mockReturnValue({
+					frontmatter: { 'word-goal': 5 },
+				});
 
-		it('should not celebrate when word count decreases below threshold', () => {
-			const mockEditor = {
-				getValue: vi.fn(),
-			} as unknown as Editor;
+				const mockFile = { path: 'test.md' } as TFile;
+				const handler = getEditorChangeHandler();
 
-			const editorChangeHandler = (mockWorkspace.on as any).mock.calls.find(
-				(call: any) => call[0] === 'editor-change'
-			)?.[1];
+				// Baseline
+				handler?.(makeEditor('one two three'), { file: mockFile });
+				vi.advanceTimersByTime(100);
 
-			// Initial state: 105 words
-			mockEditor.getValue = vi.fn().mockReturnValue('word '.repeat(105));
-			editorChangeHandler?.(mockEditor);
-			vi.advanceTimersByTime(500);
+				// Cross per-note goal → perNoteGoalCelebrated now has 'test.md'
+				handler?.(makeEditor('one two three four five six'), { file: mockFile });
+				vi.advanceTimersByTime(100);
+				expect(plugin.petView?.transitionState).toHaveBeenCalledWith('celebration');
 
-			vi.clearAllMocks();
+				vi.advanceTimersByTime(CELEBRATION_OVERLAY_CONSTANTS.CELEBRATION_DURATION_MS);
+				service.cleanup();
+				vi.clearAllMocks();
 
-			// Decreased to 95 words
-			mockEditor.getValue = vi.fn().mockReturnValue('word '.repeat(95));
-			editorChangeHandler?.(mockEditor);
-			vi.advanceTimersByTime(500);
+				// After cleanup: fileWordCounts and perNoteGoalCelebrated are empty.
+				// First edit re-initialises baseline (no celebration).
+				handler?.(makeEditor('one'), { file: mockFile });
+				vi.advanceTimersByTime(100);
+				expect(plugin.petView?.transitionState).not.toHaveBeenCalled();
 
-			expect(plugin.petView?.transitionState).not.toHaveBeenCalled();
-		});
+				// Second edit crosses goal again — should celebrate (Set was cleared)
+				handler?.(makeEditor('one two three four five six'), { file: mockFile });
+				vi.advanceTimersByTime(100);
 
-		it('should only celebrate once per threshold per document', () => {
-			const mockEditor = {
-				getValue: vi.fn(),
-			} as unknown as Editor;
-
-			const editorChangeHandler = (mockWorkspace.on as any).mock.calls.find(
-				(call: any) => call[0] === 'editor-change'
-			)?.[1];
-
-			// Initial state: 95 words
-			mockEditor.getValue = vi.fn().mockReturnValue('word '.repeat(95));
-			editorChangeHandler?.(mockEditor);
-			vi.advanceTimersByTime(500);
-
-			vi.clearAllMocks();
-
-			// Cross 100 threshold first time
-			mockEditor.getValue = vi.fn().mockReturnValue('word '.repeat(105));
-			editorChangeHandler?.(mockEditor);
-			vi.advanceTimersByTime(500);
-			expect(plugin.petView?.transitionState).toHaveBeenCalledTimes(1);
-
-			vi.clearAllMocks();
-
-			// Continue writing past 100 threshold
-			mockEditor.getValue = vi.fn().mockReturnValue('word '.repeat(120));
-			editorChangeHandler?.(mockEditor);
-			vi.advanceTimersByTime(500);
-			// Should not celebrate again for same threshold
-			expect(plugin.petView?.transitionState).not.toHaveBeenCalled();
+				expect(plugin.petView?.transitionState).toHaveBeenCalledWith('celebration');
+			});
 		});
 	});
 
 	describe('editor-change debouncing', () => {
-		it('should debounce editor-change events to 500ms', () => {
+		it('should debounce editor-change events to 100ms', () => {
 			const mockEditor = {
 				getValue: vi.fn().mockReturnValue('- [x] Task'),
 			} as unknown as Editor;
@@ -527,15 +698,15 @@ describe('CelebrationService', () => {
 			)?.[1];
 
 			// Trigger multiple rapid changes
-			editorChangeHandler?.(mockEditor);
-			editorChangeHandler?.(mockEditor);
-			editorChangeHandler?.(mockEditor);
+			editorChangeHandler?.(mockEditor, { file: null });
+			editorChangeHandler?.(mockEditor, { file: null });
+			editorChangeHandler?.(mockEditor, { file: null });
 
 			// Should not trigger yet
 			expect(plugin.petView?.transitionState).not.toHaveBeenCalled();
 
-			// After 500ms, should process once
-			vi.advanceTimersByTime(500);
+			// After 100ms, should process once
+			vi.advanceTimersByTime(100);
 			expect(plugin.petView?.transitionState).toHaveBeenCalledTimes(1);
 		});
 
@@ -550,19 +721,19 @@ describe('CelebrationService', () => {
 
 			// First change: no content (establishes baseline)
 			mockEditor.getValue = vi.fn().mockReturnValue('');
-			editorChangeHandler?.(mockEditor);
-			vi.advanceTimersByTime(300);
+			editorChangeHandler?.(mockEditor, { file: null });
+			vi.advanceTimersByTime(60);
 
 			// Second change before debounce completes (resets timer): adds a task
 			mockEditor.getValue = vi.fn().mockReturnValue('- [x] Task complete');
-			editorChangeHandler?.(mockEditor);
-			vi.advanceTimersByTime(300);
+			editorChangeHandler?.(mockEditor, { file: null });
+			vi.advanceTimersByTime(60);
 
 			// Still shouldn't have triggered (debounce not complete)
 			expect(plugin.petView?.transitionState).not.toHaveBeenCalled();
 
-			// Complete the debounce period (total 500ms from second change)
-			vi.advanceTimersByTime(200);
+			// Complete the debounce period (total 100ms from second change)
+			vi.advanceTimersByTime(40);
 			// Now celebration should trigger for task completion
 			expect(plugin.petView?.transitionState).toHaveBeenCalledTimes(1);
 		});

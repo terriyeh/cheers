@@ -1,4 +1,17 @@
 /**
+ * Persisted daily writing progress.
+ * Stored as the `daily` key in data.json alongside settings fields.
+ */
+export interface DailyWordData {
+	/** ISO date string (e.g. "2026-02-23") — resets counter when date changes */
+	date: string;
+	/** Accumulated word delta written today across all files */
+	wordsAddedToday: number;
+	/** Whether the daily goal celebration has already fired today */
+	goalCelebrated: boolean;
+}
+
+/**
  * VaultPal Plugin Settings
  */
 export interface ObsidianPetsSettings {
@@ -18,10 +31,10 @@ export interface ObsidianPetsSettings {
 		onTaskComplete: boolean;
 		/** Celebrate when a link is created */
 		onLinkCreate: boolean;
-		/** Celebrate when word count milestones are reached */
-		onWordMilestone: boolean;
-		/** Word count thresholds for celebrations */
-		wordMilestones: number[];
+		/** Celebrate when word count goals are reached (daily or per-note) */
+		onWordGoal: boolean;
+		/** Daily word goal: words to write today across vault. null = not set. */
+		dailyWordGoal: number | null;
 	};
 }
 
@@ -37,8 +50,8 @@ export const DEFAULT_SETTINGS: ObsidianPetsSettings = {
 		onNoteCreate: true,
 		onTaskComplete: true,
 		onLinkCreate: true,
-		onWordMilestone: true,
-		wordMilestones: [100, 500, 1000, 3500, 5000],
+		onWordGoal: false,
+		dailyWordGoal: null,
 	},
 };
 

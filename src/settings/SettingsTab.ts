@@ -56,6 +56,7 @@ export class ObsidianPetsSettingTab extends PluginSettingTab {
 		// Note Creation
 		new Setting(containerEl)
 			.setName('Note creation')
+			.setDesc('Celebrate when you create any new note')
 			.addToggle((toggle) =>
 				toggle
 					.setValue(this.plugin.settings.celebrations.onNoteCreate)
@@ -68,7 +69,7 @@ export class ObsidianPetsSettingTab extends PluginSettingTab {
 		// Task Completion
 		new Setting(containerEl)
 			.setName('Task completion')
-			.setDesc('Checking off a checkbox')
+			.setDesc('Celebrate when you check off a checkbox')
 			.addToggle((toggle) =>
 				toggle
 					.setValue(this.plugin.settings.celebrations.onTaskComplete)
@@ -81,6 +82,7 @@ export class ObsidianPetsSettingTab extends PluginSettingTab {
 		// Link Creation
 		new Setting(containerEl)
 			.setName('Link creation')
+			.setDesc('Celebrate when you create a new link')
 			.addToggle((toggle) =>
 				toggle
 					.setValue(this.plugin.settings.celebrations.onLinkCreate)
@@ -90,53 +92,50 @@ export class ObsidianPetsSettingTab extends PluginSettingTab {
 					})
 			);
 
-		// Word Count Milestones
-		const wordMilestoneSetting = new Setting(containerEl)
-			.setName('Word count milestones')
-			.setDesc('Reaching a certain number of words written that day')
+		// Word Count Goals
+		new Setting(containerEl)
+			.setName('Word count goals')
+			.setDesc('Celebrate when you reach your writing goals')
 			.addToggle((toggle) =>
 				toggle
-					.setValue(this.plugin.settings.celebrations.onWordMilestone)
+					.setValue(this.plugin.settings.celebrations.onWordGoal)
 					.onChange(async (value) => {
-						this.plugin.settings.celebrations.onWordMilestone = value;
+						this.plugin.settings.celebrations.onWordGoal = value;
 						await this.plugin.saveSettings();
-						// Refresh display to show/hide milestone input
 						this.display();
 					})
 			);
 
-		// Word Count Milestones Input (only show if word milestones are enabled)
-		if (this.plugin.settings.celebrations.onWordMilestone) {
+		if (this.plugin.settings.celebrations.onWordGoal) {
+			// Daily word goal input
 			new Setting(containerEl)
-				.setName('Milestone thresholds')
-				.setDesc('Comma-separated numbers (e.g., 100, 500, 1000). Max value: 10,000,000 words.')
+				.setName('Daily word goal')
+				.setDesc('Words written today across your vault (resets at midnight). Leave blank to use per-note goals only.')
 				.addText((text) =>
 					text
-						.setPlaceholder('100, 500, 1000, 3500, 5000')
-						.setValue(this.plugin.settings.celebrations.wordMilestones.join(', '))
+						.setPlaceholder('e.g. 500')
+						.setValue(this.plugin.settings.celebrations.dailyWordGoal?.toString() ?? '')
 						.onChange(async (value) => {
-							const MAX_MILESTONE = 10000000; // 10 million words
-							const MAX_MILESTONE_COUNT = 50; // Limit array size
-
-							// Parse and validate
-							const milestones = value
-								.split(',')
-								.map((s) => parseInt(s.trim()))
-								.filter((n) => !isNaN(n) && n > 0 && n <= MAX_MILESTONE)
-								.slice(0, MAX_MILESTONE_COUNT);
-
-							// Remove duplicates and sort
-							const unique = [...new Set(milestones)].sort((a, b) => a - b);
-
-							this.plugin.settings.celebrations.wordMilestones =
-								unique.length > 0 ? unique : [100, 500, 1000, 3500, 5000]; // Default if empty
-
+							const num = parseInt(value.trim(), 10);
+							this.plugin.settings.celebrations.dailyWordGoal =
+								Number.isFinite(num) && num > 0 && num <= 100_000 ? num : null;
 							await this.plugin.saveSettings();
-
-							// Update display with cleaned value
-							text.setValue(this.plugin.settings.celebrations.wordMilestones.join(', '));
 						})
 				);
+
+			// Per-note goal hint
+			containerEl.createEl('p', {
+				text: "To add a note-specific word goal, add the word-goal file property and enter a numerical value as the word target for that file. For example, word-goal: 500 sets a word target of 500 for that file.",
+				cls: 'setting-item-description',
+			});
+
+			// Warning when no goal type is configured
+			if (this.plugin.settings.celebrations.dailyWordGoal === null) {
+				containerEl.createEl('p', {
+					text: '⚠ At least one goal type must be configured: set a daily goal above, or add word-goal to a note\'s frontmatter.',
+					cls: 'setting-item-description',
+				});
+			}
 		}
 	}
 }
