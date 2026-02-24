@@ -15,7 +15,7 @@
 
 import type { TFile, Editor, EventRef, MarkdownFileInfo, MarkdownView } from 'obsidian';
 import type ObsidianPetsPlugin from '../main';
-import { CELEBRATION_OVERLAY_CONSTANTS } from '../utils/celebration-constants';
+import { CELEBRATION_OVERLAY_CONSTANTS, STATUS_BAR_NOTIFICATION_DURATION_MS } from '../utils/celebration-constants';
 
 /**
  * Celebration event types for logging / future toast differentiation
@@ -61,8 +61,19 @@ export class CelebrationService {
 	private isCelebrating: boolean = false;
 	private celebrationTimeout: number | undefined;
 
-	constructor(plugin: ObsidianPetsPlugin) {
+	// Status bar notification
+	private statusBarItem: HTMLElement | null = null;
+	private statusBarClearTimeout: number | undefined;
+	private static readonly STATUS_BAR_MESSAGES: Record<CelebrationEventType, string> = {
+		'note-create':   '✨ A new note has enriched your vault',
+		'task-complete': '✅ You got that done!',
+		'link-create':   '🔗 A new link has enriched your vault',
+		'word-goal':     '🏆 Congrats! You reached your writing goal!',
+	};
+
+	constructor(plugin: ObsidianPetsPlugin, statusBarItem: HTMLElement | null = null) {
 		this.plugin = plugin;
+		this.statusBarItem = statusBarItem;
 
 		// Register event listeners (individual celebration types check their own toggles)
 		this.registerEventListeners();
@@ -222,6 +233,26 @@ export class CelebrationService {
 	}
 
 	/**
+	 * Count words in raw editor content using Obsidian's approach:
+	 * strip non-prose content, then count whitespace-separated tokens.
+	 */
+	static countWords(content: string): number {
+		// Strip YAML frontmatter. \r?\n handles both line endings.
+		// {0,5000} caps the match to prevent runaway on unclosed delimiters.
+		let body = content.replace(/^---\r?\n[\s\S]{0,5000}?\r?\n---\r?\n?/, '');
+		// Strip fenced code blocks — code is not prose.
+		// {0,20000} caps on unclosed fences.
+		body = body.replace(/```[\s\S]{0,20000}?```/g, '');
+		// Strip inline code.
+		body = body.replace(/`[^`\n]*`/g, '');
+		// Strip Obsidian comment blocks (%% ... %%).
+		// {0,10000} caps on unclosed delimiters.
+		body = body.replace(/%%[\s\S]{0,10000}?%%/g, '');
+		// Count whitespace-separated tokens — matches Obsidian's built-in word count algorithm.
+		return (body.match(/\S+/g) || []).length;
+	}
+
+	/**
 	 * Check for word count goals (daily and per-note)
 	 * @param content - Raw editor content (frontmatter included)
 	 * @param file - The file being edited, or null if unknown
@@ -230,17 +261,9 @@ export class CelebrationService {
 		if (!this.plugin.settings.celebrations.onWordGoal) return;
 		if (!file) return; // No file context — skip entirely to avoid polluting shared state
 
-		// Strip YAML frontmatter before counting to prevent frontmatter keys/values
-		// (including the word-goal field itself) from inflating the body word count.
-		// \r?\n handles both Unix and Windows line endings. {0,5000} caps the match
-		// to prevent a linear scan on large files with unclosed frontmatter delimiters.
-		const withoutFrontmatter = content.replace(/^---\r?\n[\s\S]{0,5000}?\r?\n---\r?\n?/, '');
-		// Strip Obsidian %% comment %% blocks — users don't consider these "written words".
-		// {0,10000} caps the match on unclosed comment delimiters.
-		const bodyContent = withoutFrontmatter.replace(/%%[\s\S]{0,10000}?%%/g, '');
-		// Match-based counting: treats hyphenated words (well-known) and numbers (1,000)
-		// as single tokens, consistent with user intuition.
-		const currentWordCount = (bodyContent.match(/(?:[0-9]+(?:(?:,|\.)[0-9]+)*|[-A-Za-z\u00C0-\u024F\u0370-\u03FF])+/g) || []).length;
+		// Count body words using the same approach as Obsidian's built-in word count:
+		// strip non-prose content, then split on whitespace.
+		const currentWordCount = CelebrationService.countWords(content);
 		const filePath = file.path;
 
 		// First observation of this file this session → set baseline, skip goal checks.
@@ -331,6 +354,21 @@ export class CelebrationService {
 	 * @param eventType - Type of celebration event (for logging)
 	 */
 	private celebrate(eventType: CelebrationEventType): void {
+		// Status bar fires unconditionally — independent of fireworks state
+		if (this.plugin.settings.celebrations.showStatusBar && this.statusBarItem) {
+			if (this.statusBarClearTimeout !== undefined) {
+				window.clearTimeout(this.statusBarClearTimeout);
+				this.statusBarClearTimeout = undefined;
+			}
+			this.statusBarItem.setText(CelebrationService.STATUS_BAR_MESSAGES[eventType]);
+			this.statusBarItem.show();
+			this.statusBarClearTimeout = window.setTimeout(() => {
+				this.statusBarItem?.setText('');
+				this.statusBarItem?.hide();
+				this.statusBarClearTimeout = undefined;
+			}, STATUS_BAR_NOTIFICATION_DURATION_MS);
+		}
+
 		// Race condition prevention - block if already celebrating
 		if (this.isCelebrating) {
 			console.debug('[CelebrationService] Skipping celebration - already celebrating');
@@ -370,7 +408,7 @@ export class CelebrationService {
 
 			// Then clean up timeout if it exists
 			if (this.celebrationTimeout !== undefined) {
-				clearTimeout(this.celebrationTimeout);
+				window.clearTimeout(this.celebrationTimeout);
 				this.celebrationTimeout = undefined;
 			}
 
@@ -390,6 +428,16 @@ export class CelebrationService {
 		this.noteCreationHandler = null;
 		this.editorChangeHandler = null;
 
+		// Clear status bar hide timeout and ensure element is hidden
+		if (this.statusBarClearTimeout !== undefined) {
+			window.clearTimeout(this.statusBarClearTimeout);
+			this.statusBarClearTimeout = undefined;
+		}
+		if (this.statusBarItem) {
+			this.statusBarItem.setText('');
+			this.statusBarItem.hide();
+		}
+
 		// Clear debounce timeout
 		if (this.editorChangeTimeout !== undefined) {
 			window.clearTimeout(this.editorChangeTimeout);
@@ -398,7 +446,7 @@ export class CelebrationService {
 
 		// Clear celebration timeout
 		if (this.celebrationTimeout !== undefined) {
-			clearTimeout(this.celebrationTimeout);
+			window.clearTimeout(this.celebrationTimeout);
 			this.celebrationTimeout = undefined;
 		}
 

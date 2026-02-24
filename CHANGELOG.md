@@ -96,10 +96,24 @@ Research into VS Code Pets (2.26M installs) and the Obsidian pet plugin landscap
 
 ## [Unreleased]
 
+### Added - Status Bar Notifications (2026-02-23)
+
+- Status bar notification: brief message appears at the left of the status bar for 3 seconds after each celebration trigger
+  - Enable via Settings → Obsidian Pets → Celebrations → "Show status bar notification" (off by default)
+  - Messages: "✨ A new note has enriched your vault", "✅ You got that done!", "🔗 A new link has enriched your vault", "🏆 Congrats! You reached your writing goal!"
+  - Global toggle (not per-trigger) — one switch controls all celebration types
+  - Independent of fireworks: fires even when fireworks are blocked by race condition prevention
+
+### Added - Word Count Goals (2026-02-23)
+
+- `countWords()` static method in `CelebrationService`: strips YAML frontmatter, fenced code blocks, inline code, and Obsidian comments (`%% %%`) before counting — matches Obsidian's word counting algorithm (`\S+` tokenization)
+- Per-file word count baseline initialized on first edit per session (prevents false celebrations on session start)
+- Daily word count total persisted across sessions (resets automatically at midnight)
+
 ### Changed - MVP Scope Redefined (2026-02-22)
 
 - Word count celebrations: replaced incremental milestone list (100, 500, 1000, 3500, 5000) with per-note goal (set via `word-goal` frontmatter) and per-day goal (configured in settings); at least one required when word count celebration is enabled
-- Toast notifications added as per-trigger option alongside fireworks; each celebration type now has independent Fireworks and Toast toggles, both on by default
+- Status bar notification added alongside fireworks as independent celebration feedback
 - Dashboard view added to v1.0 scope: Stats tab within pet panel, concentric word count rings (daily outer, per-note inner), daily activity tallies for enabled celebration types
 - Butterfly chase moved from v1.0 to v1.1
 - Companion system moved from v1.0 to v1.2; ships alongside cosmetics and seasonal assets due to shared rendering complexity

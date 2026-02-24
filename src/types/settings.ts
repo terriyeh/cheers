@@ -35,6 +35,8 @@ export interface ObsidianPetsSettings {
 		onWordGoal: boolean;
 		/** Daily word goal: words to write today across vault. null = not set. */
 		dailyWordGoal: number | null;
+		/** Show a brief message in the status bar when a celebration triggers */
+		showStatusBar: boolean;
 	};
 }
 
@@ -52,6 +54,7 @@ export const DEFAULT_SETTINGS: ObsidianPetsSettings = {
 		onLinkCreate: true,
 		onWordGoal: false,
 		dailyWordGoal: null,
+		showStatusBar: false,
 	},
 };
 

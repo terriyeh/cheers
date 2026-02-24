@@ -41,7 +41,7 @@ A plugin you feel, not think about.
   - Word count goals (see below)
 - **Per-trigger options** (independent toggles for each trigger type):
   - **Fireworks**: Show fireworks overlay animation (on by default)
-  - **Toast**: Show Obsidian notice/toast message (on by default)
+  - **Status bar notification**: Show a brief message in the status bar for 3 seconds (global toggle, off by default)
 - **Word count goal types** (at least one required when word count celebration is enabled):
   - **Per-note goal**: Set via frontmatter in the note (`word-goal: 10000`). Celebrates when note reaches 100% of goal.
   - **Per-day goal**: Single number in plugin settings (vault-wide total words written today, resets at midnight). Celebrates when daily total reaches 100% of goal.
@@ -83,7 +83,7 @@ A plugin you feel, not think about.
 - **Celebration settings**:
   - Toggle for each trigger type (daily notes, tasks, links, word count)
   - Per-trigger fireworks toggle (on/off, default on)
-  - Per-trigger toast toggle (on/off, default on)
+  - Status bar notification toggle (global on/off, default off)
   - Daily word goal (number, required when word count celebration is on)
   - Per-note word goal: set in note frontmatter (`word-goal: [number]`), not in plugin settings
 - **Data storage**: Local JSON via Obsidian Plugin API
@@ -123,10 +123,12 @@ A plugin you feel, not think about.
 - Settings persistence
 
 **Remaining:**
-- Toast notification system (per-trigger toast toggle, on by default, independent of fireworks)
-- Replace word milestone list with per-note goal (frontmatter) + per-day goal (settings)
 - Dashboard view (Pet/Stats tab toggle, concentric rings, activity tallies)
 - Settings page: ensure all settings accessible via Plugin Settings tab (not modal-only)
+
+**Also complete:**
+- Status bar notification system (global toggle, off by default, independent of fireworks)
+- Word count goals: per-note goal (frontmatter `word-goal`) + per-day goal (settings), replacing milestone list
 
 ### V1.1 — Interactivity + Vault Health
 - Butterfly chase interaction (user-triggered, pets chase then return to walking)
@@ -145,7 +147,7 @@ A plugin you feel, not think about.
 1. **Background**: Image asset management + CSS swap logic
 2. **Sprites**: GIF-based animation per state
 3. **State machine**: Pet animation state transitions
-4. **Event system**: Vault listeners → celebration triggers → fireworks + toast
+4. **Event system**: Vault listeners → celebration triggers → fireworks + status bar notification
 5. **Word count tracking**: Delta accumulation per file for daily total; frontmatter reader for per-note goal
 6. **Dashboard**: Tab-switched view within same panel; SVG concentric rings (pure CSS/SVG, no charting library); daily counters with midnight reset
 7. **Settings**: Plugin Settings tab UI + data persistence layer

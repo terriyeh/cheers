@@ -76,8 +76,15 @@ export default class ObsidianPetsPlugin extends Plugin {
 
 		// Don't auto-open on startup - let user open manually via ribbon/command
 
+		// Create status bar item (hidden until a celebration fires)
+		const statusBarItem = this.addStatusBarItem();
+		statusBarItem.hide();
+		statusBarItem.addClass('obsidian-pets-status');
+		// Move to the leftmost position in the status bar
+		statusBarItem.parentElement?.prepend(statusBarItem);
+
 		// Initialize celebration service
-		this.celebrationService = new CelebrationService(this);
+		this.celebrationService = new CelebrationService(this, statusBarItem);
 
 		// Expose debug commands for manual state testing (development only)
 		// This code is completely removed in production builds via tree-shaking
@@ -275,6 +282,10 @@ Available states:
 			) {
 				validated.celebrations.dailyWordGoal = DEFAULT_SETTINGS.celebrations.dailyWordGoal;
 			}
+			// Validate showStatusBar: must be a boolean
+			if (typeof validated.celebrations.showStatusBar !== 'boolean') {
+				validated.celebrations.showStatusBar = DEFAULT_SETTINGS.celebrations.showStatusBar;
+			}
 		}
 
 		return validated;
@@ -286,7 +297,14 @@ Available states:
 	async loadSettings() {
 		const loadedData = await this.loadData();
 		const { daily, ...settingsData } = (loadedData ?? {}) as any;
-		const mergedSettings = Object.assign({}, DEFAULT_SETTINGS, settingsData);
+		const mergedSettings: ObsidianPetsSettings = {
+			...DEFAULT_SETTINGS,
+			...settingsData,
+			celebrations: {
+				...DEFAULT_SETTINGS.celebrations,
+				...(settingsData.celebrations ?? {}),
+			},
+		};
 		this.settings = this.validateSettings(mergedSettings);
 		this.dailyWordData = this.loadDailyWordData(daily);
 	}
