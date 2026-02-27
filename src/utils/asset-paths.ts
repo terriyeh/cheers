@@ -27,14 +27,40 @@ export const EFFECT_SPRITES = {
 } as const;
 
 /**
- * Background scene filenames
+ * A background scene entry: the GIF filename and its matching sky fill color.
+ * Adding a new season/theme is a single entry here — file and skyColor travel together
+ * so they can never get out of sync.
+ */
+export type Background = {
+	readonly file: string;
+	readonly skyColor: string;
+};
+
+/**
+ * Background scene definitions.
+ * Each entry bundles the GIF filename with the sky color that fills the container
+ * above the tiled image, keeping the scene seamless at any panel height.
  */
 export const BACKGROUNDS = {
-	/** Default garden scene with path */
-	DEFAULT: 'background-reg.png',
-	/** Alternative moon world scene */
-	MOON_WORLD: 'moon-world.gif',
-} as const;
+	/** Daytime scene (6am–6pm) */
+	DAY: {
+		file: 'background-day-8fps.gif',
+		skyColor: '#6f9eff',
+	},
+	/** Nighttime scene (6pm–6am) */
+	NIGHT: {
+		file: 'background-night-8fps.gif',
+		skyColor: '#4c4f85',
+	},
+} as const satisfies Record<string, Background>;
+
+/**
+ * Returns the background entry (file + skyColor) for the current (or provided) hour.
+ * Day = 6am–6pm (hours 6–17), Night = everything else.
+ */
+export function getTimeOfDayBackground(hour: number = new Date().getHours()): Background {
+	return (hour >= 6 && hour < 18) ? BACKGROUNDS.DAY : BACKGROUNDS.NIGHT;
+}
 
 /**
  * Asset subdirectories within assets/

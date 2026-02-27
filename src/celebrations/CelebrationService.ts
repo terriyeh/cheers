@@ -29,6 +29,8 @@ export class CelebrationService {
 	// Constants for timing and limits
 	private static readonly EDITOR_DEBOUNCE_MS = 100;
 	private static readonly MAX_CONTENT_LENGTH = 1000000; // 1MB of text (~500 pages)
+	/** Maximum value stored in any daily activity counter. Prevents inflated stats from large files. */
+	private static readonly MAX_DAILY_COUNTER = 100_000;
 	// Note: Celebration duration uses CELEBRATION_OVERLAY_CONSTANTS.CELEBRATION_DURATION_MS (4320ms)
 
 	private plugin: ObsidianPetsPlugin;
@@ -127,12 +129,23 @@ export class CelebrationService {
 	 * @param file - The file that was created
 	 */
 	private handleNoteCreation(file: TFile): void {
-		// Only celebrate for markdown files
+		// Only process markdown files
 		// Check extension property first, fall back to path check for test mocks
 		const isMarkdown = file.extension === 'md' || file.path.endsWith('.md');
 		if (!isMarkdown) {
 			return;
 		}
+
+		// Reset daily stats if the date has rolled over (midnight reset).
+		// Placed AFTER the isMarkdown guard so non-markdown files don't trigger a reset.
+		this.resetDailyStatsIfNeeded();
+
+		// Increment note creation counter unconditionally (capped to avoid inflated stats)
+		this.plugin.dailyWordData.notesCreatedToday = Math.min(
+			this.plugin.dailyWordData.notesCreatedToday + 1,
+			CelebrationService.MAX_DAILY_COUNTER
+		);
+		this.persistActivityUpdate();
 
 		// Check if note creation celebrations are enabled
 		if (!this.plugin.settings.celebrations.onNoteCreate) {
@@ -178,6 +191,9 @@ export class CelebrationService {
 			return;
 		}
 
+		// Reset daily stats if the date has rolled over (midnight reset)
+		this.resetDailyStatsIfNeeded();
+
 		// Check all celebration types
 		this.checkTaskCompletion(content);
 		this.checkLinkCreation(content);
@@ -186,36 +202,41 @@ export class CelebrationService {
 
 	/**
 	 * Check for task completion (increase in checked tasks)
+	 * Counter tracking is unconditional; celebration requires the toggle.
 	 * @param content - Editor content
 	 */
 	private checkTaskCompletion(content: string): void {
-		if (!this.plugin.settings.celebrations.onTaskComplete) {
-			return;
-		}
-
 		// Count completed tasks: - [x]
 		const taskPattern = /- \[x\]/gi;
 		const matches = content.match(taskPattern);
 		const currentTaskCount = matches ? matches.length : 0;
 
-		// Only celebrate on increase
-		if (currentTaskCount > this.previousTaskCount) {
-			this.celebrate('task-complete');
-		}
+		const delta = Math.max(currentTaskCount - this.previousTaskCount, 0);
 
-		// Update tracked count
+		// Update tracked count unconditionally
 		this.previousTaskCount = currentTaskCount;
+
+		if (delta > 0) {
+			// Always track activity (regardless of celebration toggle), capped to avoid inflated stats
+			this.plugin.dailyWordData.tasksCompletedToday = Math.min(
+				this.plugin.dailyWordData.tasksCompletedToday + delta,
+				CelebrationService.MAX_DAILY_COUNTER
+			);
+			this.persistActivityUpdate();
+
+			// Only celebrate if toggle is on
+			if (this.plugin.settings.celebrations.onTaskComplete) {
+				this.celebrate('task-complete');
+			}
+		}
 	}
 
 	/**
 	 * Check for link creation (increase in wiki or markdown links)
+	 * Counter tracking is unconditional; celebration requires the toggle.
 	 * @param content - Editor content
 	 */
 	private checkLinkCreation(content: string): void {
-		if (!this.plugin.settings.celebrations.onLinkCreate) {
-			return;
-		}
-
 		// Count both wiki links [[link]] and markdown links [text](url)
 		// Require at least 1 character inside brackets to avoid celebrating on [[]] or []()
 		// Length bounds prevent O(n*m) backtracking on files with many unclosed [[
@@ -226,13 +247,24 @@ export class CelebrationService {
 		const markdownLinks = content.match(markdownLinkPattern) || [];
 		const currentLinkCount = wikiLinks.length + markdownLinks.length;
 
-		// Only celebrate on increase
-		if (currentLinkCount > this.previousLinkCount) {
-			this.celebrate('link-create');
-		}
+		const delta = Math.max(currentLinkCount - this.previousLinkCount, 0);
 
-		// Update tracked count
+		// Update tracked count unconditionally
 		this.previousLinkCount = currentLinkCount;
+
+		if (delta > 0) {
+			// Always track activity (regardless of celebration toggle), capped to avoid inflated stats
+			this.plugin.dailyWordData.linksCreatedToday = Math.min(
+				this.plugin.dailyWordData.linksCreatedToday + delta,
+				CelebrationService.MAX_DAILY_COUNTER
+			);
+			this.persistActivityUpdate();
+
+			// Only celebrate if toggle is on
+			if (this.plugin.settings.celebrations.onLinkCreate) {
+				this.celebrate('link-create');
+			}
+		}
 	}
 
 	/**
@@ -299,13 +331,9 @@ export class CelebrationService {
 
 		const daily = this.plugin.dailyWordData;
 
-		// Midnight reset: use local date so reset happens at the user's midnight, not UTC midnight
-		const today = this.plugin.getLocalDateString();
-		if (daily.date !== today) {
-			daily.date = today;
-			daily.wordsAddedToday = 0;
-			daily.goalCelebrated = false;
-		}
+		// Midnight reset — processEditorChange calls resetDailyStatsIfNeeded() before
+		// reaching here, so this is a safety net for any future direct callers.
+		this.resetDailyStatsIfNeeded();
 
 		if (daily.goalCelebrated) return; // already celebrated today
 
@@ -344,13 +372,36 @@ export class CelebrationService {
 		// Handle both numeric YAML values (word-goal: 500) and string values
 		const perNoteGoal = typeof raw === 'number' ? raw : parseInt(raw, 10);
 
-		if (!Number.isFinite(perNoteGoal) || perNoteGoal <= 0) return;
+		if (!Number.isFinite(perNoteGoal) || !Number.isInteger(perNoteGoal) || perNoteGoal <= 0 || perNoteGoal > CelebrationService.MAX_DAILY_COUNTER) return;
 		if (this.perNoteGoalCelebrated.has(file.path)) return; // already celebrated this session
 
 		// Crossing detection: previous was below goal, current is at or above goal
 		if (prevCount < perNoteGoal && currentCount >= perNoteGoal) {
 			this.perNoteGoalCelebrated.add(file.path);
 			this.celebrate('word-goal');
+		}
+	}
+
+	/**
+	 * Reset daily stats if the calendar date has changed (midnight rollover).
+	 * Idempotent: safe to call multiple times per event; subsequent calls in the same
+	 * day are no-ops because `daily.date` is already set to today.
+	 */
+	private resetDailyStatsIfNeeded(): void {
+		const today = this.plugin.getLocalDateString();
+		const daily = this.plugin.dailyWordData;
+		if (daily.date !== today) {
+			daily.date = today;
+			daily.wordsAddedToday = 0;
+			daily.goalCelebrated = false;
+			daily.notesCreatedToday = 0;
+			daily.tasksCompletedToday = 0;
+			daily.linksCreatedToday = 0;
+			// Persist the reset immediately so a crash before the next counter write
+			// doesn't leave stale data on disk.
+			void this.plugin.saveSettings().catch(err =>
+				console.error('[CelebrationService] Failed to persist midnight reset:', err)
+			);
 		}
 	}
 
@@ -419,6 +470,17 @@ export class CelebrationService {
 
 			console.warn('[CelebrationService] Error triggering celebration:', error);
 		}
+	}
+
+	/**
+	 * Persist an activity counter change: refresh the stats panel and save to disk.
+	 * Called after incrementing any daily counter (notes, tasks, links).
+	 */
+	private persistActivityUpdate(): void {
+		this.plugin.petView?.updateStatsComponent();
+		void this.plugin.saveSettings().catch(err =>
+			console.error('[CelebrationService] Failed to save activity stats:', err)
+		);
 	}
 
 	/**

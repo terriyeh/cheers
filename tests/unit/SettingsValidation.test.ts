@@ -3,7 +3,7 @@
  * Tests validation logic for pet and user names
  */
 
-import { VALIDATION_RULES } from '../../src/types/settings';
+import { VALIDATION_RULES, DEFAULT_SETTINGS } from '../../src/types/settings';
 
 describe('Settings Validation', () => {
 	describe('Pet Name Validation', () => {
@@ -167,6 +167,49 @@ describe('Settings Validation', () => {
 			const exactName = 'A'.repeat(30);
 			expect(exactName.length).toBe(rules.maxLength);
 			expect(rules.pattern.test(exactName)).toBe(true);
+		});
+	});
+
+	// ─── dashboardColorMode ──────────────────────────────────────────────────
+
+	describe('dashboardColorMode validation', () => {
+		// The inline check in validateSettings() is: value === 'warm' || value === 'cool'
+		// Mirror that logic here so we can test it as a pure function.
+		function validateColorMode(value: unknown): 'warm' | 'cool' {
+			return value === 'warm' || value === 'cool' ? value : DEFAULT_SETTINGS.dashboardColorMode;
+		}
+
+		it('DEFAULT_SETTINGS.dashboardColorMode is "warm"', () => {
+			expect(DEFAULT_SETTINGS.dashboardColorMode).toBe('warm');
+		});
+
+		it('accepts "warm" as a valid value', () => {
+			expect(validateColorMode('warm')).toBe('warm');
+		});
+
+		it('accepts "cool" as a valid value', () => {
+			expect(validateColorMode('cool')).toBe('cool');
+		});
+
+		it('falls back to "warm" for an unrecognized string', () => {
+			expect(validateColorMode('purple')).toBe('warm');
+			expect(validateColorMode('blue')).toBe('warm');
+			expect(validateColorMode('')).toBe('warm');
+		});
+
+		it('falls back to "warm" for non-string types', () => {
+			expect(validateColorMode(null)).toBe('warm');
+			expect(validateColorMode(undefined)).toBe('warm');
+			expect(validateColorMode(1)).toBe('warm');
+			expect(validateColorMode(true)).toBe('warm');
+			expect(validateColorMode({})).toBe('warm');
+		});
+
+		it('falls back to "warm" for near-miss values (wrong case, extra spaces)', () => {
+			expect(validateColorMode('Warm')).toBe('warm');
+			expect(validateColorMode('COOL')).toBe('warm');
+			expect(validateColorMode(' warm')).toBe('warm');
+			expect(validateColorMode('cool ')).toBe('warm');
 		});
 	});
 

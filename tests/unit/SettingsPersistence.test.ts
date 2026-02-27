@@ -100,7 +100,7 @@ describe('Settings Persistence', () => {
 			expect(merged).toHaveProperty('movementSpeed');
 
 			// Verify no unexpected fields
-			const expectedKeys = ['petName', 'userName', 'hasCompletedWelcome', 'movementSpeed', 'celebrations'];
+			const expectedKeys = ['petName', 'userName', 'hasCompletedWelcome', 'movementSpeed', 'celebrations', 'dashboardColorMode'];
 			const actualKeys = Object.keys(merged);
 			expect(actualKeys.sort()).toEqual(expectedKeys.sort());
 		});
@@ -233,6 +233,43 @@ describe('Settings Persistence', () => {
 			expect(settings.petName).toBe('Rover');
 			expect(settings.userName).toBe('David');
 			expect(settings.hasCompletedWelcome).toBe(true);
+		});
+	});
+
+	// ─── dashboardColorMode ──────────────────────────────────────────────────
+
+	describe('dashboardColorMode defaults and merging', () => {
+		it('DEFAULT_SETTINGS includes dashboardColorMode defaulting to "warm"', () => {
+			expect(DEFAULT_SETTINGS.dashboardColorMode).toBe('warm');
+		});
+
+		it('merging empty loaded data preserves default "warm"', () => {
+			const loadedData = {};
+			const merged = { ...DEFAULT_SETTINGS, ...loadedData } as ObsidianPetsSettings;
+			expect(merged.dashboardColorMode).toBe('warm');
+		});
+
+		it('merging with dashboardColorMode: "cool" overrides the default', () => {
+			const loadedData = { dashboardColorMode: 'cool' as const };
+			const merged = { ...DEFAULT_SETTINGS, ...loadedData } as ObsidianPetsSettings;
+			expect(merged.dashboardColorMode).toBe('cool');
+		});
+
+		it('merging with dashboardColorMode: "warm" explicitly keeps "warm"', () => {
+			const loadedData = { dashboardColorMode: 'warm' as const };
+			const merged = { ...DEFAULT_SETTINGS, ...loadedData } as ObsidianPetsSettings;
+			expect(merged.dashboardColorMode).toBe('warm');
+		});
+
+		it('dashboardColorMode is preserved alongside other settings during merge', () => {
+			const loadedData = {
+				petName: 'Buddy',
+				dashboardColorMode: 'cool' as const,
+			};
+			const merged = { ...DEFAULT_SETTINGS, ...loadedData } as ObsidianPetsSettings;
+			expect(merged.petName).toBe('Buddy');
+			expect(merged.dashboardColorMode).toBe('cool');
+			expect(merged.userName).toBe(''); // Default preserved
 		});
 	});
 });

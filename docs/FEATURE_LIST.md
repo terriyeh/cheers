@@ -121,14 +121,12 @@ A plugin you feel, not think about.
 - Main character animations (walk, pet, celebrate)
 - Production fireworks animation
 - Settings persistence
+- Status bar notification system (global toggle, off by default, independent of fireworks)
+- Word count goals: per-note goal (frontmatter `word-goal`) + per-day goal (settings), replacing milestone list
 
 **Remaining:**
 - Dashboard view (Pet/Stats tab toggle, concentric rings, activity tallies)
 - Settings page: ensure all settings accessible via Plugin Settings tab (not modal-only)
-
-**Also complete:**
-- Status bar notification system (global toggle, off by default, independent of fireworks)
-- Word count goals: per-note goal (frontmatter `word-goal`) + per-day goal (settings), replacing milestone list
 
 ### V1.1 — Interactivity + Vault Health
 - Butterfly chase interaction (user-triggered, pets chase then return to walking)

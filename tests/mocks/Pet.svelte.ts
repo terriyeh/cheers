@@ -8,7 +8,7 @@ import { clampMovementSpeed, calculateGifAnimationDuration } from '../../src/uti
 
 export default class MockPetComponent {
   private target: HTMLElement;
-  private props: any;
+  public props: any;
   public $set: any;
   public $destroy: any;
   public $on: any;
@@ -35,6 +35,14 @@ export default class MockPetComponent {
       const clampedSpeed = clampMovementSpeed(options.props.movementSpeed);
       const animationDuration = calculateGifAnimationDuration(clampedSpeed);
       this.container.style.setProperty('--animation-duration', `${animationDuration}s`);
+    }
+
+    // Apply initial background styles
+    if (options.props.backgroundColor !== undefined) {
+      this.container.style.backgroundColor = options.props.backgroundColor;
+    }
+    if (options.props.backgroundPath !== undefined) {
+      this.container.style.backgroundImage = `url("${options.props.backgroundPath}")`;
     }
 
     // Wrapper with interactive attributes
@@ -103,6 +111,14 @@ export default class MockPetComponent {
 
       if (newProps.fireworksSpritePath !== undefined) {
         this.updateCelebrationOverlay(this.props.state);
+      }
+
+      if (newProps.backgroundColor !== undefined) {
+        this.container.style.backgroundColor = newProps.backgroundColor;
+      }
+
+      if (newProps.backgroundPath !== undefined) {
+        this.container.style.backgroundImage = `url("${newProps.backgroundPath}")`;
       }
     };
 
