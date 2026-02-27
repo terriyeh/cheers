@@ -1,7 +1,7 @@
 # Implementation Plan: Stats/Dashboard Feature
 
 **Spec:** [dashboard.md](./dashboard.md)
-**Status:** Ready for implementation
+**Status:** In progress — Tasks 1–4, 6–8 done; Task 5 (Stats.svelte UI) pending
 
 ---
 
@@ -31,7 +31,7 @@ Four issues identified and fixed below:
 
 ### Phase A — Data Layer
 
-**Task 1 — `src/types/settings.ts`**
+**Task 1 — `src/types/settings.ts`** ✅ DONE
 
 Extend `DailyWordData`:
 ```typescript
@@ -52,7 +52,7 @@ Do NOT add a `VALIDATION_RULES` entry — validation is a simple equality check 
 
 ---
 
-**Task 2 — `src/main.ts`**
+**Task 2 — `src/main.ts`** ✅ DONE
 
 In `getDefaultDailyData()`, add the three new fields defaulting to `0`.
 
@@ -69,7 +69,7 @@ if (validated.dashboardColorMode !== 'warm' && validated.dashboardColorMode !== 
 
 ---
 
-**Task 3 — `src/celebrations/CelebrationService.ts`**
+**Task 3 — `src/celebrations/CelebrationService.ts`** ✅ DONE
 
 Three sub-changes:
 
@@ -136,7 +136,7 @@ Same pattern for `checkLinkCreation()` / `linksCreatedToday`.
 
 ### Phase B — Stats Component
 
-**Task 4 — `src/utils/stats-utils.ts`** *(new small helper)*
+**Task 4 — `src/utils/stats-utils.ts`** ✅ DONE *(new small helper)*
 
 Extract pure derivation logic that needs unit testing:
 
@@ -182,7 +182,7 @@ This is the only logic in `Stats.svelte` that merits unit testing. The rest (SVG
 
 ---
 
-**Task 5 — `src/components/Stats.svelte`** *(new file)*
+**Task 5 — `src/components/Stats.svelte`** 🚧 PENDING — stub exists, ring/tally UI not yet implemented *(new file)*
 
 Imports `computeRingData`, `INNER_RADIUS`, `CIRCUMFERENCE` from `stats-utils.ts`.
 
@@ -342,7 +342,7 @@ $: showEmptyState = !ring.showRingSection && !anyColumnVisible;
 
 ### Phase C — View Integration
 
-**Task 6 — `src/views/PetView.ts` + `src/settings/SettingsTab.ts` + `tests/mocks/obsidian.ts`**
+**Task 6 — `src/views/PetView.ts` + `src/settings/SettingsTab.ts` + `tests/mocks/obsidian.ts`** ✅ DONE (PetView + mocks done; SettingsTab color mode toggle pending — no SettingsTab.ts yet)
 
 Three coordinated changes done together since they share a dependency boundary.
 
@@ -475,7 +475,7 @@ new Setting(containerEl)
 
 ---
 
-**Task 7 — `styles.css`**
+**Task 7 — `styles.css`** ✅ DONE
 
 Append at end:
 ```css
@@ -515,7 +515,7 @@ Append at end:
 
 ### Phase D — Tests
 
-**Task 8 — Tests (three files)**
+**Task 8 — Tests (three files)** ✅ DONE
 
 **`tests/unit/CelebrationService.test.ts`** — extend existing:
 - Extend `MockPlugin.dailyWordData` with 3 new fields (all `0`).

@@ -125,8 +125,8 @@ A plugin you feel, not think about.
 - Word count goals: per-note goal (frontmatter `word-goal`) + per-day goal (settings), replacing milestone list
 
 **Remaining:**
-- Dashboard view (Pet/Stats tab toggle, concentric rings, activity tallies)
-- Settings page: ensure all settings accessible via Plugin Settings tab (not modal-only)
+- Dashboard view: tab bar, data layer (counters, daily reset), and ring geometry helper (`stats-utils.ts`) are done; Stats.svelte ring/tally UI is pending
+- Settings page: ensure all settings accessible via Plugin Settings tab (not modal-only); `dashboardColorMode` toggle not yet wired into SettingsTab.ts
 
 ### V1.1 — Interactivity + Vault Health
 - Butterfly chase interaction (user-triggered, pets chase then return to walking)

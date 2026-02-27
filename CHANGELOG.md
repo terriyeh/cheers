@@ -96,6 +96,30 @@ Research into VS Code Pets (2.26M installs) and the Obsidian pet plugin landscap
 
 ## [Unreleased]
 
+### Added - Day/Night Background System (2026-02-27)
+
+- Two animated GIF backgrounds: `background-day-8fps.gif` (6am–6pm) and `background-night-8fps.gif` (6pm–6am)
+- `BACKGROUNDS` object in `asset-paths.ts` co-locates `file` + `skyColor` per scene — adding a new season/theme requires one entry
+- Container `background-color` set to `skyColor` so the area above the tiled GIF appears as a seamless sky at any panel height (day: `#6f9eff`, night: `#4c4f85`)
+- `getTimeOfDayBackground(hour?)` returns the active `Background` object; transitions scheduled at each 6am/6pm boundary via `setTimeout`
+- `applyBackground()` wrapped in try/catch inside the timer callback so a path error can't permanently stop the update cycle
+- Old placeholder assets removed (`background-reg.png`, `moon-world.gif`)
+
+### Added - Stats Dashboard Foundation (2026-02-27)
+
+- **Tab bar**: Pet and Stats tabs inside the plugin panel — switches views without opening a new panel; Obsidian Files core plugin visual pattern
+- **Data layer** (`src/utils/daily-word-data.ts`): `parseDailyWordData()` validates and migrates persisted daily counters
+- **Stats geometry helper** (`src/utils/stats-utils.ts`): `computeRingData()` — pure, testable derivation of SVG ring visibility flags, progress values, and stroke-dashoffset
+- **Settings additions**: `notesCreatedToday`, `tasksCompletedToday`, `linksCreatedToday` on `DailyWordData`; `dashboardColorMode: 'warm' | 'cool'` on plugin settings
+- **`PetView` wiring**: `updateStatsComponent()` and `buildStatsProps()` rebuild Stats props from current plugin state; called by `CelebrationService` after each counter increment
+- **`CelebrationService` counters**: Notes, tasks, and links tracked regardless of celebration toggle (toggle only controls the fireworks/notification display)
+- Stats.svelte component placeholder added — ring and tally UI implementation pending
+
+### Changed - Code Quality Cleanups (2026-02-27)
+
+- Removed dead code in `Pet.svelte`: `spriteImgElement`, `spriteWidth/Height`, `handleSpriteLoad`, `--animation-duration`, `actualDistance` alias
+- Tab click handlers migrated from raw `element.onclick` to Obsidian's `registerDomEvent()` for lifecycle-safe cleanup
+
 ### Added - Status Bar Notifications (2026-02-23)
 
 - Status bar notification: brief message appears at the left of the status bar for 3 seconds after each celebration trigger
