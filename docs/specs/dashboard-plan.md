@@ -342,7 +342,7 @@ $: showEmptyState = !ring.showRingSection && !anyColumnVisible;
 
 ### Phase C — View Integration
 
-**Task 6 — `src/views/PetView.ts` + `src/settings/SettingsTab.ts` + `tests/mocks/obsidian.ts`** ✅ DONE (PetView + mocks done; SettingsTab color mode toggle pending — no SettingsTab.ts yet)
+**Task 6 — `src/views/PetView.ts` + `src/settings/SettingsTab.ts` + `tests/mocks/obsidian.ts`** ✅ DONE (PetView + mocks done; `dashboardColorMode` dropdown in SettingsTab.ts pending — ships with Task 5)
 
 Three coordinated changes done together since they share a dependency boundary.
 

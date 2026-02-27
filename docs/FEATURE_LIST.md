@@ -125,8 +125,8 @@ A plugin you feel, not think about.
 - Word count goals: per-note goal (frontmatter `word-goal`) + per-day goal (settings), replacing milestone list
 
 **Remaining:**
-- Dashboard view: tab bar, data layer (counters, daily reset), and ring geometry helper (`stats-utils.ts`) are done; Stats.svelte ring/tally UI is pending
-- Settings page: ensure all settings accessible via Plugin Settings tab (not modal-only); `dashboardColorMode` toggle not yet wired into SettingsTab.ts
+- Stats.svelte ring/tally UI (the only outstanding v1.0 item): concentric word count rings, activity tallies, warm/cool color mode. The `dashboardColorMode` Settings tab dropdown ships alongside this.
+- Everything else — tab bar, data layer, celebration counters, ring geometry, all Settings tab entries — is done.
 
 ### V1.1 — Interactivity + Vault Health
 - Butterfly chase interaction (user-triggered, pets chase then return to walking)

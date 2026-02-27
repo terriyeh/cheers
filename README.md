@@ -348,10 +348,11 @@ obsidian-pets/
 
 - ✅ Status bar notifications — fires automatically with every enabled trigger; messages use the pet's name
 - ✅ Word count goals — daily goal (settings) and per-note goal (`word-goal` frontmatter), replacing milestone list
-- 🚧 Progress dashboard — tab bar, data layer, and ring geometry helper are done; Stats.svelte ring/tally UI is pending:
+- ✅ Settings page — all active settings accessible via Plugin Settings tab (pet name, speed, all celebration toggles, daily word goal)
+- 🚧 Progress dashboard — tab bar, data layer, and ring geometry helper are done; Stats.svelte ring/tally UI is the last piece:
   - Concentric word count rings (daily outer, per-note inner)
   - Daily activity tallies for enabled celebration types
-- 🚧 Settings page — all settings accessible via Plugin Settings tab
+  - Dashboard color mode toggle (warm/cool) added to Settings tab alongside this
 
 ### v1.1 — Interactivity + Vault Health
 
