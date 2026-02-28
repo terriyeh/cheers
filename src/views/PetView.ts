@@ -175,10 +175,15 @@ export class PetView extends ItemView {
 
       // Mount Stats Svelte component into the stats panel
       if (this.statsPanel) {
-        this.statsComponent = new StatsComponent({
-          target: this.statsPanel,
-          props: {},
-        });
+        try {
+          this.statsComponent = new StatsComponent({
+            target: this.statsPanel,
+            props: {},
+          });
+        } catch (error) {
+          console.error('Failed to mount Stats component:', error);
+          // Stats tab will be empty but pet tab remains functional
+        }
       }
 
       // Register workspace events to refresh stats panel when it is visible
