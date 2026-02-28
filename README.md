@@ -50,7 +50,7 @@ We're here to:
   - GPU-accelerated CSS animations (<0.1% CPU)
 - **User-Configurable Triggers** ✅ IMPLEMENTED (v0.2.0): Individual toggles for each celebration type, with independent fireworks and status bar controls
 - **Status Bar Notifications** ✅ IMPLEMENTED: Brief message in the status bar for each celebration — fires automatically with every enabled trigger
-- **Progress Dashboard** 🚧 PLANNED (v1.0): Stats tab within the pet panel — concentric word count rings and daily activity tallies for enabled celebration types
+- **Progress Dashboard** 🚧 IN PROGRESS (v1.0): Stats tab within the pet panel — tab bar, data layer, and ring geometry are implemented; Stats.svelte ring/tally UI is pending
 - **Butterfly Chase** 🚧 PLANNED (v1.1): Release a butterfly and watch your pet chase it
 - **Crew & Cosmetics** 🚧 PLANNED (v1.2): Optional companion pets + accessories (hats, scarves) + seasonal backgrounds
 - **Privacy-First** ✅ IMPLEMENTED: Fully local, no network calls, no telemetry
@@ -159,8 +159,9 @@ Each pet state uses a separate animated GIF file for smooth, browser-native anim
   - `cat-celebrating-6fps.gif` - Character celebrates
 - **Visual Effects** (128px × 128px display size):
   - `fireworks.gif` - 3-firework overlay during celebrations
-- **Background Scene**:
-  - `Background_reg.png` - Tileable garden path (128px height)
+- **Background Scene** (day/night, auto-swaps at 6am/6pm):
+  - `background-day-8fps.gif` - Daytime scene with sky fill `#6f9eff`
+  - `background-night-8fps.gif` - Nighttime scene with sky fill `#4c4f85`
 
 All frame animation is handled natively by the browser (no sprite sheets or CSS keyframes needed). This approach reduces complexity and ensures consistent performance across devices.
 
@@ -287,31 +288,40 @@ ln -s /path/to/obsidian-pets /path/to/test-vault/.obsidian/plugins/obsidian-pets
 ```
 obsidian-pets/
 ├── src/
-│   ├── main.ts                    # Main plugin class
+│   ├── main.ts                      # Plugin entry point, settings persistence, daily data
 │   ├── modals/
-│   │   └── WelcomeModal.ts       # Settings modal
+│   │   └── WelcomeModal.ts          # First-run settings modal
 │   ├── views/
-│   │   └── PetView.ts            # Main pet panel
-│   ├── components/               # Svelte components
-│   │   └── Pet.svelte
+│   │   └── PetView.ts               # Sidebar panel: Pet/Stats tab bar, background transitions
+│   ├── components/
+│   │   ├── Pet.svelte               # Animated pet with movement, background, interaction
+│   │   └── Stats.svelte             # Stats dashboard UI (🚧 ring/tally UI pending)
 │   ├── pet/
-│   │   └── PetStateMachine.ts   # Animation state machine
-│   ├── celebration/              # Celebration system (coming soon)
-│   │   ├── CelebrationEngine.ts
-│   │   ├── VaultEventListeners.ts
-│   │   └── MilestoneTracker.ts
+│   │   └── PetStateMachine.ts       # Animation state machine (walking/petting/celebration)
+│   ├── celebrations/
+│   │   └── CelebrationService.ts    # Vault event listeners, celebration triggers, daily counters
+│   ├── utils/
+│   │   ├── asset-paths.ts           # Centralized asset constants; BACKGROUNDS + getTimeOfDayBackground()
+│   │   ├── animation.ts             # Movement speed constants and helpers
+│   │   ├── stats-utils.ts           # computeRingData() — pure ring geometry for Stats tab
+│   │   └── daily-word-data.ts       # parseDailyWordData() — validates/migrates persisted counters
 │   └── types/
 │       ├── pet.ts
-│       └── settings.ts
+│       └── settings.ts              # ObsidianPetsSettings, DailyWordData, DEFAULT_SETTINGS
 ├── assets/
-│   ├── cat-walking-6fps.gif       # Walking animation GIF
-│   ├── cat-petting-6fps.gif       # Petting animation GIF
-│   ├── cat-celebrating-6fps.gif   # Celebration animation GIF
+│   ├── cat-walking-6fps.gif         # Walking animation GIF
+│   ├── cat-petting-6fps.gif         # Petting animation GIF
+│   ├── cat-celebrating-6fps.gif     # Celebration animation GIF
 │   ├── effects/
-│   │   ├── fireworks.gif          # Celebration fireworks overlay
-│   │   └── heart.png              # Legacy asset (unused)
+│   │   └── fireworks.gif            # Celebration fireworks overlay
 │   └── backgrounds/
-│       └── Background_reg.png     # Default garden scene
+│       ├── background-day-8fps.gif  # Daytime scene (6am–6pm), sky: #6f9eff
+│       └── background-night-8fps.gif # Nighttime scene (6pm–6am), sky: #4c4f85
+├── tests/
+│   ├── unit/                        # Vitest unit tests (393 tests)
+│   └── mocks/                       # Obsidian API + Svelte component mocks
+├── docs/
+│   └── specs/                       # Feature specs and implementation plans
 ├── styles.css
 ├── manifest.json
 └── package.json
@@ -338,10 +348,11 @@ obsidian-pets/
 
 - ✅ Status bar notifications — fires automatically with every enabled trigger; messages use the pet's name
 - ✅ Word count goals — daily goal (settings) and per-note goal (`word-goal` frontmatter), replacing milestone list
-- 🚧 Progress dashboard — Stats tab within the pet panel:
+- ✅ Settings page — all active settings accessible via Plugin Settings tab (pet name, speed, all celebration toggles, daily word goal)
+- 🚧 Progress dashboard — tab bar, data layer, and ring geometry helper are done; Stats.svelte ring/tally UI is the last piece:
   - Concentric word count rings (daily outer, per-note inner)
   - Daily activity tallies for enabled celebration types
-- 🚧 Settings page — all settings accessible via Plugin Settings tab
+  - Dashboard color mode toggle (warm/cool) added to Settings tab alongside this
 
 ### v1.1 — Interactivity + Vault Health
 

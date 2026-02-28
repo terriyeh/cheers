@@ -1,13 +1,18 @@
-import { ItemView, type WorkspaceLeaf, Notice } from 'obsidian';
+import { ItemView, MarkdownView, type WorkspaceLeaf, Notice } from 'obsidian';
 import type { PetState, StateChangeListener } from '../types/pet';
 import { PetStateMachine } from '../pet/PetStateMachine';
 import PetComponent from '../components/Pet.svelte';
+import StatsComponent from '../components/Stats.svelte';
 import type ObsidianPetsPlugin from '../main';
 import { WelcomeModal } from '../modals/WelcomeModal';
-import { PET_SPRITES, EFFECT_SPRITES, BACKGROUNDS, ASSET_DIRECTORIES } from '../utils/asset-paths';
+import { PET_SPRITES, EFFECT_SPRITES, ASSET_DIRECTORIES, getTimeOfDayBackground } from '../utils/asset-paths';
+import { CelebrationService } from '../celebrations/CelebrationService';
 
 // Build-time constant injected by esbuild
 declare const __DEV__: boolean;
+
+/** Debounce delay (ms) for refreshing the stats panel on editor-change events. */
+const STATS_DEBOUNCE_MS = 150;
 
 /**
  * View type identifier for the pet view
@@ -17,12 +22,37 @@ export const VIEW_TYPE_PET = 'obsidian-pets-pet-view';
 /**
  * Pet View - Main ItemView for displaying the pet companion
  */
+/** Props passed to Stats.svelte. All fields must match the component's prop declarations. */
+interface StatsProps {
+  wordsAddedToday: number;
+  notesCreatedToday: number;
+  linksCreatedToday: number;
+  tasksCompletedToday: number;
+  dailyWordGoal: number | null;
+  showNotesColumn: boolean;
+  showLinksColumn: boolean;
+  showTasksColumn: boolean;
+  fileWordCount: number | null;
+  /** Per-note word goal from frontmatter. TODO: read from metadataCache (see CelebrationService.checkPerNoteGoal). */
+  fileWordGoal: number | null;
+  colorMode: 'warm' | 'cool';
+}
+
 export class PetView extends ItemView {
   public petComponent: PetComponent | null = null;
+  private statsComponent: InstanceType<typeof StatsComponent> | null = null;
   private stateMachine: PetStateMachine | null = null;
   private containerDiv: HTMLDivElement | null = null;
+  private petPanel: HTMLElement | null = null;
+  private statsPanel: HTMLElement | null = null;
+  private petTabEl: HTMLElement | null = null;
+  private statsTabEl: HTMLElement | null = null;
   private stateChangeListener: StateChangeListener | null = null;
   private petEventListener: ((event: CustomEvent<{ returnToState: PetState }>) => void) | null = null;
+  private plugin: ObsidianPetsPlugin | null = null;
+  private activeTab: 'pet' | 'stats' = 'pet';
+  private statsEditorChangeTimeout: number | undefined;
+  private backgroundTransitionTimeout: number | undefined;
 
   constructor(leaf: WorkspaceLeaf) {
     super(leaf);
@@ -69,15 +99,34 @@ export class PetView extends ItemView {
         }
       }
 
+      // Store plugin reference and reset tab state
+      this.plugin = plugin ?? null;
+      this.activeTab = 'pet';
+
       // Show loading state
       this.showLoading();
 
       // Initialize state machine
       this.stateMachine = new PetStateMachine();
 
-      // Create container for pet component
+      // Build tab bar + panels inside the content container
       const contentContainer = this.getContentContainer();
-      this.containerDiv = contentContainer.createDiv({
+
+      const tabBar = contentContainer.createDiv({ cls: 'vp-tab-bar' });
+      this.petTabEl = tabBar.createDiv({ cls: 'vp-tab-pet' });
+      this.petTabEl.classList.add('is-active');
+      this.statsTabEl = tabBar.createDiv({ cls: 'vp-tab-stats' });
+
+      this.petPanel = contentContainer.createDiv({ cls: 'vp-panel-pet' });
+      this.statsPanel = contentContainer.createDiv({ cls: 'vp-panel-stats' });
+      this.statsPanel.classList.add('vp-panel-hidden');
+
+      // Wire tab click handlers
+      this.registerDomEvent(this.petTabEl!, 'click', () => this.switchTab('pet'));
+      this.registerDomEvent(this.statsTabEl!, 'click', () => this.switchTab('stats'));
+
+      // Create pet component container inside the pet panel
+      this.containerDiv = this.petPanel!.createDiv({
         cls: 'obsidian-pets-container',
       });
 
@@ -100,7 +149,9 @@ export class PetView extends ItemView {
       const pettingSpritePath = this.getAssetPath(PET_SPRITES.PETTING);
       const celebrationSpritePath = this.getAssetPath(PET_SPRITES.CELEBRATING);
       const fireworksSpritePath = this.getAssetPath(EFFECT_SPRITES.FIREWORKS, ASSET_DIRECTORIES.EFFECTS);
-      const backgroundPath = this.getAssetPath(BACKGROUNDS.DEFAULT, ASSET_DIRECTORIES.BACKGROUNDS);
+      const bg = getTimeOfDayBackground();
+      const backgroundPath = this.getAssetPath(bg.file, ASSET_DIRECTORIES.BACKGROUNDS);
+      const backgroundColor = bg.skyColor;
 
       // Get plugin settings for pet name and movement speed (reuse plugin variable from above)
       const petName = plugin?.settings?.petName ?? 'Kit';
@@ -116,13 +167,48 @@ export class PetView extends ItemView {
           celebrationSpritePath: celebrationSpritePath,
           fireworksSpritePath: fireworksSpritePath,
           backgroundPath: backgroundPath,
+          backgroundColor: backgroundColor,
           petName: petName,
           movementSpeed: movementSpeed,
         },
       });
 
+      // Mount Stats Svelte component into the stats panel
+      if (this.statsPanel) {
+        try {
+          this.statsComponent = new StatsComponent({
+            target: this.statsPanel,
+            props: {},
+          });
+        } catch (error) {
+          console.error('Failed to mount Stats component:', error);
+          // Stats tab will be empty but pet tab remains functional
+        }
+      }
+
+      // Register workspace events to refresh stats panel when it is visible
+      this.registerEvent(this.app.workspace.on('editor-change', () => {
+        if (this.activeTab !== 'stats') return;
+        if (this.statsEditorChangeTimeout !== undefined) {
+          window.clearTimeout(this.statsEditorChangeTimeout);
+        }
+        this.statsEditorChangeTimeout = window.setTimeout(() => {
+          this.statsEditorChangeTimeout = undefined;
+          this.updateStatsComponent();
+        }, STATS_DEBOUNCE_MS);
+      }));
+
+      this.registerEvent(this.app.workspace.on('active-leaf-change', () => {
+        if (this.activeTab === 'stats') {
+          this.updateStatsComponent();
+        }
+      }));
+
       // Setup pet interaction event handling
       this.setupPetInteraction();
+
+      // Schedule background transition at next 6am/6pm boundary
+      this.scheduleNextBackgroundTransition();
 
       // Hide loading state
       this.hideLoading();
@@ -133,6 +219,10 @@ export class PetView extends ItemView {
       this.hideLoading();
 
       // Cleanup any partially initialized resources
+      if (this.backgroundTransitionTimeout !== undefined) {
+        window.clearTimeout(this.backgroundTransitionTimeout);
+        this.backgroundTransitionTimeout = undefined;
+      }
       if (this.stateMachine && this.stateChangeListener) {
         this.stateMachine.removeListener(this.stateChangeListener);
         this.stateChangeListener = null;
@@ -166,6 +256,12 @@ export class PetView extends ItemView {
       this.petComponent = null;
     }
 
+    // Destroy Stats Svelte component
+    if (this.statsComponent) {
+      this.statsComponent.$destroy();
+      this.statsComponent = null;
+    }
+
     // Clear pet event listener reference
     this.petEventListener = null;
 
@@ -175,9 +271,26 @@ export class PetView extends ItemView {
       this.stateMachine = null;
     }
 
+    // Clear stats debounce timer
+    if (this.statsEditorChangeTimeout !== undefined) {
+      window.clearTimeout(this.statsEditorChangeTimeout);
+      this.statsEditorChangeTimeout = undefined;
+    }
+
+    // Clear background transition timer
+    if (this.backgroundTransitionTimeout !== undefined) {
+      window.clearTimeout(this.backgroundTransitionTimeout);
+      this.backgroundTransitionTimeout = undefined;
+    }
+
     // Clear container
     this.containerEl.empty();
     this.containerDiv = null;
+    this.petPanel = null;
+    this.statsPanel = null;
+    this.petTabEl = null;
+    this.statsTabEl = null;
+    this.plugin = null;
   }
 
   /**
@@ -338,6 +451,67 @@ export class PetView extends ItemView {
   }
 
   /**
+   * Push updated stats props to the Stats Svelte component.
+   * Called by CelebrationService whenever daily activity counters change.
+   * Safe to call before onOpen() or after onClose() — no-op when component is absent.
+   */
+  updateStatsComponent(): void {
+    if (!this.statsComponent) return;
+    const plugin = this.plugin;
+    // Guard: dailyWordData may be absent on partially-populated test stubs
+    if (!plugin || !plugin.dailyWordData) {
+      this.statsComponent.$set({});
+      return;
+    }
+    this.statsComponent.$set(this.buildStatsProps(plugin));
+  }
+
+  /**
+   * Derive the props object passed to Stats.svelte from current plugin state.
+   * Precondition: plugin.dailyWordData is present (enforced by updateStatsComponent).
+   */
+  private buildStatsProps(plugin: ObsidianPetsPlugin): StatsProps {
+    const daily = plugin.dailyWordData;
+    const cel = plugin.settings.celebrations;
+    const dailyWordGoal: number | null = cel.onWordGoal ? cel.dailyWordGoal : null;
+
+    const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+    const fileWordCount: number | null = activeView
+      ? CelebrationService.countWords(activeView.editor.getValue())
+      : null;
+
+    return {
+      wordsAddedToday: daily.wordsAddedToday,
+      notesCreatedToday: daily.notesCreatedToday,
+      linksCreatedToday: daily.linksCreatedToday,
+      tasksCompletedToday: daily.tasksCompletedToday,
+      dailyWordGoal,
+      showNotesColumn: cel.onNoteCreate,
+      showLinksColumn: cel.onLinkCreate,
+      showTasksColumn: cel.onTaskComplete,
+      fileWordCount,
+      // TODO: read from active file's frontmatter word-goal key (see CelebrationService.checkPerNoteGoal)
+      fileWordGoal: null,
+      colorMode: plugin.settings.dashboardColorMode,
+    };
+  }
+
+  /**
+   * Switch between the Pet and Stats tabs.
+   */
+  private switchTab(tab: 'pet' | 'stats'): void {
+    const showPet = tab === 'pet';
+    this.petPanel?.classList.toggle('vp-panel-hidden', !showPet);
+    this.statsPanel?.classList.toggle('vp-panel-hidden', showPet);
+    this.petTabEl?.classList.toggle('is-active', showPet);
+    this.statsTabEl?.classList.toggle('is-active', !showPet);
+    this.activeTab = tab;
+    if (tab === 'stats') {
+      this.updateStatsComponent();
+    }
+  }
+
+  /**
    * Get the content container safely with multiple fallback strategies
    * @throws Error if container element not found
    */
@@ -467,6 +641,49 @@ export class PetView extends ItemView {
     return assetPath;
   }
 
+  /**
+   * Apply the correct day/night background to the pet component.
+   */
+  private applyBackground(): void {
+    if (!this.petComponent) return;
+    const bg = getTimeOfDayBackground();
+    const backgroundPath = this.getAssetPath(bg.file, ASSET_DIRECTORIES.BACKGROUNDS);
+    this.petComponent.$set({ backgroundPath, backgroundColor: bg.skyColor });
+  }
+
+  /**
+   * Schedule a one-shot timeout to fire at the next 6am or 6pm boundary,
+   * then swap the background and reschedule.
+   */
+  private scheduleNextBackgroundTransition(): void {
+    const now = new Date();
+    const hour = now.getHours();
+    const minute = now.getMinutes();
+    const second = now.getSeconds();
+
+    // Determine next boundary: 6am (hour 6) or 6pm (hour 18)
+    let nextBoundaryHour: number;
+    if (hour < 6) {
+      nextBoundaryHour = 6;
+    } else if (hour < 18) {
+      nextBoundaryHour = 18;
+    } else {
+      nextBoundaryHour = 30; // next day's 6am = 24 + 6
+    }
+
+    const msUntilBoundary =
+      ((nextBoundaryHour - hour) * 3600 - minute * 60 - second) * 1000 - now.getMilliseconds();
+
+    this.backgroundTransitionTimeout = window.setTimeout(() => {
+      this.backgroundTransitionTimeout = undefined;
+      try {
+        this.applyBackground();
+      } catch (error) {
+        console.error('Failed to apply background transition:', error);
+      }
+      this.scheduleNextBackgroundTransition();
+    }, msUntilBoundary);
+  }
 
 
 }

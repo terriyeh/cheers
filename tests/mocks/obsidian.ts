@@ -5,6 +5,21 @@
 
 import { vi } from 'vitest';
 
+// Extend HTMLElement with Obsidian's toggleClass helper so mock DOM elements
+// respond correctly to PetView's tab switching logic.
+if (typeof HTMLElement !== 'undefined') {
+  (HTMLElement.prototype as any).toggleClass = function (
+    cls: string,
+    force?: boolean
+  ): void {
+    if (force !== undefined) {
+      this.classList.toggle(cls, force);
+    } else {
+      this.classList.toggle(cls);
+    }
+  };
+}
+
 export interface TFile {
   path: string;
   name: string;
@@ -28,6 +43,7 @@ export interface MarkdownPostProcessorContext {
 export class App {
   vault: Vault;
   workspace: any;
+  metadataCache: any;
   plugins: {
     manifests: Record<string, { dir: string }>;
     plugins: Record<string, any>;
@@ -40,6 +56,15 @@ export class App {
       getLeaf: vi.fn().mockReturnValue({
         openFile: vi.fn(),
       }),
+      on: vi.fn().mockReturnValue({}),
+      off: vi.fn(),
+      offref: vi.fn(),
+      getActiveViewOfType: vi.fn().mockReturnValue(null),
+      revealLeaf: vi.fn(),
+      getLeftLeaf: vi.fn().mockReturnValue(null),
+    };
+    this.metadataCache = {
+      getFileCache: vi.fn().mockReturnValue(null),
     };
     this.plugins = {
       manifests: {
@@ -228,6 +253,20 @@ export class ItemView {
     button.onclick = callback;
     return button;
   }
+
+  registerEvent(_eventRef: any): void {
+    // no-op: Obsidian's Component.registerEvent stores refs for cleanup;
+    // in tests we rely on manual cleanup or vi.clearAllTimers instead.
+  }
+
+  registerDomEvent(
+    el: HTMLElement,
+    type: string,
+    callback: EventListenerOrEventListenerObject,
+    options?: boolean | AddEventListenerOptions
+  ): void {
+    el.addEventListener(type, callback, options);
+  }
 }
 
 export class Modal {
@@ -264,6 +303,21 @@ if (typeof window !== 'undefined') {
       valueOf: () => Date.now(),
     };
   };
+}
+
+/**
+ * Mock for Obsidian's setIcon() helper — renders an icon into a container element.
+ * The real implementation injects an SVG; the mock is a no-op spy.
+ */
+export const setIcon = vi.fn();
+
+/**
+ * Minimal MarkdownView stub — only the class identity matters for
+ * `workspace.getActiveViewOfType(MarkdownView)` lookups.
+ */
+export class MarkdownView {
+  editor: any = { getValue: vi.fn().mockReturnValue('') };
+  file: any = null;
 }
 
 // Export mock functions for convenience

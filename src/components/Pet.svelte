@@ -4,10 +4,9 @@
   import {
     ANIMATION_CONSTANTS,
     clampMovementSpeed,
-    calculateGifAnimationDuration,
     calculateSpeedInPixelsPerSecond,
   } from '../utils/animation';
-  import { PET_SPRITES, EFFECT_SPRITES } from '../utils/asset-paths';
+  import { PET_SPRITES, EFFECT_SPRITES, BACKGROUNDS } from '../utils/asset-paths';
 
   /**
    * Current state of the pet
@@ -40,6 +39,12 @@
   export let backgroundPath: string = '';
 
   /**
+   * Sky fill color matching the current background scene (passed from PetView).
+   * Fills the container above the tiled GIF so the sky extends seamlessly upward.
+   */
+  export let backgroundColor: string = BACKGROUNDS.DAY.skyColor;
+
+  /**
    * Pet's name (from settings)
    */
   export let petName: string = 'Kit';
@@ -55,12 +60,6 @@
   // Container element for resize observation
   let containerEl: HTMLElement | null = null;
   let resizeObserver: ResizeObserver | null = null;
-
-  // GIF dimension detection (dynamically loaded from image)
-  // GIF handles frame animation internally - no sprite sheet needed
-  let spriteImgElement: HTMLImageElement | null = null;
-  let spriteWidth = ANIMATION_CONSTANTS.DEFAULT_PET_WIDTH; // Default fallback (natural GIF width)
-  let spriteHeight = ANIMATION_CONSTANTS.DEFAULT_PET_WIDTH; // Default fallback (natural GIF height)
 
   // Fixed display width for consistent sizing
   const petWidth = ANIMATION_CONSTANTS.PET_DISPLAY_SIZE;
@@ -84,13 +83,6 @@
   $: clampedSpeed = clampMovementSpeed(movementSpeed);
 
   /**
-   * Calculate animation duration for GIF playback
-   * Note: GIF animation is handled by the browser, this is for potential future use
-   * Linear scaling: 0% = 2s (slowest), 100% = 1s (fastest)
-   */
-  $: animationDuration = calculateGifAnimationDuration(clampedSpeed);
-
-  /**
    * Calculate base speed in pixels per second using reference container width
    * This ensures consistent movement speed regardless of actual container size
    * Uses fixed 100px display width for calculations (PET_DISPLAY_SIZE)
@@ -99,21 +91,6 @@
 
   // Movement duration will be calculated dynamically based on actual container width
   let movementDuration = 15; // Default fallback value
-
-  /**
-   * Handle GIF image load - verify image loaded successfully
-   * GIF is displayed at fixed 100x100 size regardless of natural dimensions
-   * GIF animation is handled by browser, no frame management needed
-   */
-  function handleSpriteLoad(): void {
-    if (spriteImgElement) {
-      spriteWidth = spriteImgElement.naturalWidth;
-      spriteHeight = spriteImgElement.naturalHeight;
-
-      // Recalculate movement range with fixed display size
-      updateMovementRange();
-    }
-  }
 
   /**
    * Calculate movement range for adaptive edge-to-edge movement
@@ -129,15 +106,12 @@
     // This gives true edge-to-edge movement using fixed 100px display width
     const maxLeft = containerWidth - petWidth;
 
-    // Calculate actual distance for this container
-    const actualDistance = maxLeft;
-
     // Calculate duration to maintain constant speed in px/s
     // Linear speed scaling: duration = distance / speed
     // Ensures movement speed (px/s) is consistent regardless of container width
     // Prevent division by zero - fallback to slowest speed
-    movementDuration = speedInPixelsPerSecond > 0 && actualDistance > 0
-      ? actualDistance / speedInPixelsPerSecond
+    movementDuration = speedInPixelsPerSecond > 0 && maxLeft > 0
+      ? maxLeft / speedInPixelsPerSecond
       : ANIMATION_CONSTANTS.MAX_DURATION;
 
     // Set CSS custom properties for keyframes and positioning
@@ -276,9 +250,9 @@
 <div
   class="pet-sprite-container"
   data-state={state}
-  style:--animation-duration="{animationDuration}s"
   style:--movement-duration="{movementDuration}s"
-  style:background-image={backgroundPath ? `url(${backgroundPath})` : 'none'}
+  style:background-image={backgroundPath ? `url("${backgroundPath}")` : 'none'}
+  style:background-color={backgroundColor}
   bind:this={containerEl}>
   <!-- Position wrapper handles horizontal movement -->
   <div class="pet-position-wrapper">
@@ -298,8 +272,6 @@
         <!-- Animated GIF that changes based on state -->
         <!-- Walking: cat-walking-6fps.gif, Petting: cat-petting-6fps.gif -->
         <img
-          bind:this={spriteImgElement}
-          on:load={handleSpriteLoad}
           class="pet-sprite"
           src={petSpritePath}
           alt={`Pet is ${state}`}
@@ -351,8 +323,7 @@
     background-position: bottom center;
     background-repeat: repeat-x;
 
-    /* Light neutral color fills space above background */
-    background-color: #f5f3ef;
+    /* Sky fill color is set dynamically via style:background-color (see backgroundColor prop) */
   }
 
   /* Position wrapper handles horizontal movement */

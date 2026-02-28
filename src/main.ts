@@ -7,6 +7,7 @@ import { DEFAULT_SETTINGS, VALIDATION_RULES } from './types/settings';
 import { WelcomeModal } from './modals/WelcomeModal';
 import { CelebrationService } from './celebrations/CelebrationService';
 import { ObsidianPetsSettingTab } from './settings/SettingsTab';
+import { parseDailyWordData } from './utils/daily-word-data';
 
 // Build-time constant injected by esbuild
 declare const __DEV__: boolean;
@@ -266,6 +267,11 @@ Available states:
 			validated.hasCompletedWelcome = DEFAULT_SETTINGS.hasCompletedWelcome;
 		}
 
+		// Validate dashboardColorMode
+		if (validated.dashboardColorMode !== 'warm' && validated.dashboardColorMode !== 'cool') {
+			validated.dashboardColorMode = DEFAULT_SETTINGS.dashboardColorMode;
+		}
+
 		// Validate celebrations sub-object exists
 		if (typeof validated.celebrations !== 'object' || validated.celebrations === null) {
 			validated.celebrations = { ...DEFAULT_SETTINGS.celebrations };
@@ -326,20 +332,13 @@ Available states:
 			date: this.getLocalDateString(),
 			wordsAddedToday: 0,
 			goalCelebrated: false,
+			notesCreatedToday: 0,
+			tasksCompletedToday: 0,
+			linksCreatedToday: 0,
 		};
 	}
 
 	private loadDailyWordData(stored: unknown): DailyWordData {
-		const today = this.getLocalDateString();
-		if (!stored || typeof stored !== 'object' || (stored as any).date !== today) {
-			return this.getDefaultDailyData();
-		}
-		return {
-			date: today,
-			wordsAddedToday: typeof (stored as any).wordsAddedToday === 'number'
-				? Math.max(0, Math.floor((stored as any).wordsAddedToday))
-				: 0,
-			goalCelebrated: (stored as any).goalCelebrated === true,
-		};
+		return parseDailyWordData(stored, this.getLocalDateString());
 	}
 }

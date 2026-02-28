@@ -15,6 +15,7 @@ interface MockPlugin {
 	settings: ObsidianPetsSettings;
 	petView?: {
 		transitionState: (state: string) => boolean;
+		updateStatsComponent: () => void;
 	};
 	dailyWordData: DailyWordData;
 	saveSettings: () => Promise<void>;
@@ -83,11 +84,15 @@ describe('CelebrationService', () => {
 			},
 			petView: {
 				transitionState: vi.fn().mockReturnValue(true),
+				updateStatsComponent: vi.fn(),
 			},
 			dailyWordData: {
 				date: localDateString(),
 				wordsAddedToday: 0,
 				goalCelebrated: false,
+				notesCreatedToday: 0,
+				tasksCompletedToday: 0,
+				linksCreatedToday: 0,
 			},
 			saveSettings: vi.fn().mockResolvedValue(undefined),
 			getLocalDateString: vi.fn().mockImplementation(localDateString),
@@ -1076,6 +1081,236 @@ describe('CelebrationService', () => {
 				vi.advanceTimersByTime(STATUS_BAR_NOTIFICATION_DURATION_MS + 100);
 				expect(mockStatusBarItem.hide).toHaveBeenCalledTimes(1);
 			});
+		});
+	});
+
+	// ─── Activity counter tracking ────────────────────────────────────────────
+
+	describe('activity counter tracking', () => {
+		function getCreateHandler() {
+			return (mockVault.on as any).mock.calls.find(
+				(call: any) => call[0] === 'create'
+			)?.[1];
+		}
+
+		function getEditorChangeHandler() {
+			return (mockWorkspace.on as any).mock.calls.find(
+				(call: any) => call[0] === 'editor-change'
+			)?.[1];
+		}
+
+		it('increments notesCreatedToday for markdown files regardless of onNoteCreate toggle', () => {
+			plugin.settings.celebrations.onNoteCreate = false;
+			const mockFile = { path: 'test.md', basename: 'test', extension: 'md' } as TFile;
+
+			getCreateHandler()?.(mockFile);
+
+			expect(plugin.dailyWordData.notesCreatedToday).toBe(1);
+		});
+
+		it('does not increment notesCreatedToday for non-markdown files', () => {
+			const mockFile = { path: 'image.png', basename: 'image', extension: 'png' } as TFile;
+
+			getCreateHandler()?.(mockFile);
+
+			expect(plugin.dailyWordData.notesCreatedToday).toBe(0);
+		});
+
+		it('increments tasksCompletedToday by the delta when multiple tasks are checked at once (paste)', () => {
+			const handler = getEditorChangeHandler();
+			const mockFile = { path: 'test.md' } as TFile;
+
+			// Baseline: 0 tasks
+			handler?.({ getValue: () => '' }, { file: mockFile });
+			vi.advanceTimersByTime(100);
+
+			// Paste 3 tasks at once: delta = 3 − 0 = 3
+			handler?.({ getValue: () => '- [x] Task 1\n- [x] Task 2\n- [x] Task 3' }, { file: mockFile });
+			vi.advanceTimersByTime(100);
+
+			expect(plugin.dailyWordData.tasksCompletedToday).toBe(3);
+		});
+
+		it('increments linksCreatedToday when a wiki link is added', () => {
+			const handler = getEditorChangeHandler();
+
+			// Baseline: no links
+			handler?.({ getValue: () => 'no links here' }, { file: null });
+			vi.advanceTimersByTime(100);
+
+			// Add one link
+			handler?.({ getValue: () => 'no links here [[new-note]]' }, { file: null });
+			vi.advanceTimersByTime(100);
+
+			expect(plugin.dailyWordData.linksCreatedToday).toBe(1);
+		});
+
+		it('increments linksCreatedToday regardless of onLinkCreate toggle', () => {
+			plugin.settings.celebrations.onLinkCreate = false;
+			const handler = getEditorChangeHandler();
+
+			// Baseline: no links
+			handler?.({ getValue: () => '' }, { file: null });
+			vi.advanceTimersByTime(100);
+
+			// Add link even though toggle is off
+			handler?.({ getValue: () => '[[link]]' }, { file: null });
+			vi.advanceTimersByTime(100);
+
+			expect(plugin.dailyWordData.linksCreatedToday).toBe(1);
+		});
+
+		it('calls updateStatsComponent on petView after notesCreatedToday increments', () => {
+			const mockFile = { path: 'test.md', basename: 'test', extension: 'md' } as TFile;
+
+			getCreateHandler()?.(mockFile);
+
+			expect((plugin.petView as any).updateStatsComponent).toHaveBeenCalled();
+		});
+
+		it('calls updateStatsComponent on petView after linksCreatedToday increments', () => {
+			const handler = getEditorChangeHandler();
+
+			// Baseline: no links
+			handler?.({ getValue: () => '' }, { file: null });
+			vi.advanceTimersByTime(100);
+			vi.clearAllMocks();
+
+			// Add link
+			handler?.({ getValue: () => '[[new-link]]' }, { file: null });
+			vi.advanceTimersByTime(100);
+
+			expect((plugin.petView as any).updateStatsComponent).toHaveBeenCalled();
+		});
+
+		it('calls saveSettings after notesCreatedToday increments', () => {
+			const mockFile = { path: 'test.md', basename: 'test', extension: 'md' } as TFile;
+
+			getCreateHandler()?.(mockFile);
+
+			expect(plugin.saveSettings).toHaveBeenCalled();
+		});
+
+		it('calls updateStatsComponent on petView after tasksCompletedToday increments', () => {
+			const handler = getEditorChangeHandler();
+			const mockFile = { path: 'test.md' } as TFile;
+
+			// Baseline: 0 tasks (sets previousTaskCount = 0)
+			handler?.({ getValue: () => '' }, { file: mockFile });
+			vi.advanceTimersByTime(100);
+			vi.clearAllMocks();
+
+			// Add 1 task (delta = 1 → increments counter)
+			handler?.({ getValue: () => '- [x] Done' }, { file: mockFile });
+			vi.advanceTimersByTime(100);
+
+			expect((plugin.petView as any).updateStatsComponent).toHaveBeenCalled();
+		});
+
+		it('calls saveSettings after tasksCompletedToday increments', () => {
+			const handler = getEditorChangeHandler();
+			const mockFile = { path: 'test.md' } as TFile;
+
+			// Baseline
+			handler?.({ getValue: () => '' }, { file: mockFile });
+			vi.advanceTimersByTime(100);
+			vi.clearAllMocks();
+
+			// Add 1 task
+			handler?.({ getValue: () => '- [x] Done' }, { file: mockFile });
+			vi.advanceTimersByTime(100);
+
+			expect(plugin.saveSettings).toHaveBeenCalled();
+		});
+
+		it('calls saveSettings after linksCreatedToday increments', () => {
+			const handler = getEditorChangeHandler();
+
+			// Baseline: no links
+			handler?.({ getValue: () => '' }, { file: null });
+			vi.advanceTimersByTime(100);
+			vi.clearAllMocks();
+
+			// Add a link
+			handler?.({ getValue: () => '[[new-link]]' }, { file: null });
+			vi.advanceTimersByTime(100);
+
+			expect(plugin.saveSettings).toHaveBeenCalled();
+		});
+	});
+
+	// ─── Midnight reset via non-word events ───────────────────────────────────
+
+	describe('midnight reset via non-word events', () => {
+		function getCreateHandler() {
+			return (mockVault.on as any).mock.calls.find(
+				(call: any) => call[0] === 'create'
+			)?.[1];
+		}
+
+		function getEditorChangeHandler() {
+			return (mockWorkspace.on as any).mock.calls.find(
+				(call: any) => call[0] === 'editor-change'
+			)?.[1];
+		}
+
+		it('resets all counters then increments notesCreatedToday to 1 on midnight note creation', () => {
+			// Pre-load stale daily data from a previous day
+			plugin.dailyWordData.date = '2020-01-01';
+			plugin.dailyWordData.wordsAddedToday = 100;
+			plugin.dailyWordData.goalCelebrated = true;
+			plugin.dailyWordData.notesCreatedToday = 5;
+			plugin.dailyWordData.tasksCompletedToday = 3;
+			plugin.dailyWordData.linksCreatedToday = 2;
+
+			const mockFile = { path: 'test.md', basename: 'test', extension: 'md' } as TFile;
+			getCreateHandler()?.(mockFile);
+
+			// Midnight reset must have fired: all word/celebration fields zeroed
+			expect(plugin.dailyWordData.wordsAddedToday).toBe(0);
+			expect(plugin.dailyWordData.goalCelebrated).toBe(false);
+			expect(plugin.dailyWordData.tasksCompletedToday).toBe(0);
+			expect(plugin.dailyWordData.linksCreatedToday).toBe(0);
+			// Then notesCreatedToday was incremented from 0 to 1
+			expect(plugin.dailyWordData.notesCreatedToday).toBe(1);
+		});
+
+		it('resets all counters then increments tasksCompletedToday on midnight task completion', () => {
+			plugin.dailyWordData.date = '2020-01-01';
+			plugin.dailyWordData.notesCreatedToday = 3;
+			plugin.dailyWordData.tasksCompletedToday = 5;
+			plugin.dailyWordData.linksCreatedToday = 1;
+
+			const handler = getEditorChangeHandler();
+			const mockFile = { path: 'test.md' } as TFile;
+
+			// First editor-change (blank content): triggers reset because date is stale;
+			// delta = 0 so no task increment happens.
+			handler?.({ getValue: () => '' }, { file: mockFile });
+			vi.advanceTimersByTime(100);
+
+			// Second editor-change: 1 task added; date is now today, no second reset.
+			handler?.({ getValue: () => '- [x] Task done' }, { file: mockFile });
+			vi.advanceTimersByTime(100);
+
+			// After reset + increment:
+			expect(plugin.dailyWordData.notesCreatedToday).toBe(0);
+			expect(plugin.dailyWordData.linksCreatedToday).toBe(0);
+			expect(plugin.dailyWordData.tasksCompletedToday).toBe(1);
+		});
+
+		it('does NOT reset counters when a non-markdown file is created (reset is after isMarkdown guard)', () => {
+			plugin.dailyWordData.date = '2020-01-01';
+			plugin.dailyWordData.notesCreatedToday = 5;
+			plugin.dailyWordData.wordsAddedToday = 200;
+
+			const mockFile = { path: 'image.png', basename: 'image', extension: 'png' } as TFile;
+			getCreateHandler()?.(mockFile);
+
+			// Non-markdown file returns early before the reset block — counters unchanged
+			expect(plugin.dailyWordData.notesCreatedToday).toBe(5);
+			expect(plugin.dailyWordData.wordsAddedToday).toBe(200);
+			expect(plugin.dailyWordData.date).toBe('2020-01-01');
 		});
 	});
 });

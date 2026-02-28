@@ -26,6 +26,7 @@ export default defineConfig({
     alias: {
       'obsidian': path.resolve(__dirname, './tests/mocks/obsidian.ts'),
       '../components/Pet.svelte': path.resolve(__dirname, './tests/mocks/Pet.svelte.ts'),
+      '../components/Stats.svelte': path.resolve(__dirname, './tests/mocks/Stats.svelte.ts'),
     },
   },
 });

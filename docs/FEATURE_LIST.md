@@ -121,14 +121,12 @@ A plugin you feel, not think about.
 - Main character animations (walk, pet, celebrate)
 - Production fireworks animation
 - Settings persistence
-
-**Remaining:**
-- Dashboard view (Pet/Stats tab toggle, concentric rings, activity tallies)
-- Settings page: ensure all settings accessible via Plugin Settings tab (not modal-only)
-
-**Also complete:**
 - Status bar notification system (global toggle, off by default, independent of fireworks)
 - Word count goals: per-note goal (frontmatter `word-goal`) + per-day goal (settings), replacing milestone list
+
+**Remaining:**
+- Stats.svelte ring/tally UI (the only outstanding v1.0 item): concentric word count rings, activity tallies, warm/cool color mode. The `dashboardColorMode` Settings tab dropdown ships alongside this.
+- Everything else — tab bar, data layer, celebration counters, ring geometry, all Settings tab entries — is done.
 
 ### V1.1 — Interactivity + Vault Health
 - Butterfly chase interaction (user-triggered, pets chase then return to walking)

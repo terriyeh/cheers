@@ -9,6 +9,12 @@ export interface DailyWordData {
 	wordsAddedToday: number;
 	/** Whether the daily goal celebration has already fired today */
 	goalCelebrated: boolean;
+	/** Number of markdown notes created today */
+	notesCreatedToday: number;
+	/** Number of tasks completed (checked off) today */
+	tasksCompletedToday: number;
+	/** Number of links created today */
+	linksCreatedToday: number;
 }
 
 /**
@@ -36,6 +42,8 @@ export interface ObsidianPetsSettings {
 		/** Daily word goal: words to write today across vault. null = not set. */
 		dailyWordGoal: number | null;
 	};
+	/** Dashboard color theme: 'warm' (amber/orange) or 'cool' (blue/teal) */
+	dashboardColorMode: 'warm' | 'cool';
 }
 
 /**
@@ -53,6 +61,7 @@ export const DEFAULT_SETTINGS: ObsidianPetsSettings = {
 		onWordGoal: false,
 		dailyWordGoal: null,
 	},
+	dashboardColorMode: 'warm',
 };
 
 /**

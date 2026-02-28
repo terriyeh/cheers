@@ -124,6 +124,58 @@
 /* Override Obsidian's default .view-content padding for immersive background */
 .workspace-leaf-content[data-type="obsidian-pets-pet-view"] .view-content {
   padding: 3px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Tab bar ──────────────────────────────────────────────────────────────── */
+
+.vp-tab-bar {
+  display: flex;
+  flex-shrink: 0;
+  gap: 4px;
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.vp-tab-pet,
+.vp-tab-stats {
+  padding: 4px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  user-select: none;
+}
+
+.vp-tab-pet:hover,
+.vp-tab-stats:hover {
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
+}
+
+.vp-tab-pet.is-active,
+.vp-tab-stats.is-active {
+  background: var(--background-modifier-active-hover);
+  color: var(--text-normal);
+  font-weight: 500;
+}
+
+/* ── Panels ───────────────────────────────────────────────────────────────── */
+
+.vp-panel-pet,
+.vp-panel-stats {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.vp-panel-stats {
+  overflow-y: auto;
+}
+
+.vp-panel-hidden {
+  display: none !important;
 }
 
 .workspace-leaf-content[data-type="obsidian-pets-pet-view"] .view-header {
