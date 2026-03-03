@@ -33,7 +33,7 @@ export default class ObsidianPetsPlugin extends Plugin {
 	settings: ObsidianPetsSettings = DEFAULT_SETTINGS;
 	petView?: PetView;
 	dailyWordData: DailyWordData = this.getDefaultDailyData();
-	private celebrationService?: CelebrationService;
+	celebrationService?: CelebrationService;
 
 	async onload() {
 		console.log('🦊 Obsidian Pets loading...');
@@ -135,11 +135,8 @@ export default class ObsidianPetsPlugin extends Plugin {
 
 Available states:
   - walking
-  - running
-  - greeting
   - celebration
   - petting
-  - sleeping
 					`);
 				}
 			};

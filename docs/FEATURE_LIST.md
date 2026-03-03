@@ -61,6 +61,8 @@ A plugin you feel, not think about.
   - Links created today
 - **Dangling links tally**: Deferred to V1.1. Framing: each unresolved `[[link]]` you fill counts as +1 progress.
 - **All counters reset at midnight**
+- **[Later] Streak counter**: Consecutive days the user hit at least one celebration trigger. Highest behavioral impact per pixel — loss aversion mechanism drives daily return. Show current streak prominently; consider a "shield" grace day to prevent one-miss abandonment.
+- **[Later] Monthly calendar dots**: One bit per day (filled/empty), GitHub contribution graph style. Minimal historical context with near-zero cognitive overhead; drives writing identity formation without requiring full chart infrastructure.
 
 ### 6. Seasonal Transformation
 - **Fountain states**: 4 variations painted into background (flowing → sparkling → reflective → frozen)
@@ -123,14 +125,15 @@ A plugin you feel, not think about.
 - Settings persistence
 - Status bar notification system (global toggle, off by default, independent of fireworks)
 - Word count goals: per-note goal (frontmatter `word-goal`) + per-day goal (settings), replacing milestone list
+- Stats dashboard (Today tab): concentric word count rings, activity tallies, warm/cool color mode
 
 **Remaining:**
-- Stats.svelte ring/tally UI (the only outstanding v1.0 item): concentric word count rings, activity tallies, warm/cool color mode. The `dashboardColorMode` Settings tab dropdown ships alongside this.
-- Everything else — tab bar, data layer, celebration counters, ring geometry, all Settings tab entries — is done.
+- None. V1.0 is feature-complete.
 
 ### V1.1 — Interactivity + Vault Health
 - Butterfly chase interaction (user-triggered, pets chase then return to walking)
-- Dangling links tally on dashboard (unresolved `[[links]]` count; reducing them is progress)
+- Dangling links tally on Today tab (unresolved `[[links]]` count; reducing them is progress)
+- Streaks tab (third panel tab): streak counter (consecutive days with vault activity) + monthly calendar dots (GitHub heatmap style; one bit per day)
 
 ### V1.2 — Scene & Cosmetics
 - Companion system (0–2 companions; crew celebrating together, lively scene feel)

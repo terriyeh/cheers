@@ -5,8 +5,8 @@
 
 import { vi } from 'vitest';
 
-// Extend HTMLElement with Obsidian's toggleClass helper so mock DOM elements
-// respond correctly to PetView's tab switching logic.
+// Extend HTMLElement with Obsidian helpers so mock DOM elements behave like
+// real Obsidian elements in tests.
 if (typeof HTMLElement !== 'undefined') {
   (HTMLElement.prototype as any).toggleClass = function (
     cls: string,
@@ -17,6 +17,16 @@ if (typeof HTMLElement !== 'undefined') {
     } else {
       this.classList.toggle(cls);
     }
+  };
+
+  (HTMLElement.prototype as any).createSpan = function (
+    options?: { cls?: string; text?: string }
+  ): HTMLSpanElement {
+    const span = document.createElement('span');
+    if (options?.cls) { span.className = options.cls; }
+    if (options?.text) { span.textContent = options.text; }
+    this.appendChild(span);
+    return span;
   };
 }
 
@@ -59,6 +69,7 @@ export class App {
       on: vi.fn().mockReturnValue({}),
       off: vi.fn(),
       offref: vi.fn(),
+      onLayoutReady: vi.fn().mockImplementation((cb: () => void) => cb()),
       getActiveViewOfType: vi.fn().mockReturnValue(null),
       revealLeaf: vi.fn(),
       getLeftLeaf: vi.fn().mockReturnValue(null),

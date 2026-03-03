@@ -10,7 +10,7 @@
 
 const OUTER_RADIUS = 80;
 const STROKE_WIDTH = 12;
-const INNER_RADIUS = OUTER_RADIUS - STROKE_WIDTH / 2; // 74
+export const INNER_RADIUS = OUTER_RADIUS - STROKE_WIDTH / 2; // 74
 
 export const CIRCUMFERENCE = 2 * Math.PI * INNER_RADIUS; // ~464.96
 

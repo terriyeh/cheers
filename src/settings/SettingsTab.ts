@@ -63,6 +63,7 @@ export class ObsidianPetsSettingTab extends PluginSettingTab {
 					.onChange(async (value) => {
 						this.plugin.settings.celebrations.onNoteCreate = value;
 						await this.plugin.saveSettings();
+						this.plugin.petView?.updateStatsComponent();
 					})
 			);
 
@@ -76,6 +77,7 @@ export class ObsidianPetsSettingTab extends PluginSettingTab {
 					.onChange(async (value) => {
 						this.plugin.settings.celebrations.onTaskComplete = value;
 						await this.plugin.saveSettings();
+						this.plugin.petView?.updateStatsComponent();
 					})
 			);
 
@@ -89,6 +91,7 @@ export class ObsidianPetsSettingTab extends PluginSettingTab {
 					.onChange(async (value) => {
 						this.plugin.settings.celebrations.onLinkCreate = value;
 						await this.plugin.saveSettings();
+						this.plugin.petView?.updateStatsComponent();
 					})
 			);
 
@@ -103,6 +106,7 @@ export class ObsidianPetsSettingTab extends PluginSettingTab {
 						this.plugin.settings.celebrations.onWordGoal = value;
 						await this.plugin.saveSettings();
 						this.display();
+						this.plugin.petView?.updateStatsComponent();
 					})
 			);
 
@@ -120,6 +124,7 @@ export class ObsidianPetsSettingTab extends PluginSettingTab {
 							this.plugin.settings.celebrations.dailyWordGoal =
 								Number.isFinite(num) && num > 0 && num <= 100_000 ? num : null;
 							await this.plugin.saveSettings();
+							this.plugin.petView?.updateStatsComponent();
 						})
 				);
 
@@ -137,5 +142,45 @@ export class ObsidianPetsSettingTab extends PluginSettingTab {
 				});
 			}
 		}
+
+		containerEl.createEl('h3', { text: 'Dashboard' });
+
+		new Setting(containerEl)
+			.setName('Color palette')
+			.setDesc('Tally column colors shown in the Stats tab')
+			.addDropdown((dropdown) =>
+				dropdown
+					.addOption('warm', 'Warm — pink / yellow / orange')
+					.addOption('cool', 'Cool — blue / cyan / green')
+					.setValue(this.plugin.settings.dashboardColorMode)
+					.onChange(async (value: string) => {
+						if (value === 'warm' || value === 'cool') {
+							this.plugin.settings.dashboardColorMode = value;
+							await this.plugin.saveSettings();
+							this.plugin.petView?.updateStatsComponent();
+						}
+					})
+			);
+
+		// TODO: REMOVE BEFORE LAUNCH — dev testing aid only
+		new Setting(containerEl)
+			.setName('Reset daily stats')
+			.setDesc('Clear today\'s activity counts. Use this if the tallies look wrong after updating the plugin.')
+			.addButton((button) =>
+				button
+					.setButtonText('Reset')
+					.setWarning()
+					.onClick(async () => {
+						const daily = this.plugin.dailyWordData;
+						daily.wordsAddedToday = 0;
+						daily.goalCelebrated = false;
+						daily.notesCreatedToday = 0;
+						daily.tasksCompletedToday = 0;
+						daily.linksCreatedToday = 0;
+						this.plugin.celebrationService?.clearFileBaselines();
+						await this.plugin.saveSettings();
+						this.plugin.petView?.updateStatsComponent();
+					})
+			);
 	}
 }

@@ -85,4 +85,4 @@ export type CelebrationOverlayConstants = typeof CELEBRATION_OVERLAY_CONSTANTS;
  * How long the status bar notification remains visible after a celebration trigger (ms).
  * Exported so tests can reference the canonical value without duplicating it.
  */
-export const STATUS_BAR_NOTIFICATION_DURATION_MS = 3000;
+export const STATUS_BAR_NOTIFICATION_DURATION_MS = 5000;

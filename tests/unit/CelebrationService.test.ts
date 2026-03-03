@@ -32,7 +32,6 @@ function localDateString(): string {
 
 interface MockStatusBarItem {
 	setText: ReturnType<typeof vi.fn>;
-	addClass: ReturnType<typeof vi.fn>;
 	show: ReturnType<typeof vi.fn>;
 	hide: ReturnType<typeof vi.fn>;
 }
@@ -48,16 +47,19 @@ describe('CelebrationService', () => {
 		vi.useFakeTimers();
 
 		// Mock Vault with event registration (returns EventRef-like object)
+		// cachedRead rejects by default — tests that need specific saved content override it.
 		mockVault = {
 			on: vi.fn().mockReturnValue({} as any),
 			off: vi.fn(),
 			offref: vi.fn(),
+			cachedRead: vi.fn().mockRejectedValue(new Error('vault not available in tests')),
 		};
 
 		// Mock Workspace with event registration (returns EventRef-like object)
 		mockWorkspace = {
 			on: vi.fn().mockReturnValue({} as any),
 			off: vi.fn(),
+			onLayoutReady: vi.fn().mockImplementation((cb: () => void) => cb()),
 		};
 
 		// Mock Plugin with default settings
@@ -81,6 +83,7 @@ describe('CelebrationService', () => {
 					onWordGoal: false,
 					dailyWordGoal: null,
 				},
+				dashboardColorMode: 'warm' as const,
 			},
 			petView: {
 				transitionState: vi.fn().mockReturnValue(true),
@@ -100,7 +103,6 @@ describe('CelebrationService', () => {
 
 		mockStatusBarItem = {
 			setText: vi.fn(),
-			addClass: vi.fn(),
 			show: vi.fn(),
 			hide: vi.fn(),
 		};
@@ -208,9 +210,10 @@ describe('CelebrationService', () => {
 				(call: any) => call[0] === 'editor-change'
 			)?.[1];
 
-			// First call: no checked tasks
+			// First call: no checked tasks — advance timer so baseline fires before mock clear
 			mockEditor.getValue = vi.fn().mockReturnValue('- [ ] Complete this task');
 			editorChangeHandler?.(mockEditor, { file: null });
+			vi.advanceTimersByTime(100);
 
 			vi.clearAllMocks();
 
@@ -233,11 +236,15 @@ describe('CelebrationService', () => {
 				(call: any) => call[0] === 'editor-change'
 			)?.[1];
 
-			// Initial state: 1 task checked
+			// Baseline: establish 0 tasks checked (per-file tracking requires first call to set baseline)
+			mockEditor.getValue = vi.fn().mockReturnValue('- [ ] Task 1\n- [ ] Task 2\n- [ ] Task 3');
+			editorChangeHandler?.(mockEditor, { file: null });
+			vi.advanceTimersByTime(100);
+
+			// First increase: 1 task checked → detected and celebrated
 			mockEditor.getValue = vi.fn().mockReturnValue('- [x] Task 1\n- [ ] Task 2\n- [ ] Task 3');
 			editorChangeHandler?.(mockEditor, { file: null });
 			vi.advanceTimersByTime(100);
-			// First increase detected and celebrated
 			expect(plugin.petView?.transitionState).toHaveBeenCalledWith('celebration');
 
 			vi.clearAllMocks();
@@ -553,6 +560,63 @@ describe('CelebrationService', () => {
 				expect(plugin.petView?.transitionState).not.toHaveBeenCalled();
 			});
 
+			it('deleting words reduces wordsAddedToday, clamped to 0', () => {
+				plugin.settings.celebrations.onWordGoal = true;
+				plugin.settings.celebrations.dailyWordGoal = 100; // won't be crossed
+
+				const mockFile = { path: 'test.md' } as TFile;
+				const handler = getEditorChangeHandler();
+
+				// Baseline: 5 words
+				handler?.(makeEditor('one two three four five'), { file: mockFile });
+				vi.advanceTimersByTime(100);
+
+				// Add 3 words → wordsAddedToday = 3
+				handler?.(makeEditor('one two three four five six seven eight'), { file: mockFile });
+				vi.advanceTimersByTime(100);
+				expect(plugin.dailyWordData.wordsAddedToday).toBe(3);
+
+				// Delete 2 words → delta = -2 → wordsAddedToday = 1
+				handler?.(makeEditor('one two three four five six'), { file: mockFile });
+				vi.advanceTimersByTime(100);
+				expect(plugin.dailyWordData.wordsAddedToday).toBe(1);
+				expect(plugin.petView?.updateStatsComponent).toHaveBeenCalled();
+
+				// Delete more than accumulated → wordsAddedToday clamped to 0
+				handler?.(makeEditor('x'), { file: mockFile });
+				vi.advanceTimersByTime(100);
+				expect(plugin.dailyWordData.wordsAddedToday).toBe(0);
+			});
+
+			it('wordsAddedToday and stats keep updating after goalCelebrated is true', () => {
+				plugin.settings.celebrations.onWordGoal = true;
+				plugin.settings.celebrations.dailyWordGoal = 5;
+
+				const mockFile = { path: 'test.md' } as TFile;
+				const handler = getEditorChangeHandler();
+
+				// Baseline
+				handler?.(makeEditor(''), { file: mockFile });
+				vi.advanceTimersByTime(100);
+
+				// Cross goal: wordsAddedToday = 5, goalCelebrated = true
+				handler?.(makeEditor('one two three four five'), { file: mockFile });
+				vi.advanceTimersByTime(100);
+				expect(plugin.dailyWordData.goalCelebrated).toBe(true);
+				expect(plugin.petView?.transitionState).toHaveBeenCalledWith('celebration');
+				vi.advanceTimersByTime(CELEBRATION_OVERLAY_CONSTANTS.CELEBRATION_DURATION_MS);
+				vi.clearAllMocks();
+
+				// Write 3 more words — counter must still advance past the goal
+				handler?.(makeEditor('one two three four five six seven eight'), { file: mockFile });
+				vi.advanceTimersByTime(100);
+
+				expect(plugin.dailyWordData.wordsAddedToday).toBe(8);
+				expect(plugin.petView?.updateStatsComponent).toHaveBeenCalled();
+				// Animation must NOT fire again
+				expect(plugin.petView?.transitionState).not.toHaveBeenCalled();
+			});
+
 			it('resets daily word count when date has changed (midnight rollover)', () => {
 				plugin.settings.celebrations.onWordGoal = true;
 				plugin.settings.celebrations.dailyWordGoal = 5;
@@ -651,7 +715,7 @@ describe('CelebrationService', () => {
 				expect(plugin.petView?.transitionState).not.toHaveBeenCalled();
 			});
 
-			it('does not celebrate per-note goal on first observation of file (baseline init)', () => {
+			it('does not celebrate when file is already above per-note goal on first open (no session crossing)', () => {
 				plugin.settings.celebrations.onWordGoal = true;
 				(plugin.app.metadataCache.getFileCache as any).mockReturnValue({
 					frontmatter: { 'word-goal': 5 },
@@ -660,11 +724,32 @@ describe('CelebrationService', () => {
 				const mockFile = { path: 'test.md' } as TFile;
 				const handler = getEditorChangeHandler();
 
-				// First edit: count already above goal — should NOT celebrate
+				// First edit: cachedRead rejects (default mock) → fallback to current count (6)
+				// savedWordCount === currentWordCount → no delta → no celebration
 				handler?.(makeEditor('one two three four five six'), { file: mockFile });
 				vi.advanceTimersByTime(100);
 
 				expect(plugin.petView?.transitionState).not.toHaveBeenCalled();
+			});
+
+			it('celebrates per-note goal when crossing happens in the first edit burst (preloaded baseline)', async () => {
+				plugin.settings.celebrations.onWordGoal = true;
+				(plugin.app.metadataCache.getFileCache as any).mockReturnValue({
+					frontmatter: { 'word-goal': 5 },
+				});
+
+				// Saved file had 3 words (below goal of 5); user typed 3 more before debounce fired
+				(plugin.app.vault as any).cachedRead = vi.fn().mockResolvedValue('one two three');
+
+				const mockFile = { path: 'test.md' } as TFile;
+				const handler = getEditorChangeHandler();
+
+				handler?.(makeEditor('one two three four five six'), { file: mockFile });
+				// Flush microtasks so the preload (vault.cachedRead) completes before the debounce fires
+				await Promise.resolve();
+				vi.advanceTimersByTime(100);
+
+				expect(plugin.petView?.transitionState).toHaveBeenCalledWith('celebration');
 			});
 
 			it('excludes YAML frontmatter text from body word count', () => {
@@ -747,6 +832,56 @@ describe('CelebrationService', () => {
 
 				expect(plugin.petView?.transitionState).toHaveBeenCalledWith('celebration');
 			});
+
+			it('cleanup() resets fileTaskCounts so next edit sets a fresh baseline', () => {
+				plugin.settings.celebrations.onTaskComplete = true;
+
+				const mockFile = { path: 'test.md' } as TFile;
+				const handler = getEditorChangeHandler();
+
+				// Baseline: 1 checked task
+				handler?.({ getValue: vi.fn().mockReturnValue('- [x] Task 1') }, { file: mockFile });
+				vi.advanceTimersByTime(100);
+
+				service.cleanup();
+				vi.advanceTimersByTime(CELEBRATION_OVERLAY_CONSTANTS.CELEBRATION_DURATION_MS);
+				vi.clearAllMocks();
+
+				// After cleanup the Map is empty — same content re-sets baseline, no celebration
+				handler?.({ getValue: vi.fn().mockReturnValue('- [x] Task 1') }, { file: mockFile });
+				vi.advanceTimersByTime(100);
+				expect(plugin.petView?.transitionState).not.toHaveBeenCalled();
+
+				// Adding a second task now triggers a delta of 1 → celebration
+				handler?.({ getValue: vi.fn().mockReturnValue('- [x] Task 1\n- [x] Task 2') }, { file: mockFile });
+				vi.advanceTimersByTime(100);
+				expect(plugin.petView?.transitionState).toHaveBeenCalledWith('celebration');
+			});
+
+			it('cleanup() resets fileLinkCounts so next edit sets a fresh baseline', () => {
+				plugin.settings.celebrations.onLinkCreate = true;
+
+				const mockFile = { path: 'test.md' } as TFile;
+				const handler = getEditorChangeHandler();
+
+				// Baseline: 1 wiki link
+				handler?.({ getValue: vi.fn().mockReturnValue('[[existing-note]]') }, { file: mockFile });
+				vi.advanceTimersByTime(100);
+
+				service.cleanup();
+				vi.advanceTimersByTime(CELEBRATION_OVERLAY_CONSTANTS.CELEBRATION_DURATION_MS);
+				vi.clearAllMocks();
+
+				// After cleanup the Map is empty — same content re-sets baseline, no celebration
+				handler?.({ getValue: vi.fn().mockReturnValue('[[existing-note]]') }, { file: mockFile });
+				vi.advanceTimersByTime(100);
+				expect(plugin.petView?.transitionState).not.toHaveBeenCalled();
+
+				// Adding a second link now triggers delta of 1 → celebration
+				handler?.({ getValue: vi.fn().mockReturnValue('[[existing-note]] [[new-note]]') }, { file: mockFile });
+				vi.advanceTimersByTime(100);
+				expect(plugin.petView?.transitionState).toHaveBeenCalledWith('celebration');
+			});
 		});
 	});
 
@@ -759,6 +894,11 @@ describe('CelebrationService', () => {
 			const editorChangeHandler = (mockWorkspace.on as any).mock.calls.find(
 				(call: any) => call[0] === 'editor-change'
 			)?.[1];
+
+			// Establish baseline (0 checked tasks) so the rapid changes register as a delta
+			editorChangeHandler?.({ getValue: vi.fn().mockReturnValue('') }, { file: null });
+			vi.advanceTimersByTime(100);
+			vi.clearAllMocks();
 
 			// Trigger multiple rapid changes
 			editorChangeHandler?.(mockEditor, { file: null });
@@ -782,10 +922,10 @@ describe('CelebrationService', () => {
 				(call: any) => call[0] === 'editor-change'
 			)?.[1];
 
-			// First change: no content (establishes baseline)
+			// First change: no content — advance full 100ms to fire debounce and set baseline
 			mockEditor.getValue = vi.fn().mockReturnValue('');
 			editorChangeHandler?.(mockEditor, { file: null });
-			vi.advanceTimersByTime(60);
+			vi.advanceTimersByTime(100);
 
 			// Second change before debounce completes (resets timer): adds a task
 			mockEditor.getValue = vi.fn().mockReturnValue('- [x] Task complete');
@@ -822,7 +962,7 @@ describe('CelebrationService', () => {
 			expect(plugin.petView?.transitionState).not.toHaveBeenCalled();
 		});
 
-		it('should allow celebration after 2.17 seconds', () => {
+		it('should allow celebration after the celebration duration elapses', () => {
 			const mockFile1 = { path: 'note1.md', basename: 'note1' } as TFile;
 			const mockFile2 = { path: 'note2.md', basename: 'note2' } as TFile;
 
@@ -932,7 +1072,7 @@ describe('CelebrationService', () => {
 		it('does not throw and does not call setText when statusBarItem is null', () => {
 			// Create a fresh vault/workspace so we can retrieve this service's handlers cleanly
 			const freshVault = { on: vi.fn().mockReturnValue({} as any), off: vi.fn(), offref: vi.fn() };
-			const freshWorkspace = { on: vi.fn().mockReturnValue({} as any), off: vi.fn() };
+			const freshWorkspace = { on: vi.fn().mockReturnValue({} as any), off: vi.fn(), onLayoutReady: vi.fn().mockImplementation((cb: () => void) => cb()) };
 			const freshPlugin = {
 				...plugin,
 				app: { ...plugin.app, vault: freshVault, workspace: freshWorkspace },
@@ -980,6 +1120,10 @@ describe('CelebrationService', () => {
 				const editorChangeHandler = (mockWorkspace.on as any).mock.calls.find(
 					(call: any) => call[0] === 'editor-change'
 				)?.[1];
+				// Establish baseline (0 links) so the wiki link registers as a new creation
+				editorChangeHandler?.({ getValue: vi.fn().mockReturnValue('') }, { file: null });
+				vi.advanceTimersByTime(100);
+				vi.clearAllMocks();
 				const editorWithLink = { getValue: vi.fn().mockReturnValue('[[my-note]]') } as unknown as Editor;
 				editorChangeHandler?.(editorWithLink, { file: null });
 				vi.advanceTimersByTime(100);
@@ -1019,27 +1163,29 @@ describe('CelebrationService', () => {
 
 			it('resets the clear timer when a second event fires before timeout expires', () => {
 				const createHandler = getCreateHandler();
+				// Use a partial window (duration - 1000ms) that stays within the notification window
+				const partialWindow = STATUS_BAR_NOTIFICATION_DURATION_MS - 1000;
 
 				// First event
 				createHandler?.(makeFile());
 				expect(mockStatusBarItem.show).toHaveBeenCalledTimes(1);
 
-				vi.advanceTimersByTime(2000); // 2s into 3s window
+				vi.advanceTimersByTime(partialWindow); // partialWindow into duration — still visible
 				expect(mockStatusBarItem.hide).not.toHaveBeenCalled();
 
 				mockStatusBarItem.show.mockClear();
 				mockStatusBarItem.hide.mockClear();
 				mockStatusBarItem.setText.mockClear();
 
-				// Second event fires before 3s timer expires — resets the timer
+				// Second event fires before timer expires — resets the timer
 				// (status bar fires before isCelebrating guard, so guard state is irrelevant here)
 				createHandler?.(makeFile('second.md'));
 				expect(mockStatusBarItem.show).toHaveBeenCalled();
 
-				vi.advanceTimersByTime(2000); // 2s into second event's 3s window — still visible
+				vi.advanceTimersByTime(partialWindow); // partialWindow into second event's window — still visible
 				expect(mockStatusBarItem.hide).not.toHaveBeenCalled();
 
-				vi.advanceTimersByTime(1001); // now past 3s from second event — hidden
+				vi.advanceTimersByTime(1001); // now past full duration from second event — hidden
 				expect(mockStatusBarItem.hide).toHaveBeenCalled();
 			});
 
@@ -1052,6 +1198,10 @@ describe('CelebrationService', () => {
 				// First event: note-create
 				createHandler?.(makeFile());
 				expect(mockStatusBarItem.setText).toHaveBeenCalledWith(expectedMsg('note-create'));
+
+				// Establish task baseline (0 checked) so the checked task registers as a new completion
+				editorChangeHandler?.({ getValue: vi.fn().mockReturnValue('') }, { file: null });
+				vi.advanceTimersByTime(100);
 
 				// While isCelebrating, task completion fires status bar before the guard
 				const editorWithTask = { getValue: vi.fn().mockReturnValue('- [x] Done') } as unknown as Editor;

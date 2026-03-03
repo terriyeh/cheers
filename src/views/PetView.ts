@@ -1,4 +1,4 @@
-import { ItemView, MarkdownView, type WorkspaceLeaf, Notice } from 'obsidian';
+import { ItemView, MarkdownView, setIcon, type WorkspaceLeaf, Notice } from 'obsidian';
 import type { PetState, StateChangeListener } from '../types/pet';
 import { PetStateMachine } from '../pet/PetStateMachine';
 import PetComponent from '../components/Pet.svelte';
@@ -33,9 +33,9 @@ interface StatsProps {
   showLinksColumn: boolean;
   showTasksColumn: boolean;
   fileWordCount: number | null;
-  /** Per-note word goal from frontmatter. TODO: read from metadataCache (see CelebrationService.checkPerNoteGoal). */
   fileWordGoal: number | null;
   colorMode: 'warm' | 'cool';
+  ringWidthPercent: number;
 }
 
 export class PetView extends ItemView {
@@ -117,8 +117,14 @@ export class PetView extends ItemView {
       this.petTabEl.classList.add('is-active');
       this.statsTabEl = tabBar.createDiv({ cls: 'vp-tab-stats' });
 
-      this.petPanel = contentContainer.createDiv({ cls: 'vp-panel-pet' });
-      this.statsPanel = contentContainer.createDiv({ cls: 'vp-panel-stats' });
+      setIcon(this.petTabEl, 'cat');
+      this.petTabEl.setAttribute('aria-label', 'Pet');
+      setIcon(this.statsTabEl, 'bar-chart-2');
+      this.statsTabEl.setAttribute('aria-label', 'Today');
+
+      const panelsContainer = contentContainer.createDiv({ cls: 'vp-panels-container' });
+      this.petPanel = panelsContainer.createDiv({ cls: 'vp-panel-pet' });
+      this.statsPanel = panelsContainer.createDiv({ cls: 'vp-panel-stats' });
       this.statsPanel.classList.add('vp-panel-hidden');
 
       // Wire tab click handlers
@@ -480,6 +486,12 @@ export class PetView extends ItemView {
       ? CelebrationService.countWords(activeView.editor.getValue())
       : null;
 
+    const raw = cel.onWordGoal && activeView?.file
+      ? this.app.metadataCache.getFileCache(activeView.file)?.frontmatter?.['word-goal']
+      : undefined;
+    const parsedGoal = typeof raw === 'number' ? raw : parseInt(String(raw ?? ''), 10);
+    const fileWordGoal: number | null = Number.isFinite(parsedGoal) && parsedGoal > 0 ? parsedGoal : null;
+
     return {
       wordsAddedToday: daily.wordsAddedToday,
       notesCreatedToday: daily.notesCreatedToday,
@@ -490,9 +502,9 @@ export class PetView extends ItemView {
       showLinksColumn: cel.onLinkCreate,
       showTasksColumn: cel.onTaskComplete,
       fileWordCount,
-      // TODO: read from active file's frontmatter word-goal key (see CelebrationService.checkPerNoteGoal)
-      fileWordGoal: null,
+      fileWordGoal,
       colorMode: plugin.settings.dashboardColorMode,
+      ringWidthPercent: 50,
     };
   }
 

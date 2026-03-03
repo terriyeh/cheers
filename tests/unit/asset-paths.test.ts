@@ -68,7 +68,7 @@ describe('getTimeOfDayBackground', () => {
       });
 
       it('DAY skyColor is the day sky color', () => {
-        expect(getTimeOfDayBackground(12).skyColor).toBe('#6f9eff');
+        expect(getTimeOfDayBackground(12).skyColor).toBe(BACKGROUNDS.DAY.skyColor);
       });
 
       it('NIGHT result is the BACKGROUNDS.NIGHT object', () => {
@@ -80,7 +80,7 @@ describe('getTimeOfDayBackground', () => {
       });
 
       it('NIGHT skyColor is the night sky color', () => {
-        expect(getTimeOfDayBackground(0).skyColor).toBe('#4c4f85');
+        expect(getTimeOfDayBackground(0).skyColor).toBe(BACKGROUNDS.NIGHT.skyColor);
       });
     });
   });

@@ -56,17 +56,6 @@
   font-style: italic;
 }
 
-/* State-specific container styling */
-/* Note: happy and celebrating states use default styling */
-
-.obsidian-pets-container[data-pet-state='sleeping'] {
-  opacity: 0.8;
-}
-
-.obsidian-pets-container[data-pet-state='encouraging'] {
-  border-left: 3px solid var(--interactive-accent);
-}
-
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .obsidian-pets-container {
@@ -133,6 +122,7 @@
 .vp-tab-bar {
   display: flex;
   flex-shrink: 0;
+  justify-content: center;
   gap: 4px;
   padding: 4px 6px;
   border-bottom: 1px solid var(--background-modifier-border);
@@ -140,12 +130,14 @@
 
 .vp-tab-pet,
 .vp-tab-stats {
-  padding: 4px 12px;
+  padding: 4px 10px;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 0.85rem;
   color: var(--text-muted);
   user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .vp-tab-pet:hover,
@@ -158,15 +150,23 @@
 .vp-tab-stats.is-active {
   background: var(--background-modifier-active-hover);
   color: var(--text-normal);
-  font-weight: 500;
 }
 
 /* ── Panels ───────────────────────────────────────────────────────────────── */
 
-.vp-panel-pet,
-.vp-panel-stats {
+/* Wrapper so both panels can stack absolutely — lets the pet animation keep running
+   while the stats panel is shown (visibility: hidden keeps layout + dimensions intact). */
+.vp-panels-container {
+  position: relative;
   flex: 1;
   min-height: 0;
+  overflow: hidden;
+}
+
+.vp-panel-pet,
+.vp-panel-stats {
+  position: absolute;
+  inset: 0;
   overflow: hidden;
 }
 
@@ -174,8 +174,11 @@
   overflow-y: auto;
 }
 
+/* Use visibility: hidden (not display: none) so the pet panel retains its dimensions
+   and CSS animations continue uninterrupted — prevents position snapping on tab switch. */
 .vp-panel-hidden {
-  display: none !important;
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .workspace-leaf-content[data-type="obsidian-pets-pet-view"] .view-header {
