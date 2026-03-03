@@ -2,59 +2,31 @@
 
 Your vault companion that celebrates you.
 
-![Version](https://img.shields.io/badge/version-0.1.0--dev-blue)
+![Version](https://img.shields.io/badge/version-0.1.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Obsidian](https://img.shields.io/badge/Obsidian-1.0.0+-purple)
 
 ---
 
-## Overview
+<!-- TODO: Add screenshot or GIF demo here -->
 
-Cheers! transforms your vault into a delightful space by celebrating your writing journey. Your companion notices when you create notes, reach word count goals, check off tasks, and engage with your knowledge base—responding with ambient celebrations that make your vault feel alive.
+Cheers! puts an animated cat companion in your Obsidian sidebar. As you write, your companion notices — and celebrates. Create a note, check off a task, reach a word goal — your pet responds with fireworks and a cheerful status bar message.
 
-**Philosophy:** *Feeling the plugin, not thinking about it.*
-
-No chat. No XP grinding. No cognitive load. Just cozy moments of recognition when you do what you love: write, think, and organize your knowledge.
+No chat. No XP grinding. No cognitive load. Just cozy moments of recognition when you do what you love.
 
 ---
 
-## Why Cheers!?
+## What Your Pet Celebrates
 
-### What Makes It Different
+| Vault Action | Celebration |
+|---|---|
+| Create any `.md` note | 🎆 Fireworks + status bar message |
+| Check off a task `- [x]` | 🎆 Fireworks + status bar message |
+| Add a link `[[wiki]]` or `[md](url)` | 🎆 Fireworks + status bar message |
+| Reach your **daily word goal** | 🎆 Fireworks + status bar message |
+| Reach a **per-note word goal** | 🎆 Fireworks + status bar message |
 
-**Pixel Pets:** Decorative pet + AI chat for vault queries
-**Vault Pets:** Pure decoration (VS Code Pets port)
-**Cheers!:** **Your vault celebrates you** ✨
-
-We're not here to:
-- ❌ Chat about your notes (use Obsidian Copilot for that)
-- ❌ Track productivity metrics (use RPG Stat Tracker for that)
-- ❌ Demand your attention with notifications
-
-We're here to:
-- ✅ Celebrate when you create a daily note
-- ✅ Cheer when you reach your word count goals
-- ✅ Notice when you check off tasks
-- ✅ Respond to your vault activities with joy
-- ✅ Provide ambient emotional support
-
-### Key Features
-
-- **Vault-Aware Celebrations** ✅ IMPLEMENTED (v0.2.0, Feb 12 2026): Pet celebrates note creation, task completion, link creation, and word count goals
-- **Interactive Pet Companion** ✅ IMPLEMENTED: 3 animation states with GIF-based animations
-  - Walking, celebration, petting
-  - CSS-based movement system with speed control
-  - Automatic direction flipping at edges
-- **Ambient Presence** ✅ IMPLEMENTED: Pet walks across panel with configurable speed (0-100%)
-  - Linear speed scaling (0% = 33s duration, 100% = 6s duration)
-  - GPU-accelerated CSS animations (<0.1% CPU)
-- **User-Configurable Triggers** ✅ IMPLEMENTED (v0.2.0): Individual toggles for each celebration type, with independent fireworks and status bar controls
-- **Status Bar Notifications** ✅ IMPLEMENTED: Brief message in the status bar for each celebration — fires automatically with every enabled trigger
-- **Progress Dashboard** ✅ IMPLEMENTED (v0.1.0): Stats tab within the pet panel — concentric word count rings, daily activity tallies, warm/cool color palette
-- **Butterfly Chase** 🚧 PLANNED (v1.1): Release a butterfly and watch your pet chase it
-- **Crew & Cosmetics** 🚧 PLANNED (v1.2): Optional companion pets + accessories (hats, scarves) + seasonal backgrounds
-- **Privacy-First** ✅ IMPLEMENTED: Fully local, no network calls, no telemetry
-- **Mobile Support** ✅ IMPLEMENTED: Touch-enabled for phones and tablets, battery-optimized
+Each trigger has its own on/off toggle. Status bar messages use your pet's name and fire automatically alongside any enabled celebration.
 
 ---
 
@@ -62,389 +34,113 @@ We're here to:
 
 ### From Obsidian Community Plugins (Recommended)
 
-1. Open Obsidian Settings → Community plugins
-2. Browse and search for "Cheers!"
-3. Click Install, then Enable
+1. Open Obsidian **Settings → Community plugins**
+2. Browse and search for **"Cheers!"**
+3. Click **Install**, then **Enable**
 
-### Manual Installation
+### Manual
 
-1. Download the latest release from [GitHub Releases](https://github.com/terriyeh/cheers/releases)
+1. Download the [latest release](https://github.com/terriyeh/cheers/releases)
 2. Extract the files to `.obsidian/plugins/cheers/` in your vault
-3. Reload Obsidian
-4. Enable the plugin in Settings → Community plugins
+3. Reload Obsidian and enable the plugin under Community plugins
 
 ---
 
 ## Quick Start
 
-### 1. Configure Your Pet Companion
+1. Click the **paw icon 🐾** in the sidebar ribbon to open the pet panel
+2. A welcome screen lets you name your pet (default: Kit) and optionally enter your own name
+3. Open **Settings → Cheers!** to turn on the celebrations you want
+4. Start writing — your pet does the rest
 
-On first launch, you'll see a welcome modal:
-
-1. Enter your pet's name (default: Kit)
-2. Optionally enter your name (what your pet will call you)
-3. Click "Let's Go!" or Skip to use defaults
-
-You can change these settings later using **Command Palette → "Edit Pet Settings"**
-
-### 2. Open Your Pet Panel
-
-1. Click the paw icon 🐾 in the sidebar ribbon
-2. Your pet appears and greets you with a wave
-3. Click or tap your pet to pet them anytime!
-
-### 3. Start Writing
-
-Your pet celebrates when you:
-- ✅ **Create any new note** - Fireworks (+ status bar message if enabled)
-- ✅ **Check off task checkboxes** - Fireworks (+ status bar message if enabled)
-- ✅ **Add links between notes** (wiki `[[link]]` or markdown `[link](url)`) - Fireworks (+ status bar message if enabled)
-- ✅ **Reach your daily word goal** (configured in settings) - Fireworks (+ status bar message if enabled)
-- ✅ **Reach your per-note word goal** (set `word-goal: [number]` in note frontmatter) - Fireworks (+ status bar message if enabled)
-
-Each action triggers a celebration animation—no input required from you. Just write, and your pet celebrates alongside you. Configure which celebrations you want in Settings.
+You can rename your pet anytime via **Command Palette → "Edit Pet Settings"**.
 
 ---
 
-## Celebration Triggers
+## Configuration
 
-### Built-in Celebrations
-
-| Action | Fireworks | Status Bar | Configurable |
-|--------|-----------|------------|--------------|
-| **Create any note** (.md files) | ✅ On/Off | ✅ Always on | Per-trigger |
-| **Check off task** (`- [x]`) | ✅ On/Off | ✅ Always on | Per-trigger |
-| **Add a link** (`[[wiki]]` or `[markdown](url)`) | ✅ On/Off | ✅ Always on | Per-trigger |
-| **Reach daily word goal** (vault-wide, resets midnight) | ✅ On/Off | ✅ Always on | Goal set in settings |
-| **Reach per-note word goal** (`word-goal` frontmatter) | ✅ On/Off | ✅ Always on | Goal set per note |
-
-### Customization
-
-Configure celebrations in **Settings → Cheers! → Celebrations**:
-- **Individual toggles**: Enable/disable each celebration type independently
-- **Status bar notification**: A brief message appears in the status bar (bottom-left) automatically with every celebration — no separate toggle needed
-- **Daily word goal**: Set your target words per day in settings (vault-wide, resets at midnight)
-- **Per-note word goal**: Add `word-goal: [number]` to any note's frontmatter to set a target for that document
-- **Race condition prevention**: Only one celebration plays at a time (prevents overlapping animations)
-- **Smart detection**: Only celebrates increases (won't trigger when unchecking tasks or removing links)
-
----
-
-## Features
-
-### Pet Animations
-
-Your companion has 3 animation states using GIF-based animation:
-
-- **Walking**: Continuous edge-to-edge movement with configurable speed (0-100%)
-  - Smooth horizontal movement with automatic direction flipping
-  - Linear speed scaling (0% = slowest 33s, 100% = fastest 6s)
-  - GPU-accelerated for 60 FPS performance
-  - Minimal battery drain (<0.1% CPU usage)
-  - GIF handles frame animation internally, no sprite sheets
-- **Celebration**: Fireworks animation triggered by vault events (v0.2.0)
-  - GIF animation (4.32 seconds)
-  - Triggered by note creation, task completion, link creation, word count goals
-- **Petting**: Content reaction when you click/tap (available anytime)
-  - GIF-based petting animation
-  - Returns to walking state after petting
-
-**GIF-Based Animation System:**
-
-Each pet state uses a separate animated GIF file for smooth, browser-native animation:
-
-- **Pet Sprites** (100px × 100px display size):
-  - `cat-walking-6fps.gif` - Looping walk cycle
-  - `cat-petting-6fps.gif` - Content reaction animation
-  - `cat-celebrating-6fps.gif` - Character celebrates
-- **Visual Effects** (128px × 128px display size):
-  - `fireworks.gif` - 3-firework overlay during celebrations
-- **Background Scene** (day/night, auto-swaps at 6am/6pm):
-  - `background-day-8fps.gif` - Daytime scene with sky fill `#6f9eff`
-  - `background-night-8fps.gif` - Nighttime scene with sky fill `#4c4f85`
-
-All frame animation is handled natively by the browser (no sprite sheets or CSS keyframes needed). This approach reduces complexity and ensures consistent performance across devices.
-
-**Movement System Features:**
-- Configurable speed (0-100% slider)
-- Adaptive boundaries (ResizeObserver updates on container resize)
-- Direction changes synchronized with sprite flipping
-- State preservation (pet returns to walking after interruptions)
-
-**Mobile Support**: Fully touch-enabled with battery-optimized CSS animations
-
----
-
-## Recommended Plugin Pairings
-
-Cheers! works beautifully alongside other plugins to create your perfect workspace:
-
-### For Ambient Music
-**[Soundscapes](https://github.com/andrewmcgivery/obsidian-soundscapes)** - Adds ambient background music to Obsidian
-- Curated lo-fi, nature sounds, and ambient tracks
-- Toggle on/off easily
-- Perfect companion for focused writing sessions
-- Pairs naturally with pet celebrations
-
-### For Productivity
-- **Daily Notes** (Core plugin) - Creates daily notes that your pet celebrates
-- **Tasks** - Track checkboxes that trigger celebrations
-- **Calendar** - Visual overview of your writing journey
-
----
-
-## Settings & Configuration
-
-### Pet Personalization
-
-**First Run:**
-- Welcome modal appears automatically when you first open the Pet View
-- Configure your pet's name and your own name
-- Settings are saved to `.obsidian/plugins/cheers/data.json`
-
-**Changing Settings Later:**
-- Open Command Palette (Ctrl/Cmd + P)
-- Type "Edit Pet Settings"
-- Update your pet's name or your name
-
-**Available Settings:**
-
-| Setting | Description | Default | Validation |
-|---------|-------------|---------|------------|
-| Pet name | Your companion's name | Kit | 1-30 characters, alphanumeric + spaces only |
-| Your name | What your pet calls you | (optional) | 0-30 characters, alphanumeric + spaces only |
-
-### Celebration Settings
+### Celebrations
 
 Open **Settings → Cheers! → Celebrations** to configure:
 
-**Individual Toggles** (enable/disable each celebration type independently):
-- ✅ **Note creation** - Celebrate when creating new .md files
-- ✅ **Task completion** - Celebrate when checking off checkboxes (`- [x]`)
-- ✅ **Link creation** - Celebrate when adding wiki links or markdown links
-- ✅ **Word count goals** - Celebrate when reaching your daily or per-note goal
+- **Individual toggles** — enable or disable each celebration type independently
+- **Daily word goal** — set a vault-wide target; resets at midnight
+- **Per-note word goal** — add `word-goal: 200` to any note's frontmatter
 
-**Status Bar Notification:**
-- Fires automatically with each celebration trigger — no toggle required. Messages use your pet's name (e.g. "✨ Kit is energized by a fresh new note")
+Both goal types can be active at the same time. The per-note goal is checked against the current open file only.
 
-**Word Count Goal Configuration** (shown only when word count goals enabled):
-- **Daily goal**: Set a target number of words to write per day across your vault (resets at midnight)
-- **Per-note goal**: Add `word-goal: [number]` to any note's frontmatter to set a target for that document
-- At least one goal type must be configured when word count celebrations are enabled
+### Pet & Appearance
 
----
-
-## Development
-
-### Prerequisites
-
-- Node.js 18+
-- npm or yarn
-- Obsidian for testing
-
-### Setup
-
-```bash
-# Clone the repository
-git clone https://github.com/terriyeh/cheers
-cd cheers
-
-# Install dependencies
-npm install
-
-# Start development mode (watch for changes)
-npm run dev
-
-# Build for production
-npm run build
-```
-
-### Testing in Obsidian
-
-1. Create a test vault in Obsidian
-2. Create a symlink to the plugin directory:
-
-```bash
-# Windows
-mklink /D "C:\path\to\test-vault\.obsidian\plugins\cheers" "D:\cheers"
-
-# macOS/Linux
-ln -s /path/to/cheers /path/to/test-vault/.obsidian/plugins/cheers
-```
-
-3. Enable the plugin in your test vault
-4. Install the Hot-Reload plugin for automatic reloading
-
-### Tech Stack
-
-- **Language**: TypeScript
-- **UI Framework**: Svelte 4 (compiled to vanilla JS)
-- **Build Tool**: esbuild with esbuild-svelte
-- **Animation**: CSS animations + TypeScript state machine
-- **Storage**: Obsidian Plugin API (local JSON)
-
-### Project Structure
-
-```
-cheers/
-├── src/
-│   ├── main.ts                      # Plugin entry point, settings persistence, daily data
-│   ├── modals/
-│   │   └── WelcomeModal.ts          # First-run settings modal
-│   ├── views/
-│   │   └── PetView.ts               # Sidebar panel: Pet/Stats tab bar, background transitions
-│   ├── components/
-│   │   ├── Pet.svelte               # Animated pet with movement, background, interaction
-│   │   └── Stats.svelte             # Stats dashboard: concentric rings, activity tallies, color modes
-│   ├── pet/
-│   │   └── PetStateMachine.ts       # Animation state machine (walking/petting/celebration)
-│   ├── celebrations/
-│   │   └── CelebrationService.ts    # Vault event listeners, celebration triggers, daily counters
-│   ├── utils/
-│   │   ├── asset-paths.ts           # Centralized asset constants; BACKGROUNDS + getTimeOfDayBackground()
-│   │   ├── animation.ts             # Movement speed constants and helpers
-│   │   ├── stats-utils.ts           # computeRingData() — pure ring geometry for Stats tab
-│   │   └── daily-word-data.ts       # parseDailyWordData() — validates/migrates persisted counters
-│   └── types/
-│       ├── pet.ts
-│       └── settings.ts              # ObsidianPetsSettings, DailyWordData, DEFAULT_SETTINGS
-├── assets/
-│   ├── cat-walking-6fps.gif         # Walking animation GIF
-│   ├── cat-petting-6fps.gif         # Petting animation GIF
-│   ├── cat-celebrating-6fps.gif     # Celebration animation GIF
-│   ├── effects/
-│   │   └── fireworks.gif            # Celebration fireworks overlay
-│   └── backgrounds/
-│       ├── background-day-8fps.gif  # Daytime scene (6am–6pm), sky: #6f9eff
-│       └── background-night-8fps.gif # Nighttime scene (6pm–6am), sky: #4c4f85
-├── tests/
-│   ├── unit/                        # Vitest unit tests (393 tests)
-│   └── mocks/                       # Obsidian API + Svelte component mocks
-├── docs/
-│   └── specs/                       # Feature specs and implementation plans
-├── styles.css
-├── manifest.json
-└── package.json
-```
+- **Pet name** — 1–30 characters, letters and spaces
+- **Your name** — optional; used in status bar messages (e.g. "✨ Kit cheers for Alex!")
+- **Animation speed** — 0–100% slider (0% = leisurely, 100% = very fast)
+- **Background** — automatically switches between a day scene (6am–8pm) and a night scene
 
 ---
 
-## Roadmap
+## Stats Dashboard
 
-### Current (Foundation + Celebrations)
+The **Stats tab** (inside the pet panel) shows your writing activity at a glance:
 
-- ✅ Pet companion with 3 animation states (walking, petting, celebration)
-- ✅ CSS-based movement system with speed control (0-100%)
-- ✅ Petting interaction (click/tap anytime)
-- ✅ Garden background scene
-- ✅ Vault event listeners — note creation, task completion, link creation
-- ✅ Fireworks celebration animations
-- ✅ User-configurable triggers with per-type toggles
-- ✅ Welcome modal and settings persistence
-- ✅ Mobile touch support with battery optimization
-- ✅ GPU-accelerated animations (60 FPS, <0.1% CPU)
-
-### v1.0 — MVP (Community Plugin Submission)
-
-- ✅ Status bar notifications — fires automatically with every enabled trigger; messages use the pet's name
-- ✅ Word count goals — daily goal (settings) and per-note goal (`word-goal` frontmatter), replacing milestone list
-- ✅ Settings page — all active settings accessible via Plugin Settings tab (pet name, speed, all celebration toggles, daily word goal)
-- ✅ Progress dashboard — Stats tab with concentric word count rings (daily outer, per-note inner), daily activity tallies for enabled celebration types, warm/cool color palette in Settings
-
-### v1.1 — Interactivity + Vault Health
-
-- 📅 Butterfly chase — release a butterfly, watch your pet chase it
-- 📅 Dangling links tally on dashboard — unresolved `[[links]]`; fixing them counts as progress
-
-### v1.2 — Scene & Cosmetics
-
-- 📅 Companion pets (0–2 optional companions, crew celebrating together)
-- 📅 Cosmetics system — hats, scarves, accessories with layered sprite rendering
-- 📅 Seasonal backgrounds — spring, summer, autumn, winter scenes
-
----
-
-## Command Palette Commands
-
-- **Open Cheers!** - Opens the pet view in the sidebar
-- **Edit Pet Settings** - Reopens the welcome modal to change pet/user names
+- **Outer ring** — daily word progress toward your goal
+- **Inner circle** — per-note word progress for the currently open file
+- **Activity tallies** — notes created, links added, and tasks completed today (shown when the corresponding celebration is enabled)
+- **Color palette** — switch between warm (pink / yellow / orange) and cool (blue / cyan / green) in Settings
 
 ---
 
 ## Troubleshooting
 
-### Plugin won't load
-- Check that you're using Obsidian 1.0.0 or higher
-- Try disabling and re-enabling the plugin
-- Check Developer Console (Ctrl+Shift+I) for errors
+**Pet won't load**
+- Confirm you're on Obsidian 1.0.0 or higher
+- Disable and re-enable the plugin
+- Check the Developer Console (Ctrl+Shift+I) for errors
 
-### Pet doesn't animate
-- Verify sprite assets exist in `assets/` folder
-- Check that animations aren't disabled by another plugin
-- Look for CSS conflicts with theme
+**Celebrations not triggering**
+- Verify the relevant toggle is on in **Settings → Cheers! → Celebrations**
+- Only one celebration plays at a time — if another is in progress, the next one queues
+- Link celebrations require content inside the brackets (`[[]]` alone won't trigger)
+- Word goal celebrations fire once when you cross 100% — not on every word after
 
-### Celebrations not triggering
-- Check **Settings → Cheers! → Celebrations** to verify triggers are enabled
-- Celebrations use race condition prevention (only one at a time) - not cooldowns
-- Link celebrations require content inside brackets (won't trigger on empty `[[]]`)
-- Word count goal celebrations fire when you hit 100% of your daily or per-note goal
-- Restart Obsidian if celebrations stop working after plugin update
+**Stats rings not showing**
+- The outer ring requires a daily word goal set in Settings
+- The inner circle requires `word-goal: [number]` in the current file's frontmatter
 
-### Welcome modal doesn't appear
-- Welcome modal only appears on first view open
-- Use Command Palette → "Edit Pet Settings" to reopen
-- Check that `hasCompletedWelcome` is false in `data.json`
+**Welcome modal doesn't appear**
+- Use **Command Palette → "Edit Pet Settings"** to reopen it at any time
 
-### Settings validation errors
-- Pet name must be 1-30 characters (alphanumeric + spaces only)
-- Your name must be 0-30 characters (alphanumeric + spaces only)
-- Special characters like @#$%^&* are not allowed
+---
+
+## Roadmap
+
+### v1.1 — Interactivity
+- Butterfly chase — release a butterfly, watch your pet chase it
+- Dangling links tally — unresolved `[[links]]` shown on the dashboard; fixing them counts as progress
+
+### v1.2 — Scene & Cosmetics
+- Companion pets — up to 2 optional companions celebrating alongside your main pet
+- Cosmetics — hats, scarves, and accessories with layered sprite rendering
+- Seasonal backgrounds — spring, summer, autumn, and winter scenes
 
 ---
 
 ## Contributing
 
-Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
-### Automated Code Review
-
-All pull requests are automatically reviewed by Claude AI using the official [Anthropic Claude Code Action](https://github.com/anthropics/claude-code-action):
-
-- **Automatic**: Runs on every PR, no @claude mention needed
-- **Comprehensive**: Reviews code quality, security, and testing
-- **Interactive**: Comment `@claude` on PRs/issues for assistance
-
-See [`.github/workflows/README.md`](.github/workflows/README.md) for details.
-
-### Reporting Issues
-
-Found a bug or have a feature request? [Open an issue](https://github.com/terriyeh/cheers/issues) on GitHub.
+Issues and pull requests are welcome on [GitHub](https://github.com/terriyeh/cheers).
 
 ---
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) file for details.
-
----
-
-## Acknowledgments
-
-- Built with the [Obsidian Plugin API](https://github.com/obsidianmd/obsidian-api)
-- Inspired by [VS Code Pets](https://github.com/tonybaloney/vscode-pets) (2.26M installs, emotion > features)
-- Research: [Pixel Pets](https://github.com/LucasHJin/obsidian-pets) and vault companion landscape
-- Animation patterns from sprite-based web games
+MIT — see [LICENSE](LICENSE) for details.
 
 ---
 
 ## Support
 
-- **Documentation**: [GitHub Wiki](https://github.com/terriyeh/cheers/wiki)
-- **Community**: [Obsidian Forum](https://forum.obsidian.md/)
 - **Issues**: [GitHub Issues](https://github.com/terriyeh/cheers/issues)
+- **Community**: [Obsidian Forum](https://forum.obsidian.md/)
 
 ---
-
-**Made with 💙 for the Obsidian community**
 
 *"Your vault celebrates you."*
