@@ -10,23 +10,23 @@ Your vault companion that celebrates you.
 
 <!-- TODO: Add screenshot or GIF demo here -->
 
-Cheers! puts an animated cat companion in your Obsidian sidebar. As you write, your companion notices — and celebrates. Create a note, check off a task, reach a word goal — your pet responds with fireworks and a cheerful status bar message.
+If you've ever wished for a personal cheerleader to celebrate the progress in your Obsidian vault, Cheers! is for you. Cheers! puts an animated, vault-aware cat companion in your Obsidian sidebar. As you work in the vault, your companion notices — and celebrates. Whether you create a note, check off a task, reach a word goal (daily and per-document), or create a new link, your companion responds with fireworks and a cheerful status bar message.
 
-No chat. No XP grinding. No cognitive load. Just cozy moments of recognition when you do what you love.
+Personalize the activities you want celebrated. Switch to Daily Stats for non-animated tallies.
+
+Minimal distraction. Maximum delight. This plugin gently rewards with cozy moments of recognition when you make progress.
 
 ---
 
-## What Your Pet Celebrates
+## Celebrated Vault Activities
 
-| Vault Action | Celebration |
-|---|---|
-| Create any `.md` note | 🎆 Fireworks + status bar message |
-| Check off a task `- [x]` | 🎆 Fireworks + status bar message |
-| Add a link `[[wiki]]` or `[md](url)` | 🎆 Fireworks + status bar message |
-| Reach your **daily word goal** | 🎆 Fireworks + status bar message |
-| Reach a **per-note word goal** | 🎆 Fireworks + status bar message |
+Each activity triggers fireworks and a status bar message using your pet's name. Every trigger has its own on/off toggle.
 
-Each trigger has its own on/off toggle. Status bar messages use your pet's name and fire automatically alongside any enabled celebration.
+- Create any `.md` note
+- Check off a task `- [x]`
+- Add a link `[[wiki]]` or `[md](url)`
+- Reach your **daily word goal** (set in Settings)
+- Reach a **per-note word goal** (set via `word-goal:` frontmatter)
 
 ---
 
