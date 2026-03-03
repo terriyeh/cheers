@@ -14,7 +14,7 @@
  */
 
 import type { TFile, Editor, EventRef, MarkdownFileInfo, MarkdownView } from 'obsidian';
-import type ObsidianPetsPlugin from '../main';
+import type CheersPlugin from '../main';
 import { CELEBRATION_OVERLAY_CONSTANTS, STATUS_BAR_NOTIFICATION_DURATION_MS } from '../utils/celebration-constants';
 
 /**
@@ -33,7 +33,7 @@ export class CelebrationService {
 	private static readonly MAX_DAILY_COUNTER = 100_000;
 	// Note: Celebration duration uses CELEBRATION_OVERLAY_CONSTANTS.CELEBRATION_DURATION_MS (4320ms)
 
-	private plugin: ObsidianPetsPlugin;
+	private plugin: CheersPlugin;
 
 	// Event references for cleanup
 	private eventRefs: EventRef[] = [];
@@ -45,13 +45,19 @@ export class CelebrationService {
 	// Debounce timer for editor changes
 	private editorChangeTimeout: number | undefined;
 
-	// State tracking for detecting increases
-	private previousTaskCount: number = 0;
-	private previousLinkCount: number = 0;
+	// Per-file task/link counts — baselines set on first observation of each file,
+	// preventing spurious increments when switching to a file with pre-existing content.
+	private fileTaskCounts: Map<string, number> = new Map();
+	private fileLinkCounts: Map<string, number> = new Map();
 
 	// Per-file word counts (in-memory, resets on restart).
-	// Initialised to current count on first edit — prevents false goal triggers on session start.
+	// Initialised from the saved file content on first edit (see preloadFileWordCount).
+	// Falls back to current editor count if the vault read fails.
 	private fileWordCounts: Map<string, number> = new Map();
+
+	// Preloaded saved-file word counts — set by preloadFileWordCount() before the first
+	// debounce fires so checkWordGoals can detect crossings in the initial edit burst.
+	private fileWordCountBaselines: Map<string, number> = new Map();
 
 	// Files whose per-note goal was celebrated this session (prevents repeat within one session).
 	// Intentionally not persisted: per-note goal celebrations reset on vault restart.
@@ -76,12 +82,31 @@ export class CelebrationService {
 		return messages[eventType];
 	}
 
-	constructor(plugin: ObsidianPetsPlugin, statusBarItem: HTMLElement | null = null) {
+	constructor(plugin: CheersPlugin, statusBarItem: HTMLElement | null = null) {
 		this.plugin = plugin;
 		this.statusBarItem = statusBarItem;
 
 		// Register event listeners (individual celebration types check their own toggles)
 		this.registerEventListeners();
+	}
+
+	/**
+	 * Asynchronously read the saved file content and store its word count as a baseline.
+	 * Called (fire-and-forget) from handleEditorChange on first encounter of a file.
+	 * The 100ms debounce window gives this read enough time to complete before
+	 * processEditorChange runs, so checkWordGoals can detect goal crossings that happen
+	 * entirely within the first edit burst of a session.
+	 */
+	private async preloadFileWordCount(file: TFile): Promise<void> {
+		try {
+			const savedContent = await this.plugin.app.vault.cachedRead(file);
+			// Only set if the debounce hasn't fired yet (fileWordCounts would have the key otherwise)
+			if (!this.fileWordCounts.has(file.path)) {
+				this.fileWordCountBaselines.set(file.path, CelebrationService.countWords(savedContent));
+			}
+		} catch {
+			// File not yet on disk or vault read unavailable — checkWordGoals falls back to current count
+		}
 	}
 
 	/**
@@ -95,18 +120,20 @@ export class CelebrationService {
 		this.editorChangeHandler = this.handleEditorChange.bind(this);
 
 		try {
-			// Listen for note creation (using type assertion as event exists but isn't in types)
-			// Validate that registration method exists
-			if (typeof (vault as any).on === 'function') {
-				const createRef = (vault as any).on('create', this.noteCreationHandler);
-				if (createRef) {
-					this.eventRefs.push(createRef);
+			// Delay 'create' listener until after vault initialisation to avoid counting
+			// all existing notes as "created today" on plugin load.
+			workspace.onLayoutReady(() => {
+				if (typeof (vault as any).on === 'function') {
+					const createRef = (vault as any).on('create', this.noteCreationHandler);
+					if (createRef) {
+						this.eventRefs.push(createRef);
+					} else {
+						console.warn('[CelebrationService] Vault event registration returned null');
+					}
 				} else {
-					console.warn('[CelebrationService] Vault event registration returned null');
+					console.warn('[CelebrationService] Vault event registration unavailable');
 				}
-			} else {
-				console.warn('[CelebrationService] Vault event registration unavailable');
-			}
+			});
 
 			// Listen for editor changes (debounced)
 			if (typeof (workspace as any).on === 'function') {
@@ -157,7 +184,7 @@ export class CelebrationService {
 	}
 
 	/**
-	 * Handle editor change event (debounced to 500ms).
+	 * Handle editor change event (debounced to 100ms).
 	 * Captures info.file at event time — avoids stale active-file lookup after debounce fires.
 	 * @param editor - The editor instance
 	 * @param info - Editor info containing the file associated with this editor
@@ -170,6 +197,18 @@ export class CelebrationService {
 
 		// Capture file NOW before the debounce fires (active file may change during that window)
 		const file = info?.file ?? null;
+
+		// On first encounter of a file with word goals enabled, preload its saved content
+		// so checkWordGoals can compare against the on-disk baseline rather than the
+		// current editor state (fixes goal crossings in the first debounce window).
+		if (
+			file &&
+			this.plugin.settings.celebrations.onWordGoal &&
+			!this.fileWordCounts.has(file.path) &&
+			!this.fileWordCountBaselines.has(file.path)
+		) {
+			void this.preloadFileWordCount(file);
+		}
 
 		// Set new timeout for debounced processing
 		this.editorChangeTimeout = window.setTimeout(() => {
@@ -195,36 +234,39 @@ export class CelebrationService {
 		this.resetDailyStatsIfNeeded();
 
 		// Check all celebration types
-		this.checkTaskCompletion(content);
-		this.checkLinkCreation(content);
+		this.checkTaskCompletion(content, file);
+		this.checkLinkCreation(content, file);
 		this.checkWordGoals(content, file);
 	}
 
 	/**
-	 * Check for task completion (increase in checked tasks)
+	 * Check for task completion (increase in checked tasks).
+	 * First observation of each file sets a baseline without counting — prevents
+	 * pre-existing checked tasks from inflating today's count on file open.
 	 * Counter tracking is unconditional; celebration requires the toggle.
-	 * @param content - Editor content
 	 */
-	private checkTaskCompletion(content: string): void {
-		// Count completed tasks: - [x]
+	private checkTaskCompletion(content: string, file: TFile | null): void {
 		const taskPattern = /- \[x\]/gi;
 		const matches = content.match(taskPattern);
 		const currentTaskCount = matches ? matches.length : 0;
 
-		const delta = Math.max(currentTaskCount - this.previousTaskCount, 0);
+		const filePath = file?.path ?? '';
+		if (!this.fileTaskCounts.has(filePath)) {
+			this.fileTaskCounts.set(filePath, currentTaskCount);
+			return;
+		}
 
-		// Update tracked count unconditionally
-		this.previousTaskCount = currentTaskCount;
+		const prevCount = this.fileTaskCounts.get(filePath)!;
+		const delta = Math.max(currentTaskCount - prevCount, 0);
+		this.fileTaskCounts.set(filePath, currentTaskCount);
 
 		if (delta > 0) {
-			// Always track activity (regardless of celebration toggle), capped to avoid inflated stats
 			this.plugin.dailyWordData.tasksCompletedToday = Math.min(
 				this.plugin.dailyWordData.tasksCompletedToday + delta,
 				CelebrationService.MAX_DAILY_COUNTER
 			);
 			this.persistActivityUpdate();
 
-			// Only celebrate if toggle is on
 			if (this.plugin.settings.celebrations.onTaskComplete) {
 				this.celebrate('task-complete');
 			}
@@ -232,12 +274,12 @@ export class CelebrationService {
 	}
 
 	/**
-	 * Check for link creation (increase in wiki or markdown links)
+	 * Check for link creation (increase in wiki or markdown links).
+	 * First observation of each file sets a baseline without counting — prevents
+	 * pre-existing links from inflating today's count on file open.
 	 * Counter tracking is unconditional; celebration requires the toggle.
-	 * @param content - Editor content
 	 */
-	private checkLinkCreation(content: string): void {
-		// Count both wiki links [[link]] and markdown links [text](url)
+	private checkLinkCreation(content: string, file: TFile | null): void {
 		// Require at least 1 character inside brackets to avoid celebrating on [[]] or []()
 		// Length bounds prevent O(n*m) backtracking on files with many unclosed [[
 		const wikiLinkPattern = /\[\[.{1,500}?\]\]/g;
@@ -247,20 +289,23 @@ export class CelebrationService {
 		const markdownLinks = content.match(markdownLinkPattern) || [];
 		const currentLinkCount = wikiLinks.length + markdownLinks.length;
 
-		const delta = Math.max(currentLinkCount - this.previousLinkCount, 0);
+		const filePath = file?.path ?? '';
+		if (!this.fileLinkCounts.has(filePath)) {
+			this.fileLinkCounts.set(filePath, currentLinkCount);
+			return;
+		}
 
-		// Update tracked count unconditionally
-		this.previousLinkCount = currentLinkCount;
+		const prevCount = this.fileLinkCounts.get(filePath)!;
+		const delta = Math.max(currentLinkCount - prevCount, 0);
+		this.fileLinkCounts.set(filePath, currentLinkCount);
 
 		if (delta > 0) {
-			// Always track activity (regardless of celebration toggle), capped to avoid inflated stats
 			this.plugin.dailyWordData.linksCreatedToday = Math.min(
 				this.plugin.dailyWordData.linksCreatedToday + delta,
 				CelebrationService.MAX_DAILY_COUNTER
 			);
 			this.persistActivityUpdate();
 
-			// Only celebrate if toggle is on
 			if (this.plugin.settings.celebrations.onLinkCreate) {
 				this.celebrate('link-create');
 			}
@@ -303,21 +348,33 @@ export class CelebrationService {
 		const currentWordCount = CelebrationService.countWords(content);
 		const filePath = file.path;
 
-		// First observation of this file this session → set baseline, skip goal checks.
-		// Prevents celebrating goals the user already crossed in a previous session.
+		// First observation of this file this session → establish baseline and check for
+		// goal crossings that happened in this initial edit burst.
+		// Uses the preloaded saved-file word count if available; falls back to current count
+		// (which suppresses false celebrations for files already past their goal on open).
 		if (!this.fileWordCounts.has(filePath)) {
-			this.fileWordCounts.set(filePath, currentWordCount);
+			const savedWordCount = this.fileWordCountBaselines.get(filePath) ?? currentWordCount;
+			this.fileWordCountBaselines.delete(filePath);
+			this.fileWordCounts.set(filePath, savedWordCount);
+
+			if (savedWordCount !== currentWordCount) {
+				const delta = currentWordCount - savedWordCount;
+				if (delta !== 0) this.checkDailyGoal(delta);
+				if (delta > 0) this.checkPerNoteGoal(file, savedWordCount, currentWordCount);
+			}
 			return;
 		}
 
 		const prevWordCount = this.fileWordCounts.get(filePath)!;
-		const delta = Math.max(currentWordCount - prevWordCount, 0);
+		const delta = currentWordCount - prevWordCount; // negative when words are deleted
 
 		// Update baseline for next comparison
 		this.fileWordCounts.set(filePath, currentWordCount);
 
-		if (delta > 0) {
+		if (delta !== 0) {
 			this.checkDailyGoal(delta);
+		}
+		if (delta > 0) {
 			this.checkPerNoteGoal(file, prevWordCount, currentWordCount);
 		}
 	}
@@ -335,13 +392,19 @@ export class CelebrationService {
 		// reaching here, so this is a safety net for any future direct callers.
 		this.resetDailyStatsIfNeeded();
 
-		if (daily.goalCelebrated) return; // already celebrated today
+		// Always track net word change — deletions shrink the count, additions grow it.
+		// Clamped to [0, MAX_DAILY_COUNTER]. goalCelebrated only gates the celebration.
+		daily.wordsAddedToday = Math.max(0, Math.min(
+			daily.wordsAddedToday + delta,
+			CelebrationService.MAX_DAILY_COUNTER
+		));
 
-		daily.wordsAddedToday += delta;
+		// Update the stats panel immediately so the ring fills in real time.
+		// No disk write here — saving only at goal-crossing keeps writes minimal.
+		this.plugin.petView?.updateStatsComponent();
 
-		// Partial progress (wordsAddedToday < dailyWordGoal) is intentionally not persisted
-		// on every edit — saving only at goal-crossing keeps disk writes minimal.
-		// A crash before the goal fires will lose the session's partial word count.
+		if (daily.goalCelebrated) return; // already celebrated today — counter still runs above
+
 		if (daily.wordsAddedToday >= dailyWordGoal) {
 			daily.goalCelebrated = true;
 			// Persist immediately. `goalCelebrated` is set synchronously above so this
@@ -397,6 +460,10 @@ export class CelebrationService {
 			daily.notesCreatedToday = 0;
 			daily.tasksCompletedToday = 0;
 			daily.linksCreatedToday = 0;
+			// Per-file baselines are only valid within the same day — clear them so the
+			// first edit of each file tomorrow sets a fresh baseline (not yesterday's).
+			this.fileTaskCounts.clear();
+			this.fileLinkCounts.clear();
 			// Persist the reset immediately so a crash before the next counter write
 			// doesn't leave stale data on disk.
 			void this.plugin.saveSettings().catch(err =>
@@ -484,6 +551,19 @@ export class CelebrationService {
 	}
 
 	/**
+	 * Clear all per-file tracking state.
+	 * Called by the dev reset button and by cleanup(). Allows testing and manual resets
+	 * to re-trigger celebrations that were already fired this session.
+	 */
+	clearFileBaselines(): void {
+		this.fileTaskCounts.clear();
+		this.fileLinkCounts.clear();
+		this.fileWordCounts.clear();
+		this.fileWordCountBaselines.clear();
+		this.perNoteGoalCelebrated.clear();
+	}
+
+	/**
 	 * Clean up event listeners and timers
 	 */
 	cleanup(): void {
@@ -521,9 +601,10 @@ export class CelebrationService {
 		this.isCelebrating = false;
 
 		// Reset state tracking
-		this.previousTaskCount = 0;
-		this.previousLinkCount = 0;
+		this.fileTaskCounts.clear();
+		this.fileLinkCounts.clear();
 		this.fileWordCounts.clear();
+		this.fileWordCountBaselines.clear();
 		this.perNoteGoalCelebrated.clear();
 	}
 }

@@ -1,10 +1,10 @@
 import { App, PluginSettingTab, Setting } from 'obsidian';
-import type ObsidianPetsPlugin from '../main';
+import type CheersPlugin from '../main';
 
-export class ObsidianPetsSettingTab extends PluginSettingTab {
-	plugin: ObsidianPetsPlugin;
+export class CheersSettingTab extends PluginSettingTab {
+	plugin: CheersPlugin;
 
-	constructor(app: App, plugin: ObsidianPetsPlugin) {
+	constructor(app: App, plugin: CheersPlugin) {
 		super(app, plugin);
 		this.plugin = plugin;
 	}
@@ -63,6 +63,7 @@ export class ObsidianPetsSettingTab extends PluginSettingTab {
 					.onChange(async (value) => {
 						this.plugin.settings.celebrations.onNoteCreate = value;
 						await this.plugin.saveSettings();
+						this.plugin.petView?.updateStatsComponent();
 					})
 			);
 
@@ -76,6 +77,7 @@ export class ObsidianPetsSettingTab extends PluginSettingTab {
 					.onChange(async (value) => {
 						this.plugin.settings.celebrations.onTaskComplete = value;
 						await this.plugin.saveSettings();
+						this.plugin.petView?.updateStatsComponent();
 					})
 			);
 
@@ -89,6 +91,7 @@ export class ObsidianPetsSettingTab extends PluginSettingTab {
 					.onChange(async (value) => {
 						this.plugin.settings.celebrations.onLinkCreate = value;
 						await this.plugin.saveSettings();
+						this.plugin.petView?.updateStatsComponent();
 					})
 			);
 
@@ -103,6 +106,7 @@ export class ObsidianPetsSettingTab extends PluginSettingTab {
 						this.plugin.settings.celebrations.onWordGoal = value;
 						await this.plugin.saveSettings();
 						this.display();
+						this.plugin.petView?.updateStatsComponent();
 					})
 			);
 
@@ -120,6 +124,7 @@ export class ObsidianPetsSettingTab extends PluginSettingTab {
 							this.plugin.settings.celebrations.dailyWordGoal =
 								Number.isFinite(num) && num > 0 && num <= 100_000 ? num : null;
 							await this.plugin.saveSettings();
+							this.plugin.petView?.updateStatsComponent();
 						})
 				);
 
@@ -137,5 +142,25 @@ export class ObsidianPetsSettingTab extends PluginSettingTab {
 				});
 			}
 		}
+
+		containerEl.createEl('h3', { text: 'Dashboard' });
+
+		new Setting(containerEl)
+			.setName('Color palette')
+			.setDesc('Tally column colors shown in the Stats tab')
+			.addDropdown((dropdown) =>
+				dropdown
+					.addOption('warm', 'Warm — pink / yellow / orange')
+					.addOption('cool', 'Cool — blue / cyan / green')
+					.setValue(this.plugin.settings.dashboardColorMode)
+					.onChange(async (value: string) => {
+						if (value === 'warm' || value === 'cool') {
+							this.plugin.settings.dashboardColorMode = value;
+							await this.plugin.saveSettings();
+							this.plugin.petView?.updateStatsComponent();
+						}
+					})
+			);
+
 	}
 }

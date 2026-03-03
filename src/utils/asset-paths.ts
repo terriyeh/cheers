@@ -45,7 +45,7 @@ export const BACKGROUNDS = {
 	/** Daytime scene (6am–6pm) */
 	DAY: {
 		file: 'background-day-8fps.gif',
-		skyColor: '#6f9eff',
+		skyColor: '#98BAFF',
 	},
 	/** Nighttime scene (6pm–6am) */
 	NIGHT: {

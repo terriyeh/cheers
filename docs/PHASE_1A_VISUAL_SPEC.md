@@ -1,6 +1,6 @@
 # Phase 1A: Core First Scene - Visual Design Specification
 
-**Project**: Vault Pal (Obsidian Pets)
+**Project**: Cheers!
 **Phase**: 1A - Core First Scene
 **Date**: 2026-02-12
 **Designer**: UX/Visual Design Specifications
@@ -10,7 +10,7 @@
 
 ## Executive Summary
 
-This document defines the visual specifications for the first garden scene in Vault Pal, a delightful Obsidian plugin featuring an animated pet companion. The design balances charm with functionality, optimizing for Obsidian's sidebar constraints (typically 300-400px wide) while supporting dark mode and ensuring the pet's 64x64px sprite remains the focal point.
+This document defines the visual specifications for the first garden scene in Cheers!, a delightful Obsidian plugin featuring an animated pet companion. The design balances charm with functionality, optimizing for Obsidian's sidebar constraints (typically 300-400px wide) while supporting dark mode and ensuring the pet's 64x64px sprite remains the focal point.
 
 **Design Philosophy**: "A plugin you feel, not think about" - subtle, ambient, and non-intrusive.
 

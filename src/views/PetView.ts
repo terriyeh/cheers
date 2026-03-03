@@ -1,9 +1,9 @@
-import { ItemView, MarkdownView, type WorkspaceLeaf, Notice } from 'obsidian';
+import { ItemView, MarkdownView, setIcon, type WorkspaceLeaf, Notice } from 'obsidian';
 import type { PetState, StateChangeListener } from '../types/pet';
 import { PetStateMachine } from '../pet/PetStateMachine';
 import PetComponent from '../components/Pet.svelte';
 import StatsComponent from '../components/Stats.svelte';
-import type ObsidianPetsPlugin from '../main';
+import type CheersPlugin from '../main';
 import { WelcomeModal } from '../modals/WelcomeModal';
 import { PET_SPRITES, EFFECT_SPRITES, ASSET_DIRECTORIES, getTimeOfDayBackground } from '../utils/asset-paths';
 import { CelebrationService } from '../celebrations/CelebrationService';
@@ -17,7 +17,7 @@ const STATS_DEBOUNCE_MS = 150;
 /**
  * View type identifier for the pet view
  */
-export const VIEW_TYPE_PET = 'obsidian-pets-pet-view';
+export const VIEW_TYPE_PET = 'cheers-pet-view';
 
 /**
  * Pet View - Main ItemView for displaying the pet companion
@@ -33,9 +33,9 @@ interface StatsProps {
   showLinksColumn: boolean;
   showTasksColumn: boolean;
   fileWordCount: number | null;
-  /** Per-note word goal from frontmatter. TODO: read from metadataCache (see CelebrationService.checkPerNoteGoal). */
   fileWordGoal: number | null;
   colorMode: 'warm' | 'cool';
+  ringWidthPercent: number;
 }
 
 export class PetView extends ItemView {
@@ -49,7 +49,7 @@ export class PetView extends ItemView {
   private statsTabEl: HTMLElement | null = null;
   private stateChangeListener: StateChangeListener | null = null;
   private petEventListener: ((event: CustomEvent<{ returnToState: PetState }>) => void) | null = null;
-  private plugin: ObsidianPetsPlugin | null = null;
+  private plugin: CheersPlugin | null = null;
   private activeTab: 'pet' | 'stats' = 'pet';
   private statsEditorChangeTimeout: number | undefined;
   private backgroundTransitionTimeout: number | undefined;
@@ -69,7 +69,7 @@ export class PetView extends ItemView {
    * Get the display text for the view
    */
   getDisplayText(): string {
-    return 'Obsidian Pets';
+    return 'Cheers!';
   }
 
   /**
@@ -91,9 +91,9 @@ export class PetView extends ItemView {
         plugins: { plugins: Record<string, unknown> };
       }
       const appWithPlugins = this.app as unknown as AppWithPlugins;
-      let plugin: ObsidianPetsPlugin | undefined;
-      if (appWithPlugins.plugins?.plugins && typeof appWithPlugins.plugins.plugins === 'object' && 'obsidian-pets' in appWithPlugins.plugins.plugins) {
-        plugin = appWithPlugins.plugins.plugins['obsidian-pets'] as ObsidianPetsPlugin;
+      let plugin: CheersPlugin | undefined;
+      if (appWithPlugins.plugins?.plugins && typeof appWithPlugins.plugins.plugins === 'object' && 'cheers' in appWithPlugins.plugins.plugins) {
+        plugin = appWithPlugins.plugins.plugins['cheers'] as CheersPlugin;
         if (plugin && !plugin.settings.hasCompletedWelcome) {
           new WelcomeModal(plugin).open();
         }
@@ -117,8 +117,14 @@ export class PetView extends ItemView {
       this.petTabEl.classList.add('is-active');
       this.statsTabEl = tabBar.createDiv({ cls: 'vp-tab-stats' });
 
-      this.petPanel = contentContainer.createDiv({ cls: 'vp-panel-pet' });
-      this.statsPanel = contentContainer.createDiv({ cls: 'vp-panel-stats' });
+      setIcon(this.petTabEl, 'cat');
+      this.petTabEl.setAttribute('aria-label', 'Pet');
+      setIcon(this.statsTabEl, 'bar-chart-2');
+      this.statsTabEl.setAttribute('aria-label', 'Today');
+
+      const panelsContainer = contentContainer.createDiv({ cls: 'vp-panels-container' });
+      this.petPanel = panelsContainer.createDiv({ cls: 'vp-panel-pet' });
+      this.statsPanel = panelsContainer.createDiv({ cls: 'vp-panel-stats' });
       this.statsPanel.classList.add('vp-panel-hidden');
 
       // Wire tab click handlers
@@ -127,7 +133,7 @@ export class PetView extends ItemView {
 
       // Create pet component container inside the pet panel
       this.containerDiv = this.petPanel!.createDiv({
-        cls: 'obsidian-pets-container',
+        cls: 'cheers-container',
       });
 
       // Set initial data attribute
@@ -341,8 +347,8 @@ export class PetView extends ItemView {
       const container = this.getContentContainer();
       container.empty();
       container.createDiv({
-        cls: 'obsidian-pets-loading',
-        text: 'Loading Obsidian Pets...',
+        cls: 'cheers-loading',
+        text: 'Loading Cheers!...',
       });
     } catch (error) {
       console.error('Failed to show loading state:', error);
@@ -353,7 +359,7 @@ export class PetView extends ItemView {
    * Hide loading state
    */
   private hideLoading(): void {
-    const loadingEl = this.containerEl.querySelector('.obsidian-pets-loading');
+    const loadingEl = this.containerEl.querySelector('.cheers-loading');
     if (loadingEl) {
       loadingEl.remove();
     }
@@ -394,7 +400,7 @@ export class PetView extends ItemView {
 
     // Generic error
     return {
-      title: 'Failed to load Obsidian Pets',
+      title: 'Failed to load Cheers!',
       message: errorMsg,
       hint: 'An unexpected error occurred. Check the console (Ctrl+Shift+I) for details.',
     };
@@ -411,28 +417,28 @@ export class PetView extends ItemView {
       const { title, message, hint } = this.categorizeError(error);
 
       const errorDiv = container.createDiv({
-        cls: 'obsidian-pets-view-error',
+        cls: 'cheers-view-error',
       });
 
       errorDiv.createEl('h3', { text: title });
 
       errorDiv.createEl('p', {
         text: message,
-        cls: 'obsidian-pets-view-error-message',
+        cls: 'cheers-view-error-message',
       });
 
       errorDiv.createEl('p', {
         text: hint,
-        cls: 'obsidian-pets-view-error-hint',
+        cls: 'cheers-view-error-hint',
       });
 
       // Also show as notice for visibility
-      new Notice(`Obsidian Pets: ${message}`, 8000);
+      new Notice(`Cheers!: ${message}`, 8000);
     } catch (containerError) {
       console.error('Failed to show error state:', containerError);
       console.error('Original error:', error);
       // Fallback notice
-      new Notice('Obsidian Pets failed to load. Check the console for details.', 8000);
+      new Notice('Cheers! failed to load. Check the console for details.', 8000);
     }
   }
 
@@ -470,7 +476,7 @@ export class PetView extends ItemView {
    * Derive the props object passed to Stats.svelte from current plugin state.
    * Precondition: plugin.dailyWordData is present (enforced by updateStatsComponent).
    */
-  private buildStatsProps(plugin: ObsidianPetsPlugin): StatsProps {
+  private buildStatsProps(plugin: CheersPlugin): StatsProps {
     const daily = plugin.dailyWordData;
     const cel = plugin.settings.celebrations;
     const dailyWordGoal: number | null = cel.onWordGoal ? cel.dailyWordGoal : null;
@@ -479,6 +485,12 @@ export class PetView extends ItemView {
     const fileWordCount: number | null = activeView
       ? CelebrationService.countWords(activeView.editor.getValue())
       : null;
+
+    const raw = cel.onWordGoal && activeView?.file
+      ? this.app.metadataCache.getFileCache(activeView.file)?.frontmatter?.['word-goal']
+      : undefined;
+    const parsedGoal = typeof raw === 'number' ? raw : parseInt(String(raw ?? ''), 10);
+    const fileWordGoal: number | null = Number.isFinite(parsedGoal) && parsedGoal > 0 ? parsedGoal : null;
 
     return {
       wordsAddedToday: daily.wordsAddedToday,
@@ -490,9 +502,9 @@ export class PetView extends ItemView {
       showLinksColumn: cel.onLinkCreate,
       showTasksColumn: cel.onTaskComplete,
       fileWordCount,
-      // TODO: read from active file's frontmatter word-goal key (see CelebrationService.checkPerNoteGoal)
-      fileWordGoal: null,
+      fileWordGoal,
       colorMode: plugin.settings.dashboardColorMode,
+      ringWidthPercent: 50,
     };
   }
 
@@ -569,13 +581,13 @@ export class PetView extends ItemView {
       plugins: { manifests: Record<string, { dir?: string }> };
     }
     const appWithManifests = this.app as unknown as AppWithManifests;
-    const manifest = appWithManifests.plugins?.manifests?.['obsidian-pets'];
+    const manifest = appWithManifests.plugins?.manifests?.['cheers'];
 
     if (!manifest) {
-      console.warn('Obsidian Pets manifest not found, using fallback path');
+      console.warn('Cheers! manifest not found, using fallback path');
     }
 
-    const pluginDir = manifest?.dir || '.obsidian/plugins/obsidian-pets';
+    const pluginDir = manifest?.dir || '.obsidian/plugins/cheers';
 
     // Validate path doesn't contain traversal sequences or absolute paths
     if (

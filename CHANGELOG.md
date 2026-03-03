@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to Obsidian Pets will be documented in this file.
+All notable changes to Cheers! will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
@@ -44,8 +44,8 @@ Research into VS Code Pets (2.26M installs) and the Obsidian pet plugin landscap
 
 - **Repository**: `vault-pal` → `obsidian-pets`
 - **Plugin ID**: `vault-pal` → `obsidian-pets`
-- **Plugin Name**: "Vault Pal" → "Obsidian Pets"
-- **GitHub URL**: https://github.com/terriyeh/obsidian-pets
+- **Plugin Name**: "Vault Pal" → "Obsidian Pets" → "Cheers!"
+- **GitHub URL**: https://github.com/terriyeh/cheers
 
 ### Competitive Positioning
 
@@ -53,7 +53,7 @@ Research into VS Code Pets (2.26M installs) and the Obsidian pet plugin landscap
 |--------|-------|-------------|
 | Pixel Pets | Decorative + AI Chat | Reactive Q&A |
 | Vault Pets | Decoration Only | None |
-| **Obsidian Pets** | **Celebration Companion** | **Proactive Joy** |
+| **Cheers!** | **Celebration Companion** | **Proactive Joy** |
 
 ### What's Preserved
 
@@ -123,7 +123,7 @@ Research into VS Code Pets (2.26M installs) and the Obsidian pet plugin landscap
 ### Added - Status Bar Notifications (2026-02-23)
 
 - Status bar notification: brief message appears at the left of the status bar for 3 seconds after each celebration trigger
-  - Enable via Settings → Obsidian Pets → Celebrations → "Show status bar notification" (off by default)
+  - Enable via Settings → Cheers! → Celebrations → "Show status bar notification" (off by default)
   - Messages use the pet's name: "✨ [pet] is energized by a fresh new note", "✅ Hooray! [pet] is doing a happy dance", "🔗 [pet] loves a fresh new link", "🏆 Woohoo! [pet] is celebrating your writing goal!"
   - No separate toggle — fires automatically whenever an enabled trigger fires
   - Independent of fireworks: fires even when fireworks are blocked by race condition prevention
@@ -187,7 +187,7 @@ Research into VS Code Pets (2.26M installs) and the Obsidian pet plugin landscap
 - 📝 **Word milestone celebrations**: Fireworks animation when crossing configurable word count thresholds (default: 100, 500, 1000, 3500, 5000 words)
 
 **Settings Integration:**
-- Individual toggle for each celebration type in Settings → Obsidian Pets → Celebrations
+- Individual toggle for each celebration type in Settings → Cheers! → Celebrations
 - Conditional word milestone input (only shows when word milestones enabled)
 - Word milestone validation: auto-removes duplicates, sorts ascending, filters invalid numbers
 - Default fallback: `100, 500, 1000, 3500, 5000` if input is cleared

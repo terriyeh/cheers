@@ -101,7 +101,7 @@ class WalkLeftState {
 **Why CSS Wins:**
 
 1. **Performance:** Your single pet doesn't need per-frame JavaScript execution
-2. **User Experience:** Vault Pal is about ambient companionship, not complex interactions
+2. **User Experience:** Cheers! is about ambient companionship, not complex interactions
 3. **Code Simplicity:** 50 lines of CSS vs. 300+ lines of state class boilerplate
 4. **Mobile Support:** Critical for Obsidian users (many on laptops/tablets)
 5. **Future-Proof:** Multi-pet still possible with CSS (see Section 3)
@@ -252,7 +252,7 @@ Let me break down what adapting vscode-pets to Obsidian would require:
   - "Chase VS Code icon" state
   - "Climb on editor" state
   - "Interact with status bar" state
-- [ ] Add Vault Pal states
+- [ ] Add Cheers! states
   - Celebration state (your custom animation)
   - Petting state (your custom animation)
   - Sleeping state (your custom animation)
@@ -273,7 +273,7 @@ Let me break down what adapting vscode-pets to Obsidian would require:
 - [ ] Update settings UI to match your design
 - [ ] Reconcile two different architectures:
   - vscode-pets: State classes own movement
-  - Vault Pal: State machine controls CSS
+  - Cheers!: State machine controls CSS
 - [ ] Choose one approach or maintain hybrid (complexity)
 
 **Estimated Time:** 30-40 hours
@@ -515,7 +515,7 @@ class JumpState extends BaseState {
 
 ## 6. Competitive Positioning Analysis
 
-### 6.1 Vault Pal vs. vscode-pets: Different Products
+### 6.1 Cheers! vs. vscode-pets: Different Products
 
 **vscode-pets Target User:**
 - Developers coding in VS Code
@@ -524,7 +524,7 @@ class JumpState extends BaseState {
 - Multiple pets for variety
 - Interactive toys (balls, treats)
 
-**Vault Pal Target User:**
+**Cheers! Target User:**
 - Writers/knowledge workers in Obsidian
 - Want ambient emotional support
 - Mobile + desktop (writers on the go)
@@ -551,9 +551,9 @@ class JumpState extends BaseState {
 
 ---
 
-### 6.3 What Vault Pal Does Better (Why Your Approach Wins)
+### 6.3 What Cheers! Does Better (Why Your Approach Wins)
 
-**Vault Pal Strengths:**
+**Cheers! Strengths:**
 1. **Vault awareness:** Celebrations tied to writing activities
    - **vscode-pets:** Generic coding events only
 2. **Writing-focused:** Daily notes, word counts, checkbox completions
@@ -822,7 +822,7 @@ Forking vscode-pets would cost **4-10x more time** than maintaining your current
 - [vscode-pets Movement Analysis](d:\vault-pal\research\vscode-pets-movement-analysis.md)
 - Research conducted February 9, 2026
 
-**Vault Pal Bug History:**
+**Cheers! Bug History:**
 - Commit 29d2904: Initial walking system (Feb 9, 16:53)
 - Commit ef0e1e9: Fixed backing out, flip sync (Feb 9, 17:34)
 - Commit 5fbf389: Fixed transform stacking, code quality (Feb 9, 17:42)

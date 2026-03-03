@@ -4,7 +4,7 @@
  */
 
 import { DEFAULT_SETTINGS } from '../../src/types/settings';
-import type { ObsidianPetsSettings } from '../../src/types/settings';
+import type { CheersSettings } from '../../src/types/settings';
 
 describe('Settings Persistence', () => {
 	describe('Default Settings Structure', () => {
@@ -61,7 +61,7 @@ describe('Settings Persistence', () => {
 				{},
 				DEFAULT_SETTINGS,
 				loadedData
-			) as ObsidianPetsSettings;
+			) as CheersSettings;
 
 			expect(merged.petName).toBe('Luna');
 			expect(merged.userName).toBe(''); // From defaults
@@ -76,7 +76,7 @@ describe('Settings Persistence', () => {
 				{},
 				DEFAULT_SETTINGS,
 				loadedData
-			) as ObsidianPetsSettings;
+			) as CheersSettings;
 
 			expect(merged.petName).toBe('Kit'); // From defaults
 			expect(merged.userName).toBe(''); // From defaults
@@ -156,7 +156,7 @@ describe('Settings Persistence', () => {
 
 	describe('Settings Validation Scenarios', () => {
 		it('creates valid settings object for save', () => {
-			const settings: ObsidianPetsSettings = {
+			const settings: CheersSettings = {
 				petName: 'Fluffy',
 				userName: 'Charlie',
 				hasCompletedWelcome: true,
@@ -169,7 +169,7 @@ describe('Settings Persistence', () => {
 		});
 
 		it('handles empty user name correctly', () => {
-			const settings: ObsidianPetsSettings = {
+			const settings: CheersSettings = {
 				petName: 'Solo',
 				userName: '',
 				hasCompletedWelcome: true,
@@ -181,7 +181,7 @@ describe('Settings Persistence', () => {
 
 		it('preserves exact string values', () => {
 			const testName = 'Test Name 123';
-			const settings: ObsidianPetsSettings = {
+			const settings: CheersSettings = {
 				petName: testName,
 				userName: testName,
 				hasCompletedWelcome: false,
@@ -195,7 +195,7 @@ describe('Settings Persistence', () => {
 	});
 
 	describe('Settings Update Scenarios', () => {
-		let settings: ObsidianPetsSettings;
+		let settings: CheersSettings;
 
 		beforeEach(() => {
 			settings = { ...DEFAULT_SETTINGS };
@@ -245,19 +245,19 @@ describe('Settings Persistence', () => {
 
 		it('merging empty loaded data preserves default "warm"', () => {
 			const loadedData = {};
-			const merged = { ...DEFAULT_SETTINGS, ...loadedData } as ObsidianPetsSettings;
+			const merged = { ...DEFAULT_SETTINGS, ...loadedData } as CheersSettings;
 			expect(merged.dashboardColorMode).toBe('warm');
 		});
 
 		it('merging with dashboardColorMode: "cool" overrides the default', () => {
 			const loadedData = { dashboardColorMode: 'cool' as const };
-			const merged = { ...DEFAULT_SETTINGS, ...loadedData } as ObsidianPetsSettings;
+			const merged = { ...DEFAULT_SETTINGS, ...loadedData } as CheersSettings;
 			expect(merged.dashboardColorMode).toBe('cool');
 		});
 
 		it('merging with dashboardColorMode: "warm" explicitly keeps "warm"', () => {
 			const loadedData = { dashboardColorMode: 'warm' as const };
-			const merged = { ...DEFAULT_SETTINGS, ...loadedData } as ObsidianPetsSettings;
+			const merged = { ...DEFAULT_SETTINGS, ...loadedData } as CheersSettings;
 			expect(merged.dashboardColorMode).toBe('warm');
 		});
 
@@ -266,7 +266,7 @@ describe('Settings Persistence', () => {
 				petName: 'Buddy',
 				dashboardColorMode: 'cool' as const,
 			};
-			const merged = { ...DEFAULT_SETTINGS, ...loadedData } as ObsidianPetsSettings;
+			const merged = { ...DEFAULT_SETTINGS, ...loadedData } as CheersSettings;
 			expect(merged.petName).toBe('Buddy');
 			expect(merged.dashboardColorMode).toBe('cool');
 			expect(merged.userName).toBe(''); // Default preserved

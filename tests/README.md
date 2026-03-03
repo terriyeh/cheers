@@ -1,6 +1,6 @@
 # Test Suite Documentation
 
-This directory contains comprehensive tests for the Vault Pal plugin, focusing on the Pet View Foundation (Issue #4).
+This directory contains comprehensive tests for the Cheers! plugin, focusing on the Pet View Foundation (Issue #4).
 
 ## Directory Structure
 

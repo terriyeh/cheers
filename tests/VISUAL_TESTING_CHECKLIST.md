@@ -8,7 +8,7 @@ This checklist should be performed whenever CSS changes are made to the plugin, 
 
 ## Prerequisites
 - Obsidian must be running
-- Vault Pal plugin must be installed and enabled
+- Cheers! plugin must be installed and enabled
 - Test vault with sample notes available
 
 ---
@@ -16,7 +16,7 @@ This checklist should be performed whenever CSS changes are made to the plugin, 
 ## Basic Visual Testing
 
 ### Theme Compatibility
-- [ ] **Light Theme**: Open Vault Pal → Settings → Appearance → Theme → Light
+- [ ] **Light Theme**: Open Cheers! → Settings → Appearance → Theme → Light
   - Background color matches Obsidian's light theme (no white-on-gray)
   - Pet view background inherits theme color
   - Buttons have appropriate contrast

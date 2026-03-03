@@ -1,8 +1,8 @@
-# VaultPal Code Block Syntax
+# Cheers! Code Block Syntax
 
 ## Design Decision
 
-VaultPal uses **type-based keywords** for different question types in code blocks. This syntax follows the pattern established by successful Obsidian plugins like Tasks and Dataview.
+Cheers! uses **type-based keywords** for different question types in code blocks. This syntax follows the pattern established by successful Obsidian plugins like Tasks and Dataview.
 
 ## Current Syntax (v0.0.1)
 
@@ -133,7 +133,7 @@ mood Rate your energy level (1-10)
 
 All errors use a consistent format:
 ```
-⚠️ VaultPal: Invalid Syntax. [Specific error].
+⚠️ Cheers!: Invalid Syntax. [Specific error].
 Example: journal What are you grateful for today?
 ```
 

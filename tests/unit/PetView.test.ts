@@ -33,7 +33,7 @@ describe('PetView', () => {
     });
 
     it('should return correct display text', () => {
-      expect(petView.getDisplayText()).toBe('Obsidian Pets');
+      expect(petView.getDisplayText()).toBe('Cheers!');
     });
 
     it('should return correct icon', () => {
@@ -41,7 +41,7 @@ describe('PetView', () => {
     });
 
     it('should export VIEW_TYPE_PET constant', () => {
-      expect(VIEW_TYPE_PET).toBe('obsidian-pets-pet-view');
+      expect(VIEW_TYPE_PET).toBe('cheers-pet-view');
     });
   });
 
@@ -57,25 +57,25 @@ describe('PetView', () => {
       await petView.onOpen();
 
       // After initialization, loading should be hidden
-      const loadingEl = petView.containerEl.querySelector('.obsidian-pets-loading');
+      const loadingEl = petView.containerEl.querySelector('.cheers-loading');
       expect(loadingEl).toBeNull();
 
       // And the pet container should be visible
-      const container = petView.containerEl.querySelector('.obsidian-pets-container');
+      const container = petView.containerEl.querySelector('.cheers-container');
       expect(container).toBeTruthy();
     });
 
     it('should hide loading state after initialization', async () => {
       await petView.onOpen();
 
-      const loadingEl = petView.containerEl.querySelector('.obsidian-pets-loading');
+      const loadingEl = petView.containerEl.querySelector('.cheers-loading');
       expect(loadingEl).toBeNull();
     });
 
     it('should create container div with correct class', async () => {
       await petView.onOpen();
 
-      const container = petView.containerEl.querySelector('.obsidian-pets-container');
+      const container = petView.containerEl.querySelector('.cheers-container');
       expect(container).toBeTruthy();
     });
 
@@ -96,7 +96,7 @@ describe('PetView', () => {
     it('should set initial data-pet-state attribute', async () => {
       await petView.onOpen();
 
-      const container = petView.containerEl.querySelector('.obsidian-pets-container');
+      const container = petView.containerEl.querySelector('.cheers-container');
       expect(container?.getAttribute('data-pet-state')).toBe('walking');
     });
 
@@ -112,7 +112,7 @@ describe('PetView', () => {
 
       // The path should be generated using app.vault.adapter.getResourcePath
       // which in our mock returns app://local/{path}
-      const expectedPath = 'app://local/.obsidian/plugins/obsidian-pets/assets/pet-sprite-sheet.png';
+      const expectedPath = 'app://local/.obsidian/plugins/cheers/assets/pet-sprite-sheet.png';
 
       // We can't directly access the petSpritePath prop, but we can verify
       // the component was mounted successfully which means the path was provided
@@ -132,7 +132,7 @@ describe('PetView', () => {
       await badView.onOpen();
 
       // Should show error state
-      const errorEl = badView.containerEl.querySelector('.obsidian-pets-view-error');
+      const errorEl = badView.containerEl.querySelector('.cheers-view-error');
       expect(errorEl).toBeTruthy();
 
       consoleErrorSpy.mockRestore();
@@ -148,11 +148,11 @@ describe('PetView', () => {
 
       await badView.onOpen();
 
-      const errorHeading = badView.containerEl.querySelector('.obsidian-pets-view-error h3');
-      const errorMessage = badView.containerEl.querySelector('.obsidian-pets-view-error-message');
-      const errorHint = badView.containerEl.querySelector('.obsidian-pets-view-error-hint');
+      const errorHeading = badView.containerEl.querySelector('.cheers-view-error h3');
+      const errorMessage = badView.containerEl.querySelector('.cheers-view-error-message');
+      const errorHint = badView.containerEl.querySelector('.cheers-view-error-hint');
 
-      expect(errorHeading?.textContent).toBe('Failed to load Obsidian Pets');
+      expect(errorHeading?.textContent).toBe('Failed to load Cheers!');
       expect(errorMessage).toBeTruthy();
       expect(errorHint?.textContent).toBe('An unexpected error occurred. Check the console (Ctrl+Shift+I) for details.');
 
@@ -192,14 +192,14 @@ describe('PetView', () => {
       const initialChildCount = petView.containerEl.children.length;
       expect(initialChildCount).toBeGreaterThan(0);
 
-      // Find the obsidian-pets-container that was created
-      const vaultPalContainer = petView.containerEl.querySelector('.obsidian-pets-container');
+      // Find the cheers-container that was created
+      const vaultPalContainer = petView.containerEl.querySelector('.cheers-container');
       expect(vaultPalContainer).toBeTruthy();
 
       await petView.onClose();
 
-      // After close, the obsidian-pets-container should be removed
-      const vaultPalContainerAfter = petView.containerEl.querySelector('.obsidian-pets-container');
+      // After close, the cheers-container should be removed
+      const vaultPalContainerAfter = petView.containerEl.querySelector('.cheers-container');
       expect(vaultPalContainerAfter).toBeNull();
     });
 
@@ -232,7 +232,7 @@ describe('PetView', () => {
 
       petView.transitionState('celebration');
 
-      const container = petView.containerEl.querySelector('.obsidian-pets-container');
+      const container = petView.containerEl.querySelector('.cheers-container');
       expect(container?.getAttribute('data-pet-state')).toBe('celebration');
     });
 
@@ -258,7 +258,7 @@ describe('PetView', () => {
         petView.transitionState(state);
         expect(petView.getCurrentState()).toBe(state);
 
-        const container = petView.containerEl.querySelector('.obsidian-pets-container');
+        const container = petView.containerEl.querySelector('.cheers-container');
         expect(container?.getAttribute('data-pet-state')).toBe(state);
       }
     });
@@ -272,7 +272,7 @@ describe('PetView', () => {
       vi.advanceTimersByTime(CELEBRATION_OVERLAY_CONSTANTS.CELEBRATION_DURATION_MS);
 
       expect(petView.getCurrentState()).toBe('walking');
-      const container = petView.containerEl.querySelector('.obsidian-pets-container');
+      const container = petView.containerEl.querySelector('.cheers-container');
       expect(container?.getAttribute('data-pet-state')).toBe('walking');
     });
 
@@ -316,7 +316,7 @@ describe('PetView', () => {
       for (const state of states) {
         petView.transitionState(state);
 
-        const container = petView.containerEl.querySelector('.obsidian-pets-container');
+        const container = petView.containerEl.querySelector('.cheers-container');
         const component = petView.containerEl.querySelector('.pet-sprite-container');
 
         expect(container?.getAttribute('data-pet-state')).toBe(state);
@@ -331,7 +331,7 @@ describe('PetView', () => {
       petView.transitionState('celebration');
       vi.advanceTimersByTime(CELEBRATION_OVERLAY_CONSTANTS.CELEBRATION_DURATION_MS);
 
-      const container = petView.containerEl.querySelector('.obsidian-pets-container');
+      const container = petView.containerEl.querySelector('.cheers-container');
       const component = petView.containerEl.querySelector('.pet-sprite-container');
 
       expect(container?.getAttribute('data-pet-state')).toBe('walking');
@@ -345,7 +345,7 @@ describe('PetView', () => {
       petView.transitionState('celebration');
       petView.transitionState('petting');
 
-      const container = petView.containerEl.querySelector('.obsidian-pets-container');
+      const container = petView.containerEl.querySelector('.cheers-container');
       const component = petView.containerEl.querySelector('.pet-sprite-container');
 
       expect(container?.getAttribute('data-pet-state')).toBe('petting');
@@ -370,7 +370,7 @@ describe('PetView', () => {
 
       // Should log error and show error state
       expect(consoleErrorSpy).toHaveBeenCalled();
-      const errorEl = failView.containerEl.querySelector('.obsidian-pets-view-error');
+      const errorEl = failView.containerEl.querySelector('.cheers-view-error');
       expect(errorEl).toBeTruthy();
 
       consoleErrorSpy.mockRestore();
@@ -394,7 +394,7 @@ describe('PetView', () => {
       await petView.onOpen();
 
       // Remove the container div
-      const container = petView.containerEl.querySelector('.obsidian-pets-container');
+      const container = petView.containerEl.querySelector('.cheers-container');
       container?.remove();
 
       // Should not throw even though container is gone
@@ -469,8 +469,8 @@ describe('PetView', () => {
       const mainContainer = petView.containerEl.children[1];
       expect(mainContainer).toBeTruthy();
 
-      // Should have obsidian-pets-container inside
-      const vaultPalContainer = mainContainer.querySelector('.obsidian-pets-container');
+      // Should have cheers-container inside
+      const vaultPalContainer = mainContainer.querySelector('.cheers-container');
       expect(vaultPalContainer).toBeTruthy();
     });
 
@@ -717,7 +717,7 @@ describe('PetView', () => {
       onTaskComplete?: boolean;
       dashboardColorMode?: 'warm' | 'cool';
     } = {}) {
-      const plugin = (petView.app as any).plugins.plugins['obsidian-pets'];
+      const plugin = (petView.app as any).plugins.plugins['cheers'];
       plugin.dailyWordData = {
         date: new Date().toISOString().slice(0, 10),
         wordsAddedToday: overrides.wordsAddedToday ?? 0,
@@ -883,7 +883,7 @@ describe('PetView', () => {
 
   describe('workspace event subscriptions', () => {
     function setupMockPlugin() {
-      const plugin = (petView.app as any).plugins.plugins['obsidian-pets'];
+      const plugin = (petView.app as any).plugins.plugins['cheers'];
       plugin.dailyWordData = {
         date: new Date().toISOString().slice(0, 10),
         wordsAddedToday: 0,
@@ -1015,7 +1015,7 @@ describe('PetView', () => {
       await petView.onOpen();
 
       // Set plugin without dailyWordData (simulates a partial stub)
-      const plugin = (petView.app as any).plugins.plugins['obsidian-pets'];
+      const plugin = (petView.app as any).plugins.plugins['cheers'];
       plugin.settings = { ...plugin.settings, dashboardColorMode: 'warm' };
       delete plugin.dailyWordData;
       (petView as any).plugin = plugin;
@@ -1054,7 +1054,7 @@ describe('PetView', () => {
 
   describe('fileWordCount with active MarkdownView', () => {
     it('passes computed word count when an active MarkdownView is present', async () => {
-      const plugin = (petView.app as any).plugins.plugins['obsidian-pets'];
+      const plugin = (petView.app as any).plugins.plugins['cheers'];
       plugin.dailyWordData = {
         date: new Date().toISOString().slice(0, 10),
         wordsAddedToday: 0,
