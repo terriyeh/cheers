@@ -1,10 +1,10 @@
 import { App, PluginSettingTab, Setting } from 'obsidian';
-import type ObsidianPetsPlugin from '../main';
+import type CheersPlugin from '../main';
 
-export class ObsidianPetsSettingTab extends PluginSettingTab {
-	plugin: ObsidianPetsPlugin;
+export class CheersSettingTab extends PluginSettingTab {
+	plugin: CheersPlugin;
 
-	constructor(app: App, plugin: ObsidianPetsPlugin) {
+	constructor(app: App, plugin: CheersPlugin) {
 		super(app, plugin);
 		this.plugin = plugin;
 	}
@@ -162,25 +162,5 @@ export class ObsidianPetsSettingTab extends PluginSettingTab {
 					})
 			);
 
-		// TODO: REMOVE BEFORE LAUNCH — dev testing aid only
-		new Setting(containerEl)
-			.setName('Reset daily stats')
-			.setDesc('Clear today\'s activity counts. Use this if the tallies look wrong after updating the plugin.')
-			.addButton((button) =>
-				button
-					.setButtonText('Reset')
-					.setWarning()
-					.onClick(async () => {
-						const daily = this.plugin.dailyWordData;
-						daily.wordsAddedToday = 0;
-						daily.goalCelebrated = false;
-						daily.notesCreatedToday = 0;
-						daily.tasksCompletedToday = 0;
-						daily.linksCreatedToday = 0;
-						this.plugin.celebrationService?.clearFileBaselines();
-						await this.plugin.saveSettings();
-						this.plugin.petView?.updateStatsComponent();
-					})
-			);
 	}
 }

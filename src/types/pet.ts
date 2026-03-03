@@ -1,5 +1,5 @@
 /**
- * Pet state types and interfaces for Obsidian Pets
+ * Pet state types and interfaces for Cheers!
  */
 
 /**

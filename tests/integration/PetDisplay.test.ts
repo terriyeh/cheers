@@ -31,7 +31,7 @@ describe('PetDisplay Integration', () => {
 
       // Verify all components are initialized
       expect(petView.getCurrentState()).toBe('walking');
-      expect(petView.containerEl.querySelector('.obsidian-pets-container')).toBeTruthy();
+      expect(petView.containerEl.querySelector('.cheers-container')).toBeTruthy();
       expect(petView.containerEl.querySelector('.pet-sprite-container')).toBeTruthy();
       expect(petView.containerEl.querySelector('.pet-sprite')).toBeTruthy();
     });
@@ -91,7 +91,7 @@ describe('PetDisplay Integration', () => {
     it('should respect movement speed setting for walking animation', async () => {
       const viewWithSettings = new PetView(leaf);
       // Set plugin settings before opening
-      (viewWithSettings.app as any).plugins.plugins['obsidian-pets'].settings.movementSpeed = 30;
+      (viewWithSettings.app as any).plugins.plugins['cheers'].settings.movementSpeed = 30;
       await viewWithSettings.onOpen();
 
       const container = viewWithSettings.containerEl.querySelector('.pet-sprite-container') as HTMLElement;
@@ -267,7 +267,7 @@ describe('PetDisplay Integration', () => {
         expect(petView.getCurrentState()).toBe(state);
 
         // Data attribute on container
-        const container = petView.containerEl.querySelector('.obsidian-pets-container');
+        const container = petView.containerEl.querySelector('.cheers-container');
         expect(container?.getAttribute('data-pet-state')).toBe(state);
 
         // Svelte component data-state
@@ -289,7 +289,7 @@ describe('PetDisplay Integration', () => {
       // All layers should be synchronized to walking
       expect(petView.getCurrentState()).toBe('walking');
 
-      const container = petView.containerEl.querySelector('.obsidian-pets-container');
+      const container = petView.containerEl.querySelector('.cheers-container');
       expect(container?.getAttribute('data-pet-state')).toBe('walking');
 
       const spriteContainer = petView.containerEl.querySelector('.pet-sprite-container');
@@ -344,7 +344,7 @@ describe('PetDisplay Integration', () => {
       petView.transitionState('celebration');
 
       // Simulate external DOM manipulation
-      const container = petView.containerEl.querySelector('.obsidian-pets-container');
+      const container = petView.containerEl.querySelector('.cheers-container');
       container?.setAttribute('data-pet-state', 'corrupted');
 
       // Auto-transition should still work

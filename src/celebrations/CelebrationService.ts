@@ -14,7 +14,7 @@
  */
 
 import type { TFile, Editor, EventRef, MarkdownFileInfo, MarkdownView } from 'obsidian';
-import type ObsidianPetsPlugin from '../main';
+import type CheersPlugin from '../main';
 import { CELEBRATION_OVERLAY_CONSTANTS, STATUS_BAR_NOTIFICATION_DURATION_MS } from '../utils/celebration-constants';
 
 /**
@@ -33,7 +33,7 @@ export class CelebrationService {
 	private static readonly MAX_DAILY_COUNTER = 100_000;
 	// Note: Celebration duration uses CELEBRATION_OVERLAY_CONSTANTS.CELEBRATION_DURATION_MS (4320ms)
 
-	private plugin: ObsidianPetsPlugin;
+	private plugin: CheersPlugin;
 
 	// Event references for cleanup
 	private eventRefs: EventRef[] = [];
@@ -82,7 +82,7 @@ export class CelebrationService {
 		return messages[eventType];
 	}
 
-	constructor(plugin: ObsidianPetsPlugin, statusBarItem: HTMLElement | null = null) {
+	constructor(plugin: CheersPlugin, statusBarItem: HTMLElement | null = null) {
 		this.plugin = plugin;
 		this.statusBarItem = statusBarItem;
 

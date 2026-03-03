@@ -1,10 +1,10 @@
 {
-	"id": "obsidian-pets",
-	"name": "Obsidian Pets",
+	"id": "cheers",
+	"name": "Cheers!",
 	"version": "0.1.0",
 	"minAppVersion": "1.0.0",
 	"description": "Your vault companion that celebrates you",
 	"author": "Terri Yeh",
-	"authorUrl": "https://github.com/terriyeh/obsidian-pets",
+	"authorUrl": "https://github.com/terriyeh/cheers",
 	"isDesktopOnly": false
 }

@@ -18,9 +18,9 @@ export interface DailyWordData {
 }
 
 /**
- * VaultPal Plugin Settings
+ * Cheers! Plugin Settings
  */
-export interface ObsidianPetsSettings {
+export interface CheersSettings {
 	/** Name of the pet companion */
 	petName: string;
 	/** Name of the user (what pet calls them) */
@@ -49,7 +49,7 @@ export interface ObsidianPetsSettings {
 /**
  * Default settings values
  */
-export const DEFAULT_SETTINGS: ObsidianPetsSettings = {
+export const DEFAULT_SETTINGS: CheersSettings = {
 	petName: 'Kit',
 	userName: '',
 	hasCompletedWelcome: false,

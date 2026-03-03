@@ -77,7 +77,7 @@ newLeft = currentLeft - (speed × multiplier)
 el.style.left = `${left}px`
 ```
 
-**Vault Pal Approach** (CSS-based):
+**Cheers! Approach** (CSS-based):
 ```css
 /* Browser's compositor thread handles animation */
 @keyframes move-horizontal {

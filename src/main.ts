@@ -2,11 +2,11 @@ import { Plugin, Notice } from 'obsidian';
 import type { WorkspaceLeaf } from 'obsidian';
 import { PetView, VIEW_TYPE_PET } from './views/PetView';
 import type { PetState } from './types/pet';
-import type { ObsidianPetsSettings, DailyWordData } from './types/settings';
+import type { CheersSettings, DailyWordData } from './types/settings';
 import { DEFAULT_SETTINGS, VALIDATION_RULES } from './types/settings';
 import { WelcomeModal } from './modals/WelcomeModal';
 import { CelebrationService } from './celebrations/CelebrationService';
-import { ObsidianPetsSettingTab } from './settings/SettingsTab';
+import { CheersSettingTab } from './settings/SettingsTab';
 import { parseDailyWordData } from './utils/daily-word-data';
 
 // Build-time constant injected by esbuild
@@ -15,7 +15,7 @@ declare const __DEV__: boolean;
 /**
  * Debug interface for manual state testing (development only)
  */
-interface ObsidianPetsDebug {
+interface CheersDebug {
 	transitionState: (state: PetState) => void;
 	getCurrentState: () => PetState | null;
 	reset: () => void;
@@ -25,18 +25,18 @@ interface ObsidianPetsDebug {
 
 declare global {
 	interface Window {
-		obsidianPetsDebug?: ObsidianPetsDebug;
+		cheersDebug?: CheersDebug;
 	}
 }
 
-export default class ObsidianPetsPlugin extends Plugin {
-	settings: ObsidianPetsSettings = DEFAULT_SETTINGS;
+export default class CheersPlugin extends Plugin {
+	settings: CheersSettings = DEFAULT_SETTINGS;
 	petView?: PetView;
 	dailyWordData: DailyWordData = this.getDefaultDailyData();
 	celebrationService?: CelebrationService;
 
 	async onload() {
-		console.log('🦊 Obsidian Pets loading...');
+		console.log('🦊 Cheers! loading...');
 
 		// Load settings
 		await this.loadSettings();
@@ -55,12 +55,12 @@ export default class ObsidianPetsPlugin extends Plugin {
 		this.initializePetView();
 
 		// Add settings tab
-		this.addSettingTab(new ObsidianPetsSettingTab(this.app, this));
+		this.addSettingTab(new CheersSettingTab(this.app, this));
 
 		// Add command to open pet view (for command palette)
 		this.addCommand({
-			id: 'open-obsidian-pets',
-			name: 'Open Obsidian Pets',
+			id: 'open-cheers',
+			name: 'Open Cheers!',
 			callback: () => {
 				this.activatePetView();
 			},
@@ -80,7 +80,7 @@ export default class ObsidianPetsPlugin extends Plugin {
 		// Create status bar item (hidden until a celebration fires)
 		const statusBarItem = this.addStatusBarItem();
 		statusBarItem.hide();
-		statusBarItem.addClass('obsidian-pets-status');
+		statusBarItem.addClass('cheers-status');
 		// Move to the leftmost position in the status bar
 		statusBarItem.parentElement?.prepend(statusBarItem);
 
@@ -90,14 +90,14 @@ export default class ObsidianPetsPlugin extends Plugin {
 		// Expose debug commands for manual state testing (development only)
 		// This code is completely removed in production builds via tree-shaking
 		if (__DEV__) {
-			window.obsidianPetsDebug = {
+			window.cheersDebug = {
 				transitionState: (state: PetState) => {
 					const view = this.getActivePetView();
 					if (view) {
 						view.transitionState(state);
 						console.log(`🦊 Transitioned to: ${state}`);
 					} else {
-						console.error('🦊 No active pet view. Open Obsidian Pets first.');
+						console.error('🦊 No active pet view. Open Cheers! first.');
 					}
 				},
 				getCurrentState: () => {
@@ -112,7 +112,7 @@ export default class ObsidianPetsPlugin extends Plugin {
 						view.transitionState('walking');
 						console.log('🦊 Reset to walking');
 					} else {
-						console.error('🦊 No active pet view. Open Obsidian Pets first.');
+						console.error('🦊 No active pet view. Open Cheers! first.');
 					}
 				},
 				setSpeed: (speed: number) => {
@@ -121,17 +121,17 @@ export default class ObsidianPetsPlugin extends Plugin {
 						view.petComponent.$set({ movementSpeed: speed });
 						console.log(`🦊 Movement speed set to: ${speed}%`);
 					} else {
-						console.error('🦊 No active pet view. Open Obsidian Pets first.');
+						console.error('🦊 No active pet view. Open Cheers! first.');
 					}
 				},
 				help: () => {
 					console.log(`
-🦊 Obsidian Pets Debug Commands:
-  obsidianPetsDebug.transitionState('state') - Transition to a state
-  obsidianPetsDebug.getCurrentState()        - Get current state
-  obsidianPetsDebug.reset()                  - Reset to walking
-  obsidianPetsDebug.setSpeed(50)             - Set movement speed (0-100)
-  obsidianPetsDebug.help()                   - Show this help
+🦊 Cheers! Debug Commands:
+  cheersDebug.transitionState('state') - Transition to a state
+  cheersDebug.getCurrentState()        - Get current state
+  cheersDebug.reset()                  - Reset to walking
+  cheersDebug.setSpeed(50)             - Set movement speed (0-100)
+  cheersDebug.help()                   - Show this help
 
 Available states:
   - walking
@@ -141,19 +141,19 @@ Available states:
 				}
 			};
 
-			console.log('🦊 Debug commands available: window.obsidianPetsDebug.help()');
+			console.log('🦊 Debug commands available: window.cheersDebug.help()');
 		}
 	}
 
 	onunload() {
-		console.log('🦊 Obsidian Pets unloaded');
+		console.log('🦊 Cheers! unloaded');
 
 		// Clean up celebration service
 		this.celebrationService?.cleanup();
 
 		// Clean up debug interface (development only)
-		if (__DEV__ && window.obsidianPetsDebug) {
-			delete window.obsidianPetsDebug;
+		if (__DEV__ && window.cheersDebug) {
+			delete window.cheersDebug;
 		}
 
 		// Detach all pet views
@@ -225,7 +225,7 @@ Available states:
 	 * @param settings - Settings object to validate
 	 * @returns Validated settings with invalid values replaced by defaults
 	 */
-	private validateSettings(settings: ObsidianPetsSettings): ObsidianPetsSettings {
+	private validateSettings(settings: CheersSettings): CheersSettings {
 		const validated = { ...settings };
 
 		// Validate petName
@@ -300,7 +300,7 @@ Available states:
 	async loadSettings() {
 		const loadedData = await this.loadData();
 		const { daily, ...settingsData } = (loadedData ?? {}) as any;
-		const mergedSettings: ObsidianPetsSettings = {
+		const mergedSettings: CheersSettings = {
 			...DEFAULT_SETTINGS,
 			...settingsData,
 			celebrations: {

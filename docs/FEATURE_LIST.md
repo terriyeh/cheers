@@ -1,5 +1,5 @@
-# Cheers! (working title) — Feature List
-# Public plugin name: Obsidian Pets
+# Cheers! — Feature List
+# Public plugin name: Cheers!
 
 ## Vision
 Creator of delightful moments in your vault.
@@ -93,7 +93,7 @@ A plugin you feel, not think about.
 ### 9. UI Components
 - **Plugin panel**: Sidebar view with two tabs — Pet tab (garden scene + pet) and Stats tab (dashboard)
 - **Welcome modal**: First-run setup (pet name, celebration events)
-- **Settings page**: Plugin Settings tab (Settings → Obsidian Pets) — not a modal
+- **Settings page**: Plugin Settings tab (Settings → Cheers!) — not a modal
 - **Butterfly button**: Clickable icon to release butterfly
 - **Speed slider**: Control movement speed (in settings)
 

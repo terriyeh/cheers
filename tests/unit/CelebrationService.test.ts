@@ -5,14 +5,14 @@
 
 import { vi } from 'vitest';
 import type { App, TFile, Editor, Vault, Workspace } from 'obsidian';
-import type ObsidianPetsPlugin from '../../src/main';
-import type { ObsidianPetsSettings, DailyWordData } from '../../src/types/settings';
+import type CheersPlugin from '../../src/main';
+import type { CheersSettings, DailyWordData } from '../../src/types/settings';
 import { CELEBRATION_OVERLAY_CONSTANTS, STATUS_BAR_NOTIFICATION_DURATION_MS } from '../../src/utils/celebration-constants';
 
 // Mock types for testing
 interface MockPlugin {
 	app: App;
-	settings: ObsidianPetsSettings;
+	settings: CheersSettings;
 	petView?: {
 		transitionState: (state: string) => boolean;
 		updateStatsComponent: () => void;
@@ -107,7 +107,7 @@ describe('CelebrationService', () => {
 			hide: vi.fn(),
 		};
 
-		service = new CelebrationService(plugin as unknown as ObsidianPetsPlugin, mockStatusBarItem as unknown as HTMLElement);
+		service = new CelebrationService(plugin as unknown as CheersPlugin, mockStatusBarItem as unknown as HTMLElement);
 	});
 
 	afterEach(() => {
@@ -1078,7 +1078,7 @@ describe('CelebrationService', () => {
 				app: { ...plugin.app, vault: freshVault, workspace: freshWorkspace },
 			};
 			// Construct without statusBarItem — exercises the null guard
-			const nullService = new CelebrationService(freshPlugin as unknown as ObsidianPetsPlugin);
+			const nullService = new CelebrationService(freshPlugin as unknown as CheersPlugin);
 			const createHandler = (freshVault.on as any).mock.calls.find(
 				(call: any) => call[0] === 'create'
 			)?.[1];

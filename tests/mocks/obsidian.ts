@@ -79,12 +79,12 @@ export class App {
     };
     this.plugins = {
       manifests: {
-        'obsidian-pets': {
-          dir: '.obsidian/plugins/obsidian-pets',
+        'cheers': {
+          dir: '.obsidian/plugins/cheers',
         },
       },
       plugins: {
-        'obsidian-pets': {
+        'cheers': {
           settings: {
             petName: 'Kit',
             userName: '',

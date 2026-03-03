@@ -1,5 +1,5 @@
 import { Modal, Setting } from 'obsidian';
-import type ObsidianPetsPlugin from '../main';
+import type CheersPlugin from '../main';
 import { VALIDATION_RULES } from '../types/settings';
 import { VIEW_TYPE_PET, PetView } from '../views/PetView';
 
@@ -8,13 +8,13 @@ import { VIEW_TYPE_PET, PetView } from '../views/PetView';
  * Collects pet name and user name from the user
  */
 export class WelcomeModal extends Modal {
-	private plugin: ObsidianPetsPlugin;
+	private plugin: CheersPlugin;
 	private petNameInput: HTMLInputElement | null = null;
 	private userNameInput: HTMLInputElement | null = null;
 	private petNameError: HTMLElement | null = null;
 	private userNameError: HTMLElement | null = null;
 
-	constructor(plugin: ObsidianPetsPlugin) {
+	constructor(plugin: CheersPlugin) {
 		super(plugin.app);
 		this.plugin = plugin;
 	}
@@ -22,14 +22,14 @@ export class WelcomeModal extends Modal {
 	onOpen() {
 		const { contentEl } = this;
 		contentEl.empty();
-		contentEl.addClass('obsidian-pets-welcome-modal');
+		contentEl.addClass('cheers-welcome-modal');
 
 		// Header
-		contentEl.createEl('h2', { text: '🦊 Welcome to Obsidian Pets!' });
+		contentEl.createEl('h2', { text: '🦊 Welcome to Cheers!' });
 
 		contentEl.createEl('p', {
 			text: 'Let\'s get your companion set up!',
-			cls: 'obsidian-pets-welcome-subtitle',
+			cls: 'cheers-welcome-subtitle',
 		});
 
 		// Pet Name Setting
@@ -46,7 +46,7 @@ export class WelcomeModal extends Modal {
 
 		// Pet name error message container
 		this.petNameError = contentEl.createDiv({
-			cls: 'obsidian-pets-error-message setting-item-description',
+			cls: 'cheers-error-message setting-item-description',
 		});
 		this.petNameError.style.display = 'none';
 
@@ -64,7 +64,7 @@ export class WelcomeModal extends Modal {
 
 		// User name error message container
 		this.userNameError = contentEl.createDiv({
-			cls: 'obsidian-pets-error-message setting-item-description',
+			cls: 'cheers-error-message setting-item-description',
 		});
 		this.userNameError.style.display = 'none';
 
@@ -94,7 +94,7 @@ export class WelcomeModal extends Modal {
 
 		// Buttons
 		const buttonContainer = contentEl.createDiv({
-			cls: 'obsidian-pets-button-container',
+			cls: 'cheers-button-container',
 		});
 
 		// Skip button

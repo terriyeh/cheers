@@ -48,8 +48,8 @@ ln -s ~/vault-pal ~/vault-pal-test/.obsidian/plugins/vault-pal
 1. In Obsidian, open the test vault
 2. Go to Settings → Community plugins
 3. Disable "Restricted mode" if needed
-4. Click "Browse" → find "Vault Pal" (it will appear as a local plugin)
-5. Enable "Vault Pal"
+4. Click "Browse" → find "Cheers!" (it will appear as a local plugin)
+5. Enable "Cheers!"
 
 ## Install Hot Reload Plugin (Recommended)
 
@@ -58,7 +58,7 @@ For automatic plugin reloading during development:
 1. In test vault settings → Community plugins
 2. Browse and install "Hot-Reload"
 3. Enable it
-4. Now when you rebuild Vault Pal, it will auto-reload
+4. Now when you rebuild Cheers!, it will auto-reload
 
 ## Create Test Template
 

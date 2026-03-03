@@ -4,7 +4,7 @@
  */
 
 /* Main container for the pet view */
-.obsidian-pets-container {
+.cheers-container {
   width: 100%;
   height: 100%;
   display: flex;
@@ -16,7 +16,7 @@
 }
 
 /* Loading state */
-.obsidian-pets-loading {
+.cheers-loading {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -28,7 +28,7 @@
 }
 
 /* Error state container (for pet view only) */
-.obsidian-pets-view-error {
+.cheers-view-error {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -38,19 +38,19 @@
   max-width: 300px;
 }
 
-.obsidian-pets-view-error h3 {
+.cheers-view-error h3 {
   color: var(--text-error);
   margin-bottom: 0.5rem;
   font-size: 1.1rem;
 }
 
-.obsidian-pets-view-error-message {
+.cheers-view-error-message {
   color: var(--text-normal);
   margin-bottom: 0.5rem;
   font-size: 0.9rem;
 }
 
-.obsidian-pets-view-error-hint {
+.cheers-view-error-hint {
   color: var(--text-muted);
   font-size: 0.8rem;
   font-style: italic;
@@ -58,7 +58,7 @@
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-  .obsidian-pets-container {
+  .cheers-container {
     padding: 0;
   }
 }
@@ -66,25 +66,25 @@
 /* Theme compatibility - no background overrides, use Obsidian defaults */
 
 /* Welcome Modal Styles */
-.obsidian-pets-welcome-modal .modal-content {
+.cheers-welcome-modal .modal-content {
   max-width: 500px;
   padding: 1.5rem;
 }
 
-.obsidian-pets-welcome-modal h2 {
+.cheers-welcome-modal h2 {
   text-align: center;
   margin-bottom: 0.5rem;
   color: var(--text-normal);
 }
 
-.obsidian-pets-welcome-subtitle {
+.cheers-welcome-subtitle {
   text-align: center;
   color: var(--text-muted);
   margin-bottom: 1.5rem;
   font-size: 0.9rem;
 }
 
-.obsidian-pets-info-box {
+.cheers-info-box {
   background-color: var(--background-secondary);
   border-left: 3px solid var(--interactive-accent);
   padding: 0.75rem 1rem;
@@ -94,7 +94,7 @@
   font-size: 0.85rem;
 }
 
-.obsidian-pets-button-container {
+.cheers-button-container {
   display: flex;
   justify-content: flex-end;
   gap: 0.5rem;
@@ -106,12 +106,12 @@
 /* View Header and Action Buttons - Graph View Style */
 /* Background colors inherit from Obsidian theme for automatic light/dark mode support */
 
-.workspace-leaf-content[data-type="obsidian-pets-pet-view"] {
+.workspace-leaf-content[data-type="cheers-pet-view"] {
   position: relative;
 }
 
 /* Override Obsidian's default .view-content padding for immersive background */
-.workspace-leaf-content[data-type="obsidian-pets-pet-view"] .view-content {
+.workspace-leaf-content[data-type="cheers-pet-view"] .view-content {
   padding: 3px;
   display: flex;
   flex-direction: column;
@@ -181,7 +181,7 @@
   pointer-events: none;
 }
 
-.workspace-leaf-content[data-type="obsidian-pets-pet-view"] .view-header {
+.workspace-leaf-content[data-type="cheers-pet-view"] .view-header {
   /* !important required to override Obsidian's default display: none on view headers */
   display: flex !important;
   position: absolute;
@@ -198,7 +198,7 @@
 }
 
 /* Re-enable pointer events for action buttons */
-.workspace-leaf-content[data-type="obsidian-pets-pet-view"] .view-actions {
+.workspace-leaf-content[data-type="cheers-pet-view"] .view-actions {
   pointer-events: auto;
   position: absolute;
   top: 8px;
@@ -210,15 +210,15 @@
 }
 
 /* Hide the view header title and navigation */
-.workspace-leaf-content[data-type="obsidian-pets-pet-view"] .view-header-title,
-.workspace-leaf-content[data-type="obsidian-pets-pet-view"] .view-header-nav-buttons,
-.workspace-leaf-content[data-type="obsidian-pets-pet-view"] .view-header-icon {
+.workspace-leaf-content[data-type="cheers-pet-view"] .view-header-title,
+.workspace-leaf-content[data-type="cheers-pet-view"] .view-header-nav-buttons,
+.workspace-leaf-content[data-type="cheers-pet-view"] .view-header-icon {
   display: none;
 }
 
 /* Style individual action buttons - floating style like Graph view */
 /* Background colors inherit from Obsidian for automatic theme adaptation */
-.workspace-leaf-content[data-type="obsidian-pets-pet-view"] .view-action {
+.workspace-leaf-content[data-type="cheers-pet-view"] .view-action {
   border-radius: 4px;
   padding: 6px;
   cursor: pointer;
@@ -230,7 +230,7 @@
 }
 
 /* Icon styling */
-.workspace-leaf-content[data-type="obsidian-pets-pet-view"] .view-action svg {
+.workspace-leaf-content[data-type="cheers-pet-view"] .view-action svg {
   width: 18px;
   height: 18px;
   color: var(--icon-color);
@@ -239,7 +239,7 @@
 /* VaultPal Code Block Inline Validation */
 /* Follows DataView plugin pattern for inline error display */
 
-.obsidian-pets-error {
+.cheers-error {
   display: block;
   width: 100%;
   max-width: 100%;
@@ -253,7 +253,7 @@
   word-wrap: break-word;
 }
 
-.obsidian-pets-error-message {
+.cheers-error-message {
   color: var(--text-error);
   font-weight: 600;
   margin-bottom: 0.5rem;
@@ -261,7 +261,7 @@
   white-space: pre-wrap;
 }
 
-.obsidian-pets-error-hint {
+.cheers-error-hint {
   color: var(--text-muted);
   font-size: 0.85rem;
   font-style: italic;
@@ -270,7 +270,7 @@
   white-space: pre-wrap;
 }
 
-.obsidian-pets-preview {
+.cheers-preview {
   display: block;
   width: 100%;
   max-width: 100%;
@@ -284,7 +284,7 @@
   word-wrap: break-word;
 }
 
-.obsidian-pets-preview-content {
+.cheers-preview-content {
   color: var(--text-normal);
   font-size: 1rem;
   line-height: 1.6;

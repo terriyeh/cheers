@@ -1,4 +1,4 @@
-# Obsidian Pets 🦊
+# Cheers! 🦊
 
 Your vault companion that celebrates you.
 
@@ -10,7 +10,7 @@ Your vault companion that celebrates you.
 
 ## Overview
 
-Obsidian Pets transforms your vault into a delightful space by celebrating your writing journey. Your companion notices when you create notes, reach word count goals, check off tasks, and engage with your knowledge base—responding with ambient celebrations that make your vault feel alive.
+Cheers! transforms your vault into a delightful space by celebrating your writing journey. Your companion notices when you create notes, reach word count goals, check off tasks, and engage with your knowledge base—responding with ambient celebrations that make your vault feel alive.
 
 **Philosophy:** *Feeling the plugin, not thinking about it.*
 
@@ -18,13 +18,13 @@ No chat. No XP grinding. No cognitive load. Just cozy moments of recognition whe
 
 ---
 
-## Why Obsidian Pets?
+## Why Cheers!?
 
 ### What Makes It Different
 
 **Pixel Pets:** Decorative pet + AI chat for vault queries
 **Vault Pets:** Pure decoration (VS Code Pets port)
-**Obsidian Pets:** **Your vault celebrates you** ✨
+**Cheers!:** **Your vault celebrates you** ✨
 
 We're not here to:
 - ❌ Chat about your notes (use Obsidian Copilot for that)
@@ -50,7 +50,7 @@ We're here to:
   - GPU-accelerated CSS animations (<0.1% CPU)
 - **User-Configurable Triggers** ✅ IMPLEMENTED (v0.2.0): Individual toggles for each celebration type, with independent fireworks and status bar controls
 - **Status Bar Notifications** ✅ IMPLEMENTED: Brief message in the status bar for each celebration — fires automatically with every enabled trigger
-- **Progress Dashboard** 🚧 IN PROGRESS (v1.0): Stats tab within the pet panel — tab bar, data layer, and ring geometry are implemented; Stats.svelte ring/tally UI is pending
+- **Progress Dashboard** ✅ IMPLEMENTED (v0.1.0): Stats tab within the pet panel — concentric word count rings, daily activity tallies, warm/cool color palette
 - **Butterfly Chase** 🚧 PLANNED (v1.1): Release a butterfly and watch your pet chase it
 - **Crew & Cosmetics** 🚧 PLANNED (v1.2): Optional companion pets + accessories (hats, scarves) + seasonal backgrounds
 - **Privacy-First** ✅ IMPLEMENTED: Fully local, no network calls, no telemetry
@@ -63,13 +63,13 @@ We're here to:
 ### From Obsidian Community Plugins (Recommended)
 
 1. Open Obsidian Settings → Community plugins
-2. Browse and search for "Obsidian Pets"
+2. Browse and search for "Cheers!"
 3. Click Install, then Enable
 
 ### Manual Installation
 
-1. Download the latest release from [GitHub Releases](https://github.com/terriyeh/obsidian-pets/releases)
-2. Extract the files to `.obsidian/plugins/obsidian-pets/` in your vault
+1. Download the latest release from [GitHub Releases](https://github.com/terriyeh/cheers/releases)
+2. Extract the files to `.obsidian/plugins/cheers/` in your vault
 3. Reload Obsidian
 4. Enable the plugin in Settings → Community plugins
 
@@ -120,7 +120,7 @@ Each action triggers a celebration animation—no input required from you. Just 
 
 ### Customization
 
-Configure celebrations in **Settings → Obsidian Pets → Celebrations**:
+Configure celebrations in **Settings → Cheers! → Celebrations**:
 - **Individual toggles**: Enable/disable each celebration type independently
 - **Status bar notification**: A brief message appears in the status bar (bottom-left) automatically with every celebration — no separate toggle needed
 - **Daily word goal**: Set your target words per day in settings (vault-wide, resets at midnight)
@@ -177,7 +177,7 @@ All frame animation is handled natively by the browser (no sprite sheets or CSS 
 
 ## Recommended Plugin Pairings
 
-Obsidian Pets works beautifully alongside other plugins to create your perfect workspace:
+Cheers! works beautifully alongside other plugins to create your perfect workspace:
 
 ### For Ambient Music
 **[Soundscapes](https://github.com/andrewmcgivery/obsidian-soundscapes)** - Adds ambient background music to Obsidian
@@ -200,7 +200,7 @@ Obsidian Pets works beautifully alongside other plugins to create your perfect w
 **First Run:**
 - Welcome modal appears automatically when you first open the Pet View
 - Configure your pet's name and your own name
-- Settings are saved to `.obsidian/plugins/obsidian-pets/data.json`
+- Settings are saved to `.obsidian/plugins/cheers/data.json`
 
 **Changing Settings Later:**
 - Open Command Palette (Ctrl/Cmd + P)
@@ -216,7 +216,7 @@ Obsidian Pets works beautifully alongside other plugins to create your perfect w
 
 ### Celebration Settings
 
-Open **Settings → Obsidian Pets → Celebrations** to configure:
+Open **Settings → Cheers! → Celebrations** to configure:
 
 **Individual Toggles** (enable/disable each celebration type independently):
 - ✅ **Note creation** - Celebrate when creating new .md files
@@ -246,8 +246,8 @@ Open **Settings → Obsidian Pets → Celebrations** to configure:
 
 ```bash
 # Clone the repository
-git clone https://github.com/terriyeh/obsidian-pets
-cd obsidian-pets
+git clone https://github.com/terriyeh/cheers
+cd cheers
 
 # Install dependencies
 npm install
@@ -266,10 +266,10 @@ npm run build
 
 ```bash
 # Windows
-mklink /D "C:\path\to\test-vault\.obsidian\plugins\obsidian-pets" "D:\obsidian-pets"
+mklink /D "C:\path\to\test-vault\.obsidian\plugins\cheers" "D:\cheers"
 
 # macOS/Linux
-ln -s /path/to/obsidian-pets /path/to/test-vault/.obsidian/plugins/obsidian-pets
+ln -s /path/to/cheers /path/to/test-vault/.obsidian/plugins/cheers
 ```
 
 3. Enable the plugin in your test vault
@@ -286,7 +286,7 @@ ln -s /path/to/obsidian-pets /path/to/test-vault/.obsidian/plugins/obsidian-pets
 ### Project Structure
 
 ```
-obsidian-pets/
+cheers/
 ├── src/
 │   ├── main.ts                      # Plugin entry point, settings persistence, daily data
 │   ├── modals/
@@ -295,7 +295,7 @@ obsidian-pets/
 │   │   └── PetView.ts               # Sidebar panel: Pet/Stats tab bar, background transitions
 │   ├── components/
 │   │   ├── Pet.svelte               # Animated pet with movement, background, interaction
-│   │   └── Stats.svelte             # Stats dashboard UI (🚧 ring/tally UI pending)
+│   │   └── Stats.svelte             # Stats dashboard: concentric rings, activity tallies, color modes
 │   ├── pet/
 │   │   └── PetStateMachine.ts       # Animation state machine (walking/petting/celebration)
 │   ├── celebrations/
@@ -349,10 +349,7 @@ obsidian-pets/
 - ✅ Status bar notifications — fires automatically with every enabled trigger; messages use the pet's name
 - ✅ Word count goals — daily goal (settings) and per-note goal (`word-goal` frontmatter), replacing milestone list
 - ✅ Settings page — all active settings accessible via Plugin Settings tab (pet name, speed, all celebration toggles, daily word goal)
-- 🚧 Progress dashboard — tab bar, data layer, and ring geometry helper are done; Stats.svelte ring/tally UI is the last piece:
-  - Concentric word count rings (daily outer, per-note inner)
-  - Daily activity tallies for enabled celebration types
-  - Dashboard color mode toggle (warm/cool) added to Settings tab alongside this
+- ✅ Progress dashboard — Stats tab with concentric word count rings (daily outer, per-note inner), daily activity tallies for enabled celebration types, warm/cool color palette in Settings
 
 ### v1.1 — Interactivity + Vault Health
 
@@ -369,7 +366,7 @@ obsidian-pets/
 
 ## Command Palette Commands
 
-- **Open Obsidian Pets** - Opens the pet view in the sidebar
+- **Open Cheers!** - Opens the pet view in the sidebar
 - **Edit Pet Settings** - Reopens the welcome modal to change pet/user names
 
 ---
@@ -387,7 +384,7 @@ obsidian-pets/
 - Look for CSS conflicts with theme
 
 ### Celebrations not triggering
-- Check **Settings → Obsidian Pets → Celebrations** to verify triggers are enabled
+- Check **Settings → Cheers! → Celebrations** to verify triggers are enabled
 - Celebrations use race condition prevention (only one at a time) - not cooldowns
 - Link celebrations require content inside brackets (won't trigger on empty `[[]]`)
 - Word count goal celebrations fire when you hit 100% of your daily or per-note goal
@@ -421,7 +418,7 @@ See [`.github/workflows/README.md`](.github/workflows/README.md) for details.
 
 ### Reporting Issues
 
-Found a bug or have a feature request? [Open an issue](https://github.com/terriyeh/obsidian-pets/issues) on GitHub.
+Found a bug or have a feature request? [Open an issue](https://github.com/terriyeh/cheers/issues) on GitHub.
 
 ---
 
@@ -442,9 +439,9 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ## Support
 
-- **Documentation**: [GitHub Wiki](https://github.com/terriyeh/obsidian-pets/wiki)
+- **Documentation**: [GitHub Wiki](https://github.com/terriyeh/cheers/wiki)
 - **Community**: [Obsidian Forum](https://forum.obsidian.md/)
-- **Issues**: [GitHub Issues](https://github.com/terriyeh/obsidian-pets/issues)
+- **Issues**: [GitHub Issues](https://github.com/terriyeh/cheers/issues)
 
 ---
 
