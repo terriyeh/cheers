@@ -50,12 +50,10 @@ Each activity triggers fireworks and a status bar message using your pet's name.
 
 ## Quick Start
 
-1. Click the **paw icon 🐾** in the sidebar ribbon to open the pet panel
+1. Open the **Cheers! panel** from the left sidebar (cat icon) or via **Command Palette → "Open Cheers!"**
 2. A welcome screen lets you name your pet (default: Kit) and optionally enter your own name
 3. Open **Settings → Cheers!** to turn on the celebrations you want
 4. Start writing — your pet does the rest
-
-You can rename your pet anytime via **Command Palette → "Edit Pet Settings"**.
 
 ---
 
@@ -77,6 +75,7 @@ Both goal types can be active at the same time. The per-note goal is checked aga
 - **Your name** — optional; used in status bar messages (e.g. "✨ Kit cheers for Alex!")
 - **Animation speed** — 0–100% slider (0% = leisurely, 100% = very fast)
 - **Background** — automatically switches between a day scene (6am–8pm) and a night scene
+- **Stats color palette** — warm (pink / yellow / orange) or cool (blue / cyan / green) for the Stats tab tallies
 
 ---
 
@@ -87,7 +86,6 @@ The **Stats tab** (inside the pet panel) shows your writing activity at a glance
 - **Outer ring** — daily word progress toward your goal
 - **Inner circle** — per-note word progress for the currently open file
 - **Activity tallies** — notes created, links added, and tasks completed today (shown when the corresponding celebration is enabled)
-- **Color palette** — switch between warm (pink / yellow / orange) and cool (blue / cyan / green) in Settings
 
 ---
 
@@ -110,19 +108,6 @@ The **Stats tab** (inside the pet panel) shows your writing activity at a glance
 
 **Welcome modal doesn't appear**
 - Use **Command Palette → "Edit Pet Settings"** to reopen it at any time
-
----
-
-## Roadmap
-
-### v1.1 — Interactivity
-- Butterfly chase — release a butterfly, watch your pet chase it
-- Dangling links tally — unresolved `[[links]]` shown on the dashboard; fixing them counts as progress
-
-### v1.2 — Scene & Cosmetics
-- Companion pets — up to 2 optional companions celebrating alongside your main pet
-- Cosmetics — hats, scarves, and accessories with layered sprite rendering
-- Seasonal backgrounds — spring, summer, autumn, and winter scenes
 
 ---
 
