@@ -10,7 +10,9 @@ Your vault companion that celebrates you.
 
 <!-- TODO: Add screenshot or GIF demo here -->
 
-If you've ever wished for a personal cheerleader to celebrate the progress in your Obsidian vault, Cheers! is for you. Cheers! puts an animated, vault-aware cat companion in your Obsidian sidebar. As you work in the vault, your companion notices — and celebrates. Whether you create a note, check off a task, reach a word goal (daily and per-document), or create a new link, your companion responds with fireworks and a cheerful status bar message.
+If you've ever wished for a personal cheerleader to celebrate the progress in your Obsidian vault, Cheers! is for you. 
+
+Cheers! puts an animated, vault-aware cat companion in your Obsidian sidebar. As you work in the vault, your companion notices — and celebrates. Whether you create a note, check off a task, reach a word goal (daily and per-document), or create a new link, your companion responds with fireworks and a cheerful status bar message.
 
 Personalize the activities you want celebrated. Switch to Daily Stats for non-animated tallies.
 
