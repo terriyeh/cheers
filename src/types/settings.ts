@@ -25,8 +25,6 @@ export interface CheersSettings {
 	petName: string;
 	/** Name of the user (what pet calls them) */
 	userName: string;
-	/** Whether the welcome modal has been shown */
-	hasCompletedWelcome: boolean;
 	/** Movement speed (0-100%): 0-60 = walking, 61-100 = running */
 	movementSpeed: number;
 	/** Celebration settings */
@@ -52,14 +50,13 @@ export interface CheersSettings {
 export const DEFAULT_SETTINGS: CheersSettings = {
 	petName: 'Kit',
 	userName: '',
-	hasCompletedWelcome: false,
 	movementSpeed: 50,
 	celebrations: {
 		onNoteCreate: true,
 		onTaskComplete: true,
 		onLinkCreate: true,
-		onWordGoal: false,
-		dailyWordGoal: null,
+		onWordGoal: true,
+		dailyWordGoal: 1667,
 	},
 	dashboardColorMode: 'warm',
 };

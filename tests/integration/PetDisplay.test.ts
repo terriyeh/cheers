@@ -119,7 +119,7 @@ describe('PetDisplay Integration', () => {
 
       petView.transitionState('celebration');
 
-      vi.advanceTimersByTime(4319);
+      vi.advanceTimersByTime(CELEBRATION_OVERLAY_CONSTANTS.CELEBRATION_DURATION_MS - 1);
       expect(petView.getCurrentState()).toBe('celebration');
 
       vi.advanceTimersByTime(1);
@@ -200,7 +200,7 @@ describe('PetDisplay Integration', () => {
       petView.transitionState('celebration');
 
       // Transition to petting right before celebration would complete
-      vi.advanceTimersByTime(4319);
+      vi.advanceTimersByTime(CELEBRATION_OVERLAY_CONSTANTS.CELEBRATION_DURATION_MS - 1);
       petView.transitionState('petting');
 
       // Advance past where celebration would have completed

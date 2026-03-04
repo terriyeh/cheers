@@ -4,7 +4,6 @@ import { PetStateMachine } from '../pet/PetStateMachine';
 import PetComponent from '../components/Pet.svelte';
 import StatsComponent from '../components/Stats.svelte';
 import type CheersPlugin from '../main';
-import { WelcomeModal } from '../modals/WelcomeModal';
 import { PET_SPRITES, ASSET_DIRECTORIES, getTimeOfDayBackground } from '../utils/asset-paths';
 import { CelebrationService } from '../celebrations/CelebrationService';
 
@@ -84,22 +83,10 @@ export class PetView extends ItemView {
    */
   async onOpen(): Promise<void> {
     try {
-      // Show welcome modal on first run
       // Access plugin instance from internal registry (may break with Obsidian API changes)
-      // Type assertion required as this uses undocumented Obsidian API
-      interface AppWithPlugins {
-        plugins: { plugins: Record<string, unknown> };
-      }
-      const appWithPlugins = this.app as unknown as AppWithPlugins;
-      let plugin: CheersPlugin | undefined;
-      if (appWithPlugins.plugins?.plugins && typeof appWithPlugins.plugins.plugins === 'object' && 'cheers' in appWithPlugins.plugins.plugins) {
-        plugin = appWithPlugins.plugins.plugins['cheers'] as CheersPlugin;
-        if (plugin && !plugin.settings.hasCompletedWelcome) {
-          new WelcomeModal(plugin).open();
-        }
-      }
-
-      // Store plugin reference and reset tab state
+      const appWithPlugins = this.app as any;
+      const plugin: CheersPlugin | undefined =
+        appWithPlugins.plugins?.plugins?.['cheers'] as CheersPlugin | undefined;
       this.plugin = plugin ?? null;
       this.activeTab = 'pet';
 

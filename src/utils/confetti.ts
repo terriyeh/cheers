@@ -11,7 +11,7 @@
 import { CELEBRATION_OVERLAY_CONSTANTS } from './celebration-constants';
 
 /** Cheerful, theme-independent particle color palette */
-const CONFETTI_COLORS = ['#f2d74e', '#ff9a91', '#a8e6cf', '#95c3de', '#c8b8f8', '#ffb347'] as const;
+const CONFETTI_COLORS = ['#ff6abc', '#fbc534', '#4f3cf8', '#f68217', '#57bbff', '#ff3131'] as const;
 
 /** Particle shape variants (matched by CSS [data-shape] selectors in Pet.svelte) */
 const CONFETTI_SHAPES = ['square', 'rect', 'circle'] as const;

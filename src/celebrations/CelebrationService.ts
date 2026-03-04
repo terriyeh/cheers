@@ -31,7 +31,7 @@ export class CelebrationService {
 	private static readonly MAX_CONTENT_LENGTH = 1000000; // 1MB of text (~500 pages)
 	/** Maximum value stored in any daily activity counter. Prevents inflated stats from large files. */
 	private static readonly MAX_DAILY_COUNTER = 100_000;
-	// Note: Celebration duration uses CELEBRATION_OVERLAY_CONSTANTS.CELEBRATION_DURATION_MS (4320ms)
+	// Note: Celebration duration uses CELEBRATION_OVERLAY_CONSTANTS.CELEBRATION_DURATION_MS (5000ms)
 
 	private plugin: CheersPlugin;
 
@@ -518,7 +518,7 @@ export class CelebrationService {
 			}
 
 			// Success - schedule flag reset after celebration animation completes
-			// Uses canonical celebration duration (4320ms / 4.32 seconds)
+			// Uses canonical celebration duration (5000ms / 5 seconds)
 			this.celebrationTimeout = window.setTimeout(() => {
 				this.isCelebrating = false;
 				this.celebrationTimeout = undefined;

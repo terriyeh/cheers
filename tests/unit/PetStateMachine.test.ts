@@ -390,7 +390,7 @@ describe('PetStateMachine', () => {
   describe('state configuration verification', () => {
     it('should have correct duration for celebration state (CELEBRATION_OVERLAY_CONSTANTS.CELEBRATION_DURATION_MSms)', () => {
       stateMachine.transition('celebration');
-      vi.advanceTimersByTime(4319);
+      vi.advanceTimersByTime(CELEBRATION_OVERLAY_CONSTANTS.CELEBRATION_DURATION_MS - 1);
       expect(stateMachine.getCurrentState()).toBe('celebration');
 
       vi.advanceTimersByTime(1);

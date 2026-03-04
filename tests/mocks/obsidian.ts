@@ -88,7 +88,6 @@ export class App {
           settings: {
             petName: 'Kit',
             userName: '',
-            hasCompletedWelcome: false,
             movementSpeed: 50,
           },
         },
