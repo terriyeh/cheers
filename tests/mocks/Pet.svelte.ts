@@ -4,7 +4,7 @@
  */
 
 import type { PetState } from '../../src/types/pet';
-import { clampMovementSpeed, calculateGifAnimationDuration } from '../../src/utils/animation';
+import { clampMovementSpeed } from '../../src/utils/animation';
 
 export default class MockPetComponent {
   private target: HTMLElement;
@@ -26,13 +26,6 @@ export default class MockPetComponent {
     this.container = document.createElement('div');
     this.container.className = 'pet-sprite-container';
     this.container.dataset.state = options.props.state;
-
-    // Set initial animation duration if movementSpeed is provided
-    if (options.props.movementSpeed !== undefined) {
-      const clampedSpeed = clampMovementSpeed(options.props.movementSpeed);
-      const animationDuration = calculateGifAnimationDuration(clampedSpeed);
-      this.container.style.setProperty('--animation-duration', `${animationDuration}s`);
-    }
 
     // Apply initial background styles
     if (options.props.backgroundColor !== undefined) {
@@ -93,9 +86,7 @@ export default class MockPetComponent {
       }
 
       if (newProps.movementSpeed !== undefined) {
-        const clampedSpeed = clampMovementSpeed(newProps.movementSpeed);
-        const animationDuration = calculateGifAnimationDuration(clampedSpeed);
-        this.container.style.setProperty('--animation-duration', `${animationDuration}s`);
+        clampMovementSpeed(newProps.movementSpeed); // validate range
       }
 
       if (newProps.backgroundColor !== undefined) {

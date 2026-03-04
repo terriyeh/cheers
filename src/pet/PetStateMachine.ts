@@ -33,7 +33,7 @@ export class PetStateMachine {
         returnsToWalking: false,
       },
       celebration: {
-        duration: CELEBRATION_OVERLAY_CONSTANTS.CELEBRATION_DURATION_MS, // 4.32 seconds (confetti rain celebration duration)
+        duration: CELEBRATION_OVERLAY_CONSTANTS.CELEBRATION_DURATION_MS, // 5 seconds (confetti rain celebration duration)
         returnsToWalking: true,
       },
       petting: {
@@ -62,7 +62,7 @@ export class PetStateMachine {
   /**
    * Transition to a new state
    * @param newState - The state to transition to
-   * @param returnTarget - Optional state to return to after duration (defaults to 'idle')
+   * @param returnTarget - Optional state to return to after duration (defaults to 'walking')
    * @returns true if transition occurred, false if already in that state
    * @throws Error if state is invalid
    */
@@ -103,7 +103,7 @@ export class PetStateMachine {
   /**
    * Schedule automatic return to target state after duration
    * @param duration - Duration in milliseconds before returning
-   * @param targetState - State to return to after duration (usually 'idle')
+   * @param targetState - State to return to after duration (usually 'walking')
    */
   private scheduleReturnTo(duration: number, targetState: PetState): void {
     this.transitionTimer = setTimeout(() => {
