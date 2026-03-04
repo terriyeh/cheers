@@ -74,7 +74,6 @@ describe('CelebrationService', () => {
 			settings: {
 				petName: 'Kit',
 				userName: '',
-				hasCompletedWelcome: true,
 				movementSpeed: 50,
 				celebrations: {
 					onNoteCreate: true,

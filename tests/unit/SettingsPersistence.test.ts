@@ -12,7 +12,8 @@ describe('Settings Persistence', () => {
 			expect(DEFAULT_SETTINGS).toBeDefined();
 			expect(DEFAULT_SETTINGS.petName).toBe('Kit');
 			expect(DEFAULT_SETTINGS.userName).toBe('');
-			expect(DEFAULT_SETTINGS.hasCompletedWelcome).toBe(false);
+			expect(DEFAULT_SETTINGS.celebrations.onWordGoal).toBe(true);
+			expect(DEFAULT_SETTINGS.celebrations.dailyWordGoal).toBe(1667);
 		});
 
 		it('default pet name passes validation', () => {
@@ -37,20 +38,17 @@ describe('Settings Persistence', () => {
 
 			expect(merged.petName).toBe('Kit');
 			expect(merged.userName).toBe('');
-			expect(merged.hasCompletedWelcome).toBe(false);
 		});
 
 		it('overrides defaults with loaded data', () => {
 			const loadedData = {
 				petName: 'Buddy',
 				userName: 'Alice',
-				hasCompletedWelcome: true,
 			};
 			const merged = Object.assign({}, DEFAULT_SETTINGS, loadedData);
 
 			expect(merged.petName).toBe('Buddy');
 			expect(merged.userName).toBe('Alice');
-			expect(merged.hasCompletedWelcome).toBe(true);
 		});
 
 		it('merges partial loaded data with defaults', () => {
@@ -65,22 +63,6 @@ describe('Settings Persistence', () => {
 
 			expect(merged.petName).toBe('Luna');
 			expect(merged.userName).toBe(''); // From defaults
-			expect(merged.hasCompletedWelcome).toBe(false); // From defaults
-		});
-
-		it('handles welcome flag independently', () => {
-			const loadedData = {
-				hasCompletedWelcome: true,
-			};
-			const merged = Object.assign(
-				{},
-				DEFAULT_SETTINGS,
-				loadedData
-			) as CheersSettings;
-
-			expect(merged.petName).toBe('Kit'); // From defaults
-			expect(merged.userName).toBe(''); // From defaults
-			expect(merged.hasCompletedWelcome).toBe(true); // From loaded
 		});
 	});
 
@@ -89,18 +71,16 @@ describe('Settings Persistence', () => {
 			const loadedData = {
 				petName: 'Max',
 				userName: 'Bob',
-				hasCompletedWelcome: true,
 			};
 			const merged = Object.assign({}, DEFAULT_SETTINGS, loadedData);
 
 			// Verify all expected fields exist
 			expect(merged).toHaveProperty('petName');
 			expect(merged).toHaveProperty('userName');
-			expect(merged).toHaveProperty('hasCompletedWelcome');
 			expect(merged).toHaveProperty('movementSpeed');
 
 			// Verify no unexpected fields
-			const expectedKeys = ['petName', 'userName', 'hasCompletedWelcome', 'movementSpeed', 'celebrations', 'dashboardColorMode'];
+			const expectedKeys = ['petName', 'userName', 'movementSpeed', 'celebrations', 'dashboardColorMode'];
 			const actualKeys = Object.keys(merged);
 			expect(actualKeys.sort()).toEqual(expectedKeys.sort());
 		});
@@ -130,67 +110,39 @@ describe('Settings Persistence', () => {
 		});
 	});
 
-	describe('First-Run Detection', () => {
-		it('detects first run with default settings', () => {
-			const settings = { ...DEFAULT_SETTINGS };
-			expect(settings.hasCompletedWelcome).toBe(false);
-		});
-
-		it('detects completed welcome', () => {
-			const settings = {
-				...DEFAULT_SETTINGS,
-				hasCompletedWelcome: true,
-			};
-			expect(settings.hasCompletedWelcome).toBe(true);
-		});
-
-		it('detects first run even with custom names', () => {
-			const settings = {
-				...DEFAULT_SETTINGS,
-				petName: 'Custom',
-				userName: 'User',
-			};
-			expect(settings.hasCompletedWelcome).toBe(false);
-		});
-	});
-
 	describe('Settings Validation Scenarios', () => {
 		it('creates valid settings object for save', () => {
-			const settings: CheersSettings = {
+			const settings = {
 				petName: 'Fluffy',
 				userName: 'Charlie',
-				hasCompletedWelcome: true,
-			};
+			} as Partial<CheersSettings>;
 
 			// Verify structure matches interface
 			expect(typeof settings.petName).toBe('string');
 			expect(typeof settings.userName).toBe('string');
-			expect(typeof settings.hasCompletedWelcome).toBe('boolean');
 		});
 
 		it('handles empty user name correctly', () => {
-			const settings: CheersSettings = {
+			const settings = {
 				petName: 'Solo',
 				userName: '',
-				hasCompletedWelcome: true,
-			};
+			} as Partial<CheersSettings>;
 
 			expect(settings.userName).toBe('');
-			expect(settings.userName.length).toBe(0);
+			expect(settings.userName!.length).toBe(0);
 		});
 
 		it('preserves exact string values', () => {
 			const testName = 'Test Name 123';
-			const settings: CheersSettings = {
+			const settings = {
 				petName: testName,
 				userName: testName,
-				hasCompletedWelcome: false,
-			};
+			} as Partial<CheersSettings>;
 
 			expect(settings.petName).toBe(testName);
 			expect(settings.userName).toBe(testName);
 			// Verify no trimming or transformation
-			expect(settings.petName.length).toBe(testName.length);
+			expect(settings.petName!.length).toBe(testName.length);
 		});
 	});
 
@@ -198,7 +150,7 @@ describe('Settings Persistence', () => {
 		let settings: CheersSettings;
 
 		beforeEach(() => {
-			settings = { ...DEFAULT_SETTINGS };
+			settings = { ...DEFAULT_SETTINGS, celebrations: { ...DEFAULT_SETTINGS.celebrations } };
 		});
 
 		it('updates pet name while preserving other fields', () => {
@@ -206,7 +158,6 @@ describe('Settings Persistence', () => {
 
 			expect(settings.petName).toBe('NewName');
 			expect(settings.userName).toBe('');
-			expect(settings.hasCompletedWelcome).toBe(false);
 		});
 
 		it('updates user name while preserving other fields', () => {
@@ -214,25 +165,14 @@ describe('Settings Persistence', () => {
 
 			expect(settings.petName).toBe('Kit');
 			expect(settings.userName).toBe('NewUser');
-			expect(settings.hasCompletedWelcome).toBe(false);
-		});
-
-		it('marks welcome as completed', () => {
-			settings.hasCompletedWelcome = true;
-
-			expect(settings.petName).toBe('Kit');
-			expect(settings.userName).toBe('');
-			expect(settings.hasCompletedWelcome).toBe(true);
 		});
 
 		it('updates all fields simultaneously', () => {
 			settings.petName = 'Rover';
 			settings.userName = 'David';
-			settings.hasCompletedWelcome = true;
 
 			expect(settings.petName).toBe('Rover');
 			expect(settings.userName).toBe('David');
-			expect(settings.hasCompletedWelcome).toBe(true);
 		});
 	});
 

@@ -4,7 +4,6 @@ import { PetView, VIEW_TYPE_PET } from './views/PetView';
 import type { PetState } from './types/pet';
 import type { CheersSettings, DailyWordData } from './types/settings';
 import { DEFAULT_SETTINGS, VALIDATION_RULES } from './types/settings';
-import { WelcomeModal } from './modals/WelcomeModal';
 import { CelebrationService } from './celebrations/CelebrationService';
 import { CheersSettingTab } from './settings/SettingsTab';
 import { parseDailyWordData } from './utils/daily-word-data';
@@ -69,9 +68,10 @@ export default class CheersPlugin extends Plugin {
 		// Add command to edit pet settings
 		this.addCommand({
 			id: 'edit-pet-settings',
-			name: 'Edit pet settings',
+			name: 'Edit settings',
 			callback: () => {
-				new WelcomeModal(this).open();
+				(this.app as any).setting.open();
+				(this.app as any).setting.openTabById('cheers');
 			},
 		});
 
@@ -257,11 +257,6 @@ Available states:
 		) {
 			console.warn(`Invalid movementSpeed loaded, using default: ${DEFAULT_SETTINGS.movementSpeed}`);
 			validated.movementSpeed = DEFAULT_SETTINGS.movementSpeed;
-		}
-
-		// Validate hasCompletedWelcome
-		if (typeof validated.hasCompletedWelcome !== 'boolean') {
-			validated.hasCompletedWelcome = DEFAULT_SETTINGS.hasCompletedWelcome;
 		}
 
 		// Validate dashboardColorMode

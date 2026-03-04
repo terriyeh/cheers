@@ -12,7 +12,7 @@ import { CELEBRATION_OVERLAY_CONSTANTS } from '../../src/utils/celebration-const
 const { CONFETTI_COUNT, CONFETTI_CLEANUP_GRACE_MS, CELEBRATION_DURATION_MS } = CELEBRATION_OVERLAY_CONSTANTS;
 
 /** Confetti palette — must match the CONFETTI_COLORS array in confetti.ts */
-const VALID_COLORS = ['#f2d74e', '#ff9a91', '#a8e6cf', '#95c3de', '#c8b8f8', '#ffb347'];
+const VALID_COLORS = ['#ff6abc', '#fbc534', '#4f3cf8', '#f68217', '#57bbff', '#ff3131'];
 /** Shape variants — must match CONFETTI_SHAPES in confetti.ts */
 const VALID_SHAPES = ['square', 'rect', 'circle'];
 
@@ -108,7 +108,7 @@ describe('spawnConfettiRain()', () => {
       });
     });
 
-    it('should use only colors from the defined 6-color palette', () => {
+    it('should use only colors from the defined palette', () => {
       spawnConfettiRain(container, 1000);
       const particles = Array.from(container.querySelectorAll('.vp-confetti-particle'));
       particles.forEach(p => {
@@ -117,7 +117,7 @@ describe('spawnConfettiRain()', () => {
       });
     });
 
-    it('should cycle through all 6 palette colors across the 35 particles', () => {
+    it('should cycle through all palette colors across the 35 particles', () => {
       spawnConfettiRain(container, 1000);
       const particles = Array.from(container.querySelectorAll('.vp-confetti-particle'));
       const colors = particles.map(p => (p as HTMLElement).style.getPropertyValue('--color').trim());

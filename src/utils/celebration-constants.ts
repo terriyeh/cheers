@@ -13,12 +13,12 @@ export const CELEBRATION_OVERLAY_CONSTANTS = {
   CONFETTI_CLEANUP_GRACE_MS: 500,
   /**
    * Total celebration duration in milliseconds.
-   * 4.32 seconds (confetti rain celebration duration)
+   * 5 seconds (confetti rain celebration duration)
    *
    * @see src/pet/PetStateMachine.ts - State machine uses this duration
    * @see tests/fixtures/petStates.ts - Test fixtures reference this value
    */
-  CELEBRATION_DURATION_MS: 4320,
+  CELEBRATION_DURATION_MS: 5000,
 } as const;
 
 /**

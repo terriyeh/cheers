@@ -111,36 +111,46 @@ export class CheersSettingTab extends PluginSettingTab {
 			);
 
 		if (this.plugin.settings.celebrations.onWordGoal) {
-			// Daily word goal input
+			// wordGoalError is assigned synchronously after new Setting() below.
+			// The onChange closure only fires on user input, so the assignment is
+			// always complete before the closure runs. The ! assertion satisfies
+			// TypeScript's definite-assignment check without reordering the DOM.
+			let wordGoalError!: HTMLElement;
+
 			new Setting(containerEl)
 				.setName('Daily word goal')
-				.setDesc('Words written today across your vault (resets at midnight). Leave blank to use per-note goals only.')
+				.setDesc('Words written today across your vault (resets at midnight).')
 				.addText((text) =>
 					text
-						.setPlaceholder('e.g. 500')
+						.setPlaceholder('e.g. 1667')
 						.setValue(this.plugin.settings.celebrations.dailyWordGoal?.toString() ?? '')
 						.onChange(async (value) => {
 							const num = parseInt(value.trim(), 10);
-							this.plugin.settings.celebrations.dailyWordGoal =
-								Number.isFinite(num) && num > 0 && num <= 100_000 ? num : null;
-							await this.plugin.saveSettings();
-							this.plugin.petView?.updateStatsComponent();
+							if (Number.isFinite(num) && num > 0 && num <= 100_000) {
+								this.plugin.settings.celebrations.dailyWordGoal = num;
+								await this.plugin.saveSettings();
+								wordGoalError.style.display = 'none';
+								this.plugin.petView?.updateStatsComponent();
+							} else {
+								wordGoalError.style.display = 'block';
+							}
 						})
 				);
+
+			// Error appears below the input (correct visual order)
+			wordGoalError = containerEl.createEl('p', {
+				text: 'Daily word goal is required when word count celebrations are enabled.',
+				cls: 'setting-item-description',
+			});
+			wordGoalError.style.color = 'var(--text-error)';
+			wordGoalError.style.display =
+				this.plugin.settings.celebrations.dailyWordGoal === null ? 'block' : 'none';
 
 			// Per-note goal hint
 			containerEl.createEl('p', {
 				text: "To add a note-specific word goal, add the word-goal file property and enter a numerical value as the word target for that file. For example, word-goal: 500 sets a word target of 500 for that file.",
 				cls: 'setting-item-description',
 			});
-
-			// Warning when no goal type is configured
-			if (this.plugin.settings.celebrations.dailyWordGoal === null) {
-				containerEl.createEl('p', {
-					text: '⚠ At least one goal type must be configured: set a daily goal above, or add word-goal to a note\'s frontmatter.',
-					cls: 'setting-item-description',
-				});
-			}
 		}
 
 		containerEl.createEl('h3', { text: 'Dashboard' });
