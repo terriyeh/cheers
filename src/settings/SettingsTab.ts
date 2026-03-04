@@ -111,12 +111,6 @@ export class CheersSettingTab extends PluginSettingTab {
 			);
 
 		if (this.plugin.settings.celebrations.onWordGoal) {
-			// wordGoalError is assigned synchronously after new Setting() below.
-			// The onChange closure only fires on user input, so the assignment is
-			// always complete before the closure runs. The ! assertion satisfies
-			// TypeScript's definite-assignment check without reordering the DOM.
-			let wordGoalError!: HTMLElement;
-
 			new Setting(containerEl)
 				.setName('Daily word goal')
 				.setDesc('Words written today across your vault (resets at midnight).')
@@ -126,21 +120,22 @@ export class CheersSettingTab extends PluginSettingTab {
 						.setValue(this.plugin.settings.celebrations.dailyWordGoal?.toString() ?? '')
 						.onChange(async (value) => {
 							const num = parseInt(value.trim(), 10);
+							const errorEl = containerEl.querySelector<HTMLElement>('.cheers-word-goal-error');
 							if (Number.isFinite(num) && num > 0 && num <= 100_000) {
 								this.plugin.settings.celebrations.dailyWordGoal = num;
 								await this.plugin.saveSettings();
-								wordGoalError.style.display = 'none';
+								if (errorEl) errorEl.style.display = 'none';
 								this.plugin.petView?.updateStatsComponent();
 							} else {
-								wordGoalError.style.display = 'block';
+								if (errorEl) errorEl.style.display = 'block';
 							}
 						})
 				);
 
 			// Error appears below the input (correct visual order)
-			wordGoalError = containerEl.createEl('p', {
+			const wordGoalError = containerEl.createEl('p', {
 				text: 'Daily word goal is required when word count celebrations are enabled.',
-				cls: 'setting-item-description',
+				cls: 'setting-item-description cheers-word-goal-error',
 			});
 			wordGoalError.style.color = 'var(--text-error)';
 			wordGoalError.style.display =
