@@ -195,8 +195,6 @@
   $: ariaLabel = pettingEnabled
     ? `Pet ${petName}`
     : `Pet ${petName} (currently busy)`;
-  $: showCelebration = state === 'celebration';
-
   // Spawn confetti exactly once when entering celebration state.
   // prevState is a plain `let` variable — assigning inside $: does NOT trigger re-run
   // (Svelte 4 only tracks reactive dependencies at block entry, not plain let assignments).

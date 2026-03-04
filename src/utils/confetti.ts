@@ -60,8 +60,8 @@ export function cancelConfettiCleanup(): void {
  *
  * Each particle is a `<div class="vp-confetti-particle">` with CSS custom properties
  * controlling its color, horizontal start position, fall speed, initial rotation, and
- * animation delay. The CSS `@keyframes vp-confetti-fall` (defined in Pet.svelte with
- * `:global()`) drives all motion — no JS animation loop is used.
+ * animation delay. The CSS `@keyframes vp-confetti-fall` (injected at runtime by
+ * `ensureConfettiStyles()`) drives all motion — no JS animation loop is used.
  *
  * Cancels any in-progress cleanup before spawning, so rapid re-triggers
  * (celebration → walking → celebration within 4820ms) replace rather than accumulate.
