@@ -39,7 +39,7 @@ jobs:
         run: |
           tag="${GITHUB_REF#refs/tags/}"
           gh release create "$tag" \
-            --title "$tag" \
+            --title "Cheers! $tag" \
             --generate-notes \
             main.js \
             manifest.json
