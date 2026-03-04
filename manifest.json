@@ -3,7 +3,7 @@
 	"name": "Cheers!",
 	"version": "0.1.0",
 	"minAppVersion": "1.0.0",
-	"description": "Your vault companion that celebrates you",
+	"description": "A vault companion that celebrates your progress.",
 	"author": "Terri Yeh",
 	"authorUrl": "https://github.com/terriyeh/cheers",
 	"isDesktopOnly": false

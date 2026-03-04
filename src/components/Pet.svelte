@@ -6,7 +6,9 @@
     clampMovementSpeed,
     calculateSpeedInPixelsPerSecond,
   } from '../utils/animation';
-  import { PET_SPRITES, EFFECT_SPRITES, BACKGROUNDS } from '../utils/asset-paths';
+  import { PET_SPRITES, BACKGROUNDS } from '../utils/asset-paths';
+  import { CELEBRATION_OVERLAY_CONSTANTS } from '../utils/celebration-constants';
+  import { spawnConfettiRain, cancelConfettiCleanup } from '../utils/confetti';
 
   /**
    * Current state of the pet
@@ -27,11 +29,6 @@
    * Path to the celebration sprite GIF (passed from PetView)
    */
   export let celebrationSpritePath: string = `assets/${PET_SPRITES.CELEBRATING}`;
-
-  /**
-   * Path to the fireworks overlay GIF (passed from PetView)
-   */
-  export let fireworksSpritePath: string = `assets/effects/${EFFECT_SPRITES.FIREWORKS}`;
 
   /**
    * Path to the background scene (passed from PetView)
@@ -69,7 +66,7 @@
    * Each state has its own GIF animation
    * Walking: cat-walking-6fps.gif
    * Petting: cat-petting-6fps.gif
-   * Celebration: cat-celebrating-6fps.gif (plus fireworks overlay)
+   * Celebration: cat-celebrating-6fps.gif
    */
   $: petSpritePath = state === 'celebration'
     ? celebrationSpritePath
@@ -200,13 +197,24 @@
     : `Pet ${petName} (currently busy)`;
   $: showCelebration = state === 'celebration';
 
+  // Spawn confetti exactly once when entering celebration state.
+  // prevState is a plain `let` variable — assigning inside $: does NOT trigger re-run
+  // (Svelte 4 only tracks reactive dependencies at block entry, not plain let assignments).
+  let prevState: PetState = 'walking';
+  $: {
+    if (state === 'celebration' && prevState !== 'celebration' && containerEl) {
+      spawnConfettiRain(containerEl, CELEBRATION_OVERLAY_CONSTANTS.CELEBRATION_DURATION_MS);
+    }
+    prevState = state;
+  }
+
   // Recalculate movement duration when speed changes
   // Maintains constant px/s speed across different container widths
   $: if (speedInPixelsPerSecond && containerEl) {
     updateMovementRange();
   }
 
-  // Celebration animation handled by GIF overlay (browser-native frame animation)
+  // Confetti rain is spawned by spawnConfettiRain() into containerEl on celebration entry.
   // Walking animation handled by GIF (browser-native frame animation)
 
   onMount(() => {
@@ -233,18 +241,25 @@
 
       // Return cleanup function for fallback
       return () => window.removeEventListener('resize', updateMovementRangeDebounced);
+    } finally {
+      // Fallback: if component mounts already in celebration state (e.g. restored session
+      // or test harness passing state='celebration' as initial prop), containerEl is now
+      // populated so spawn directly. prevState = 'celebration' prevents the $: block
+      // from double-spawning if Svelte re-evaluates it after mount.
+      if (state === 'celebration' && containerEl) {
+        spawnConfettiRain(containerEl, CELEBRATION_OVERLAY_CONSTANTS.CELEBRATION_DURATION_MS);
+        prevState = 'celebration';
+      }
     }
   });
 
   onDestroy(() => {
     // Explicit cleanup to help garbage collection
     // ResizeObserver cleanup is handled by onMount return function
-    // Note: GIF animations (walking and celebration) handled by browser, no cleanup needed
+    // Cancel any in-flight confetti cleanup timer (prevents setTimeout firing on detached nodes)
+    cancelConfettiCleanup();
     containerEl = null;
   });
-
-  // All animations (walking and celebration) are handled natively by the browser via GIF
-  // No JavaScript animation loops needed
 </script>
 
 <div
@@ -280,29 +295,6 @@
     </div>
   </div>
 
-  <!-- Celebration overlay - 3-firework display pattern -->
-  {#if showCelebration}
-    <div class="celebration-overlay" aria-hidden="true">
-      <!-- Center firework (top) -->
-      <img
-        class="celebration-sprite celebration-sprite-center"
-        src={fireworksSpritePath}
-        alt=""
-      />
-      <!-- Left firework (lower) -->
-      <img
-        class="celebration-sprite celebration-sprite-left"
-        src={fireworksSpritePath}
-        alt=""
-      />
-      <!-- Right firework (lower) -->
-      <img
-        class="celebration-sprite celebration-sprite-right"
-        src={fireworksSpritePath}
-        alt=""
-      />
-    </div>
-  {/if}
 </div>
 
 <style>
@@ -380,7 +372,7 @@
   /* Browser natively plays GIF frames, reducing CSS complexity */
   /* GIF changes based on state: walking or petting */
   /* Walking: cat-walking-6fps.gif, Petting: cat-petting-6fps.gif */
-  /* Celebration uses fireworks overlay (fireworks.gif) */
+  /* Celebration uses confetti rain (CSS @keyframes via spawnConfettiRain) */
 
   /* Apply movement animations - pet moves continuously in all states */
   /* Movement speed is controlled by --movement-duration CSS variable */
@@ -428,63 +420,55 @@
     }
   }
 
-  /* Celebration overlay - container for 3-firework display */
-  .celebration-overlay {
+  /* ── Confetti rain ──────────────────────────────────────────────────────────── */
+
+  /*
+   * :global() is REQUIRED here.
+   * Particles are created via document.createElement() and appended directly to
+   * containerEl — they are NOT rendered by Svelte's template. Svelte's scoped CSS
+   * compiler adds a hash suffix (e.g. .vp-confetti-particle.svelte-abc123) to all
+   * class selectors. Dynamically created elements never receive this hash attribute,
+   * so without :global() these rules are silently ignored and particles are invisible.
+   */
+  :global(.vp-confetti-particle) {
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 20; /* Above pet */
+    top: -12px;
+    left: var(--left);
+    width: 8px;
+    height: 10px;
+    background-color: var(--color);
+    border-radius: 1px;
     pointer-events: none;
+    z-index: 20;
+    animation: vp-confetti-fall var(--duration, 3s) var(--delay, 0s) linear infinite;
   }
 
-  .celebration-sprite {
-    position: absolute;
-    display: block;
-    width: var(--celebration-display-size, 128px); /* FIREWORK_DISPLAY_WIDTH - Scales down from 256px native GIF size */
-    height: var(--celebration-display-size, 128px); /* FIREWORK_DISPLAY_HEIGHT - See celebration-constants.ts */
-    image-rendering: auto; /* Smooth rendering for celebration effects */
-    /* GIF animation is handled natively by the browser */
-  }
+  /* Shape variants */
+  :global(.vp-confetti-particle[data-shape="circle"]) { width: 8px;  height: 8px;  border-radius: 50%; }
+  :global(.vp-confetti-particle[data-shape="rect"])   { width: 12px; height: 5px;  border-radius: 1px; }
+  :global(.vp-confetti-particle[data-shape="square"]) { width: 8px;  height: 8px;  border-radius: 1px; }
 
-  /* Center firework - top position, horizontally centered, plays immediately */
-  /* @see CELEBRATION_OVERLAY_CONSTANTS in src/utils/celebration-constants.ts */
-  .celebration-sprite-center {
-    top: 80px; /* CENTER_FIREWORK_TOP_PX - Upper third position */
-    left: 50%;
-    transform: translateX(-50%);
-    animation: fadeIn 0.3s ease-in forwards; /* FADE_IN_DURATION_S */
-    animation-delay: 0s; /* CENTER_DELAY_S */
-  }
-
-  /* Left firework - lower position, 200px left of center, plays 0.5s after center */
-  /* @see CELEBRATION_OVERLAY_CONSTANTS in src/utils/celebration-constants.ts */
-  .celebration-sprite-left {
-    top: 120px; /* SIDE_FIREWORK_TOP_PX - Creates 40px depth offset from center */
-    left: calc(50% - 200px - 64px); /* Center - HORIZONTAL_SPACING_PX - HALF_DISPLAY_WIDTH */
-    opacity: 0;
-    animation: fadeIn 0.3s ease-in forwards; /* FADE_IN_DURATION_S */
-    animation-delay: 0.5s; /* LEFT_DELAY_S = STAGGER_INTERVAL_S */
-  }
-
-  /* Right firework - lower position, 200px right of center, plays 0.5s after left */
-  /* @see CELEBRATION_OVERLAY_CONSTANTS in src/utils/celebration-constants.ts */
-  .celebration-sprite-right {
-    top: 120px; /* SIDE_FIREWORK_TOP_PX - Creates 40px depth offset from center */
-    left: calc(50% + 200px - 64px); /* Center + HORIZONTAL_SPACING_PX - HALF_DISPLAY_WIDTH */
-    opacity: 0;
-    animation: fadeIn 0.3s ease-in forwards; /* FADE_IN_DURATION_S */
-    animation-delay: 1s; /* RIGHT_DELAY_S = 2 × STAGGER_INTERVAL_S */
-  }
-
-  /* Fade in animation for staggered fireworks reveal */
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
-  }
+  /*
+   * Sway pattern: fixed px lateral drift gives visible wobble independent of particle size.
+   * translateX uses px NOT % — in CSS transforms, % is relative to the element's own
+   * width, not the container. 5% of an 8px particle = 0.4px (imperceptible drift).
+   * ±8–20px gives ~3–8% of a 250px sidebar width, which is visually meaningful.
+   *
+   * rotateZ only — rotateY omitted: a genuine Y-axis flip requires a perspective context
+   * (perspective: Xpx on an ancestor). The sidebar has none, so rotateY produces a flat
+   * horizontal-squish artifact and forces GPU compositing layers with zero visual payoff.
+   *
+   * No opacity animation — avoids the hard 0.3→1 flash at each loop boundary that occurs
+   * when animation-iteration-count: infinite resets from 100% back to 0%.
+   *
+   * translateY uses px NOT % — same reason as translateX. 115% of a 10px particle = 11.5px
+   * (imperceptible fall). Fixed px values (0→420px) travel the full container height.
+   */
+  /*
+   * @keyframes vp-confetti-fall is intentionally NOT defined here.
+   * Svelte 4 silently drops @keyframes rules inside :global{} block syntax —
+   * only the animation reference is emitted, never the definition.
+   * The keyframes are injected at runtime via ensureConfettiStyles() in
+   * src/utils/confetti.ts, called at the start of every spawnConfettiRain() invocation.
+   */
 </style>

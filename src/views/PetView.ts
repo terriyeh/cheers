@@ -5,7 +5,7 @@ import PetComponent from '../components/Pet.svelte';
 import StatsComponent from '../components/Stats.svelte';
 import type CheersPlugin from '../main';
 import { WelcomeModal } from '../modals/WelcomeModal';
-import { PET_SPRITES, EFFECT_SPRITES, ASSET_DIRECTORIES, getTimeOfDayBackground } from '../utils/asset-paths';
+import { PET_SPRITES, ASSET_DIRECTORIES, getTimeOfDayBackground } from '../utils/asset-paths';
 import { CelebrationService } from '../celebrations/CelebrationService';
 
 // Build-time constant injected by esbuild
@@ -154,7 +154,6 @@ export class PetView extends ItemView {
       const walkingSpritePath = this.getAssetPath(PET_SPRITES.WALKING);
       const pettingSpritePath = this.getAssetPath(PET_SPRITES.PETTING);
       const celebrationSpritePath = this.getAssetPath(PET_SPRITES.CELEBRATING);
-      const fireworksSpritePath = this.getAssetPath(EFFECT_SPRITES.FIREWORKS, ASSET_DIRECTORIES.EFFECTS);
       const bg = getTimeOfDayBackground();
       const backgroundPath = this.getAssetPath(bg.file, ASSET_DIRECTORIES.BACKGROUNDS);
       const backgroundColor = bg.skyColor;
@@ -171,7 +170,6 @@ export class PetView extends ItemView {
           walkingSpritePath: walkingSpritePath,
           pettingSpritePath: pettingSpritePath,
           celebrationSpritePath: celebrationSpritePath,
-          fireworksSpritePath: fireworksSpritePath,
           backgroundPath: backgroundPath,
           backgroundColor: backgroundColor,
           petName: petName,

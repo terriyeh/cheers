@@ -33,7 +33,7 @@ export class PetStateMachine {
         returnsToWalking: false,
       },
       celebration: {
-        duration: CELEBRATION_OVERLAY_CONSTANTS.CELEBRATION_DURATION_MS, // 4.32 seconds (matches fireworks GIF loop)
+        duration: CELEBRATION_OVERLAY_CONSTANTS.CELEBRATION_DURATION_MS, // 4.32 seconds (confetti rain celebration duration)
         returnsToWalking: true,
       },
       petting: {

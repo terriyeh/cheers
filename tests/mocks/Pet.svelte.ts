@@ -18,9 +18,6 @@ export default class MockPetComponent {
   private container!: HTMLElement;
   private wrapper!: HTMLElement;
   private sprite!: HTMLElement;
-  private heartOverlay: HTMLElement | null = null;
-  private celebrationOverlay: HTMLElement | null = null;
-
   constructor(options: { target: HTMLElement; props: any }) {
     this.target = options.target;
     this.props = options.props;
@@ -67,12 +64,6 @@ export default class MockPetComponent {
     this.container.appendChild(this.wrapper);
     this.target.appendChild(this.container);
 
-    // Add heart overlay if in petting state
-    this.updateHeartOverlay(options.props.state);
-
-    // Add celebration overlay if in celebration state
-    this.updateCelebrationOverlay(options.props.state);
-
     // Set method for updating props
     this.$set = (newProps: any) => {
       this.updateCount++;
@@ -95,8 +86,6 @@ export default class MockPetComponent {
         this.container.dataset.state = newProps.state;
         this.sprite.setAttribute('alt', `Pet is ${newProps.state}`);
         this.updateInteractiveAttributes(newProps.state, this.props.petName);
-        this.updateHeartOverlay(newProps.state);
-        this.updateCelebrationOverlay(newProps.state);
       }
 
       if (newProps.petName !== undefined) {
@@ -107,10 +96,6 @@ export default class MockPetComponent {
         const clampedSpeed = clampMovementSpeed(newProps.movementSpeed);
         const animationDuration = calculateGifAnimationDuration(clampedSpeed);
         this.container.style.setProperty('--animation-duration', `${animationDuration}s`);
-      }
-
-      if (newProps.fireworksSpritePath !== undefined) {
-        this.updateCelebrationOverlay(this.props.state);
       }
 
       if (newProps.backgroundColor !== undefined) {
@@ -181,66 +166,6 @@ export default class MockPetComponent {
     this.wrapper.setAttribute('aria-disabled', pettingEnabled ? 'false' : 'true');
     this.wrapper.setAttribute('aria-label', ariaLabel);
     this.wrapper.style.cursor = cursorStyle;
-  }
-
-  private updateHeartOverlay(state: PetState): void {
-    const showHeart = state === 'petting';
-
-    if (showHeart && !this.heartOverlay) {
-      // Create heart overlay
-      this.heartOverlay = document.createElement('div');
-      this.heartOverlay.className = 'heart-overlay';
-      this.heartOverlay.setAttribute('aria-hidden', 'true');
-
-      const heartImg = document.createElement('img');
-      heartImg.src = 'assets/heart.png';
-      heartImg.alt = '';
-
-      this.heartOverlay.appendChild(heartImg);
-      this.wrapper.appendChild(this.heartOverlay);
-    } else if (!showHeart && this.heartOverlay) {
-      // Remove heart overlay
-      this.heartOverlay.remove();
-      this.heartOverlay = null;
-    }
-  }
-
-  private updateCelebrationOverlay(state: PetState): void {
-    // Remove existing overlay
-    if (this.celebrationOverlay) {
-      this.celebrationOverlay.remove();
-      this.celebrationOverlay = null;
-    }
-
-    // Add overlay if in celebration state and fireworks path is provided
-    if (state === 'celebration' && this.props.fireworksSpritePath) {
-      this.celebrationOverlay = document.createElement('div');
-      this.celebrationOverlay.className = 'celebration-overlay';
-      this.celebrationOverlay.setAttribute('aria-hidden', 'true');
-
-      // Center firework
-      const centerSprite = document.createElement('img');
-      centerSprite.className = 'celebration-sprite celebration-sprite-center';
-      centerSprite.src = this.props.fireworksSpritePath;
-      centerSprite.alt = '';
-
-      // Left firework
-      const leftSprite = document.createElement('img');
-      leftSprite.className = 'celebration-sprite celebration-sprite-left';
-      leftSprite.src = this.props.fireworksSpritePath;
-      leftSprite.alt = '';
-
-      // Right firework
-      const rightSprite = document.createElement('img');
-      rightSprite.className = 'celebration-sprite celebration-sprite-right';
-      rightSprite.src = this.props.fireworksSpritePath;
-      rightSprite.alt = '';
-
-      this.celebrationOverlay.appendChild(centerSprite);
-      this.celebrationOverlay.appendChild(leftSprite);
-      this.celebrationOverlay.appendChild(rightSprite);
-      this.container.appendChild(this.celebrationOverlay);
-    }
   }
 
   private handleClick(event: MouseEvent): void {

@@ -9,7 +9,7 @@
  * - walking: Default state with neutral expression, continuous movement
  *
  * Interaction states (temporary, return to walking):
- * - celebration: Happy expression when celebrating vault activities (fireworks overlay)
+ * - celebration: Happy expression when celebrating vault activities (confetti rain)
  * - petting: Content expression when user interacts with pet (hearts overlay)
  *
  * Note: Movement speed (0-100%) is controlled by CSS animation-duration,

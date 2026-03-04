@@ -1,6 +1,6 @@
 /**
  * Unit tests for Pet.svelte component
- * Tests rendering, interactivity, heart overlay, accessibility, and state display
+ * Tests rendering, interactivity, accessibility, and state display
  */
 
 import { vi } from 'vitest';
@@ -24,7 +24,6 @@ describe('Pet.svelte Component', () => {
     walkingSpritePath: 'assets/cat-walking-6fps.gif',
     pettingSpritePath: 'assets/cat-petting-6fps.gif',
     celebrationSpritePath: 'assets/cat-celebrating-6fps.gif',
-    fireworksSpritePath: 'assets/effects/fireworks.gif',
     backgroundPath: '',
     petName: 'Kit',
     movementSpeed: 60,
@@ -188,7 +187,7 @@ describe('Pet.svelte Component', () => {
       component.$destroy();
     });
 
-    it('should use celebration sprite during celebration state (plus fireworks overlay)', () => {
+    it('should use celebration sprite during celebration state', () => {
       const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'celebration' } });
       const sprite = container.querySelector('.pet-sprite') as HTMLImageElement;
       expect(sprite.getAttribute('src')).toContain('cat-celebrating-6fps.gif');
@@ -213,77 +212,73 @@ describe('Pet.svelte Component', () => {
   });
 
   describe('celebration overlay', () => {
-    it('should render 3 firework sprites during celebration state', () => {
+    it('should not render a .celebration-overlay div during celebration state', () => {
       const component = new MockPetComponent({
         target: container,
-        props: {
-          ...defaultProps,
-          state: 'celebration',
-          fireworksSpritePath: 'assets/effects/fireworks.gif'
-        }
+        props: { ...defaultProps, state: 'celebration' }
       });
 
-      const celebrationOverlay = container.querySelector('.celebration-overlay');
-      expect(celebrationOverlay).toBeTruthy();
-
-      const fireworkSprites = container.querySelectorAll('.celebration-sprite');
-      expect(fireworkSprites.length).toBe(3);
-
-      // Verify each sprite has the correct class
-      expect(container.querySelector('.celebration-sprite-center')).toBeTruthy();
-      expect(container.querySelector('.celebration-sprite-left')).toBeTruthy();
-      expect(container.querySelector('.celebration-sprite-right')).toBeTruthy();
+      expect(container.querySelector('.celebration-overlay')).toBeFalsy();
 
       component.$destroy();
     });
 
-    it('should show celebration overlay only during celebration state', () => {
+    it('should not render any .celebration-sprite elements during celebration state', () => {
       const component = new MockPetComponent({
         target: container,
-        props: {
-          ...defaultProps,
-          state: 'walking',
-          fireworksSpritePath: 'assets/effects/fireworks.gif'
-        }
+        props: { ...defaultProps, state: 'celebration' }
       });
 
-      // Walking state - no overlay
-      let overlay = container.querySelector('.celebration-overlay');
-      expect(overlay).toBeFalsy();
-
-      // Transition to celebration
-      component.$set({ state: 'celebration' });
-      overlay = container.querySelector('.celebration-overlay');
-      expect(overlay).toBeTruthy();
-
-      // Transition to petting
-      component.$set({ state: 'petting' });
-      overlay = container.querySelector('.celebration-overlay');
-      expect(overlay).toBeFalsy();
+      expect(container.querySelectorAll('.celebration-sprite').length).toBe(0);
 
       component.$destroy();
     });
 
-    it('should clean up celebration overlay when component is destroyed', () => {
+    it('should apply data-state="celebration" to the container for CSS animation pause', () => {
       const component = new MockPetComponent({
         target: container,
-        props: {
-          ...defaultProps,
-          state: 'celebration',
-          fireworksSpritePath: 'assets/effects/fireworks.gif'
-        }
+        props: { ...defaultProps, state: 'celebration' }
       });
 
-      // Verify overlay exists
-      let overlay = container.querySelector('.celebration-overlay');
-      expect(overlay).toBeTruthy();
+      const spriteContainer = container.querySelector('.pet-sprite-container');
+      expect(spriteContainer?.getAttribute('data-state')).toBe('celebration');
 
-      // Destroy component
       component.$destroy();
+    });
 
-      // Verify cleanup
-      overlay = container.querySelector('.celebration-overlay');
-      expect(overlay).toBeFalsy();
+    it('should not render overlay or sprites during walking state', () => {
+      const component = new MockPetComponent({ target: container, props: defaultProps });
+
+      expect(container.querySelector('.celebration-overlay')).toBeFalsy();
+      expect(container.querySelectorAll('.celebration-sprite').length).toBe(0);
+
+      component.$destroy();
+    });
+
+    it('should not render overlay or sprites during petting state', () => {
+      const component = new MockPetComponent({
+        target: container,
+        props: { ...defaultProps, state: 'petting' }
+      });
+
+      expect(container.querySelector('.celebration-overlay')).toBeFalsy();
+      expect(container.querySelectorAll('.celebration-sprite').length).toBe(0);
+
+      component.$destroy();
+    });
+
+    it('should not render overlay or sprites after transitioning from celebration to walking', () => {
+      const component = new MockPetComponent({
+        target: container,
+        props: { ...defaultProps, state: 'celebration' }
+      });
+
+      component.$set({ state: 'walking' });
+
+      expect(container.querySelector('.celebration-overlay')).toBeFalsy();
+      expect(container.querySelectorAll('.celebration-sprite').length).toBe(0);
+
+      component.$destroy();
     });
   });
 
@@ -415,20 +410,4 @@ describe('Pet.svelte Component', () => {
     });
   });
 
-  describe('celebration state', () => {
-    it('should apply celebration data-state to container during celebration', () => {
-      const component = new MockPetComponent({
-        target: container,
-        props: { ...defaultProps, state: 'celebration' }
-      });
-
-      const spriteContainer = container.querySelector('.pet-sprite-container');
-      expect(spriteContainer?.getAttribute('data-state')).toBe('celebration');
-
-      // CSS selector `.pet-sprite-container[data-state='celebration']` enables pause
-      // This data-state attribute is critical for animation-play-state: paused
-
-      component.$destroy();
-    });
-  });
 });
