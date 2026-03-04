@@ -1,7 +1,7 @@
 {
   "name": "cheers",
   "version": "0.1.0",
-  "description": "Your vault companion that celebrates you",
+  "description": "A vault companion that celebrates your progress.",
   "main": "main.js",
   "scripts": {
     "dev": "node esbuild.config.mjs",

@@ -36,7 +36,7 @@ export const PERMANENT_STATES: PetState[] = ['walking'];
  */
 export const STATE_DURATIONS: Record<PetState, number> = {
   walking: 0, // Continuous until interrupted
-  celebration: CELEBRATION_OVERLAY_CONSTANTS.CELEBRATION_DURATION_MS, // 4.32 seconds (matches fireworks GIF loop)
+  celebration: CELEBRATION_OVERLAY_CONSTANTS.CELEBRATION_DURATION_MS, // 4.32 seconds (confetti rain celebration duration)
   petting: 2000, // 2 seconds
 };
 

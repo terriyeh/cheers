@@ -16,15 +16,6 @@ export const PET_SPRITES = {
 	CELEBRATING: 'cat-celebrating-6fps.gif',
 } as const;
 
-/**
- * Effect sprite filenames (overlays and particles)
- */
-export const EFFECT_SPRITES = {
-	/** Fireworks overlay for celebrations (3-firework display pattern) */
-	FIREWORKS: 'fireworks.gif',
-	/** Legacy heart overlay (unused, kept for backwards compatibility) */
-	HEART: 'heart.png',
-} as const;
 
 /**
  * A background scene entry: the GIF filename and its matching sky fill color.
@@ -68,8 +59,6 @@ export function getTimeOfDayBackground(hour: number = new Date().getHours()): Ba
 export const ASSET_DIRECTORIES = {
 	/** Root assets directory (pet sprites) */
 	ROOT: '',
-	/** Effects subdirectory (fireworks, particles) */
-	EFFECTS: 'effects',
 	/** Backgrounds subdirectory (scenes) */
 	BACKGROUNDS: 'backgrounds',
 } as const;

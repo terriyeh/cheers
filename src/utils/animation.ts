@@ -18,7 +18,7 @@ export const ANIMATION_CONSTANTS = {
   DEFAULT_PET_WIDTH: 100,
   /** Fixed display size for pet sprites (pixels) - all pet GIFs render at this size */
   PET_DISPLAY_SIZE: 100,
-  /** Fixed display size for celebration fireworks (pixels) - scales down from 256px native GIF */
+  /** Fixed display size for celebration overlay elements (pixels) */
   CELEBRATION_DISPLAY_SIZE: 128,
 } as const;
 
