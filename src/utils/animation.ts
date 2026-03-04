@@ -23,36 +23,12 @@ export const ANIMATION_CONSTANTS = {
 } as const;
 
 /**
- * GIF animation duration constants
- * Note: GIF frame animation is handled by the browser
- */
-export const GIF_ANIMATION_CONSTANTS = {
-  /** Slowest GIF playback (0% speed) - 2 seconds per cycle */
-  MAX_DURATION: 2,
-  /** Fastest GIF playback (100% speed) - 1 second per cycle */
-  MIN_DURATION: 1,
-} as const;
-
-/**
  * Clamp movement speed to valid range (0-100)
  * @param speed - Raw movement speed value
  * @returns Clamped speed between 0 and 100
  */
 export function clampMovementSpeed(speed: number): number {
   return Math.max(0, Math.min(100, speed));
-}
-
-/**
- * Calculate animation duration for GIF playback based on movement speed
- * Linear scaling: 0% = 2s (slowest), 100% = 1s (fastest)
- * Note: GIF animation is handled by the browser, this is for CSS animation-duration
- * @param speed - Movement speed (0-100)
- * @returns Animation duration in seconds
- */
-export function calculateGifAnimationDuration(speed: number): number {
-  const clampedSpeed = clampMovementSpeed(speed);
-  const { MAX_DURATION, MIN_DURATION } = GIF_ANIMATION_CONSTANTS;
-  return MAX_DURATION - (clampedSpeed / 100) * (MAX_DURATION - MIN_DURATION);
 }
 
 /**

@@ -21,12 +21,6 @@ export type PetState =
   | 'petting';
 
 /**
- * Movement speed percentage (0-100)
- * Controls horizontal translation speed via CSS animation-duration
- */
-export type MovementSpeed = number;
-
-/**
  * Configuration for pet state machine behavior
  */
 export interface PetStateConfig {

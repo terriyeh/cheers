@@ -385,7 +385,7 @@
   }
 
   /* Pause pet movement during celebration and petting */
-  /* During celebration: Pet freezes in place while fireworks display plays (4.32 seconds) */
+  /* During celebration: Pet freezes in place while confetti rain plays (5 seconds) */
   /* During petting: Pet pauses to enjoy being petted */
   /* @see CELEBRATION_OVERLAY_CONSTANTS in src/utils/celebration-constants.ts */
   .pet-sprite-container[data-state='celebration'] .pet-position-wrapper,
