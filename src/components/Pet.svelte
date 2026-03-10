@@ -450,6 +450,7 @@
     border-radius: 1px;
     pointer-events: none;
     z-index: 20;
+    will-change: transform;
     animation: vp-confetti-fall var(--duration, 3s) var(--delay, 0s) linear infinite;
   }
 

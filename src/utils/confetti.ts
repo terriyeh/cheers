@@ -56,6 +56,14 @@ export function cancelConfettiCleanup(): void {
 }
 
 /**
+ * Remove the injected confetti @keyframes style tag from document.head.
+ * Call from the plugin's onunload() so no DOM nodes leak between plugin reloads.
+ */
+export function removeConfettiStyles(): void {
+  document.getElementById(CONFETTI_STYLE_ID)?.remove();
+}
+
+/**
  * Spawn confetti rain particles into the given container element.
  *
  * Each particle is a `<div class="vp-confetti-particle">` with CSS custom properties
