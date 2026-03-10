@@ -3,6 +3,7 @@ node_modules/
 package-lock.json
 
 # Build outputs
+main.js
 main.js.map
 *.map
 
