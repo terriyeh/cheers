@@ -236,8 +236,7 @@
   color: var(--icon-color);
 }
 
-/* VaultPal Code Block Inline Validation */
-/* Follows DataView plugin pattern for inline error display */
+/* Inline error display */
 
 .cheers-error {
   display: block;

@@ -16,11 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Why This Pivot?
 
-Research into VS Code Pets (2.26M installs) and the Obsidian pet plugin landscape revealed:
-1. **No progression needed**: VS Code Pets has ZERO XP/levels yet dominates the market (50x more installs than competitors with progression)
-2. **Emotion > Features**: Success driven by "100% joy gain, zero productivity gain"
-3. **Market gap**: No Obsidian plugin celebrates vault activities proactively
-4. **Simplicity wins**: Complex chat/conversation systems add cognitive load and compete with existing plugins (Obsidian Copilot, Smart Composer)
+1. **Emotion > Features**: Ambient joy beats deliberate gamification — no progression system needed
+2. **Market gap**: No Obsidian plugin celebrates vault activities proactively
+3. **Simplicity wins**: Complex chat/conversation systems add cognitive load with no meaningful benefit
 
 ### What's Changing
 
@@ -42,18 +40,8 @@ Research into VS Code Pets (2.26M installs) and the Obsidian pet plugin landscap
 
 ### Renamed
 
-- **Repository**: `vault-pal` → `obsidian-pets`
-- **Plugin ID**: `vault-pal` → `obsidian-pets`
-- **Plugin Name**: "Vault Pal" → "Obsidian Pets" → "Cheers"
+- **Plugin Name**: "Vault Pal" → "Cheers"
 - **GitHub URL**: https://github.com/terriyeh/cheers
-
-### Competitive Positioning
-
-| Plugin | Focus | Interaction |
-|--------|-------|-------------|
-| Pixel Pets | Decorative + AI Chat | Reactive Q&A |
-| Vault Pets | Decoration Only | None |
-| **Cheers** | **Celebration Companion** | **Proactive Joy** |
 
 ### What's Preserved
 
