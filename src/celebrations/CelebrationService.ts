@@ -246,11 +246,12 @@ export class CelebrationService {
 	 * Counter tracking is unconditional; celebration requires the toggle.
 	 */
 	private checkTaskCompletion(content: string, file: TFile | null): void {
+		if (!file) return;
 		const taskPattern = /- \[x\]/gi;
 		const matches = content.match(taskPattern);
 		const currentTaskCount = matches ? matches.length : 0;
 
-		const filePath = file?.path ?? '';
+		const filePath = file.path;
 		if (!this.fileTaskCounts.has(filePath)) {
 			this.fileTaskCounts.set(filePath, currentTaskCount);
 			return;
@@ -280,6 +281,7 @@ export class CelebrationService {
 	 * Counter tracking is unconditional; celebration requires the toggle.
 	 */
 	private checkLinkCreation(content: string, editor: Editor, file: TFile | null): void {
+		if (!file) return;
 		// Require at least 1 character inside brackets to avoid celebrating on [[]] or []()
 		// Length bounds prevent O(n*m) backtracking on files with many unclosed [[
 		const wikiLinkPattern = /\[\[.{1,500}?\]\]/g;
@@ -308,7 +310,7 @@ export class CelebrationService {
 			}
 		}
 
-		const filePath = file?.path ?? '';
+		const filePath = file.path;
 		if (!this.fileLinkCounts.has(filePath)) {
 			this.fileLinkCounts.set(filePath, currentLinkCount);
 			return;
@@ -407,9 +409,7 @@ export class CelebrationService {
 
 		const daily = this.plugin.dailyWordData;
 
-		// Midnight reset — processEditorChange calls resetDailyStatsIfNeeded() before
-		// reaching here, so this is a safety net for any future direct callers.
-		this.resetDailyStatsIfNeeded();
+		// Precondition: caller (processEditorChange) has already called resetDailyStatsIfNeeded().
 
 		// Always track net word change — deletions shrink the count, additions grow it.
 		// Clamped to [0, MAX_DAILY_COUNTER]. goalCelebrated only gates the celebration.

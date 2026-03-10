@@ -51,8 +51,9 @@ export class PetView extends ItemView {
   private plugin: CheersPlugin | null = null;
   private activeTab: 'pet' | 'stats' = 'pet';
   private statsEditorChangeTimeout: number | undefined;
-  constructor(leaf: WorkspaceLeaf) {
+  constructor(leaf: WorkspaceLeaf, plugin: CheersPlugin | null = null) {
     super(leaf);
+    this.plugin = plugin;
   }
 
   /**
@@ -93,11 +94,13 @@ export class PetView extends ItemView {
    */
   async onOpen(): Promise<void> {
     try {
-      // Access plugin instance from internal registry (may break with Obsidian API changes)
-      const appWithPlugins = this.app as any;
-      const plugin: CheersPlugin | undefined =
-        appWithPlugins.plugins?.plugins?.['cheers'] as CheersPlugin | undefined;
-      this.plugin = plugin ?? null;
+      // Resolve plugin: prefer constructor-injected instance (production path via main.ts),
+      // fall back to internal registry lookup (test / late-open path).
+      if (this.plugin === null) {
+        const appWithPlugins = this.app as any;
+        this.plugin = (appWithPlugins.plugins?.plugins?.['cheers'] as CheersPlugin | undefined) ?? null;
+      }
+      const plugin = this.plugin;
       this.activeTab = 'pet';
 
       // Show loading state
@@ -446,10 +449,7 @@ export class PetView extends ItemView {
     if (!this.statsComponent) return;
     const plugin = this.plugin;
     // Guard: dailyWordData may be absent on partially-populated test stubs
-    if (!plugin || !plugin.dailyWordData) {
-      this.statsComponent.$set({});
-      return;
-    }
+    if (!plugin || !plugin.dailyWordData) return;
     this.statsComponent.$set(this.buildStatsProps(plugin));
   }
 
@@ -485,7 +485,9 @@ export class PetView extends ItemView {
       fileWordCount,
       fileWordGoal,
       colorMode: plugin.settings.dashboardColorMode,
-      ringWidthPercent: 50,
+      ringWidthPercent: dailyWordGoal && dailyWordGoal > 0
+        ? Math.min(100, Math.round((daily.wordsAddedToday / dailyWordGoal) * 100))
+        : 0,
     };
   }
 
@@ -525,10 +527,10 @@ export class PetView extends ItemView {
       ) as HTMLElement;
     }
 
-    // Strategy 4: Create fallback container if none exists
+    // Strategy 4: Expected DOM structure not found — fail loudly rather than
+    // silently mounting content in the wrong container.
     if (!container) {
-      console.warn('Standard container not found, creating fallback container');
-      container = this.containerEl.createDiv({ cls: 'view-content' });
+      throw new Error('View content container not found — Obsidian DOM structure may have changed');
     }
 
     return container;

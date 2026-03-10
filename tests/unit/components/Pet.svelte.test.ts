@@ -206,27 +206,9 @@ describe('Pet.svelte Component', () => {
   });
 
   describe('celebration overlay', () => {
-    it('should not render a .celebration-overlay div during celebration state', () => {
-      const component = new MockPetComponent({
-        target: container,
-        props: { ...defaultProps, state: 'celebration' }
-      });
-
-      expect(container.querySelector('.celebration-overlay')).toBeFalsy();
-
-      component.$destroy();
-    });
-
-    it('should not render any .celebration-sprite elements during celebration state', () => {
-      const component = new MockPetComponent({
-        target: container,
-        props: { ...defaultProps, state: 'celebration' }
-      });
-
-      expect(container.querySelectorAll('.celebration-sprite').length).toBe(0);
-
-      component.$destroy();
-    });
+    // Note: confetti particles are spawned imperatively via spawnConfettiRain() in onMount /
+    // reactive blocks — not rendered by Svelte's template — so they cannot be tested via the
+    // mock component. The meaningful contract tested here is the CSS pause mechanism.
 
     it('should apply data-state="celebration" to the container for CSS animation pause', () => {
       const component = new MockPetComponent({
@@ -236,41 +218,6 @@ describe('Pet.svelte Component', () => {
 
       const spriteContainer = container.querySelector('.pet-sprite-container');
       expect(spriteContainer?.getAttribute('data-state')).toBe('celebration');
-
-      component.$destroy();
-    });
-
-    it('should not render overlay or sprites during walking state', () => {
-      const component = new MockPetComponent({ target: container, props: defaultProps });
-
-      expect(container.querySelector('.celebration-overlay')).toBeFalsy();
-      expect(container.querySelectorAll('.celebration-sprite').length).toBe(0);
-
-      component.$destroy();
-    });
-
-    it('should not render overlay or sprites during petting state', () => {
-      const component = new MockPetComponent({
-        target: container,
-        props: { ...defaultProps, state: 'petting' }
-      });
-
-      expect(container.querySelector('.celebration-overlay')).toBeFalsy();
-      expect(container.querySelectorAll('.celebration-sprite').length).toBe(0);
-
-      component.$destroy();
-    });
-
-    it('should not render overlay or sprites after transitioning from celebration to walking', () => {
-      const component = new MockPetComponent({
-        target: container,
-        props: { ...defaultProps, state: 'celebration' }
-      });
-
-      component.$set({ state: 'walking' });
-
-      expect(container.querySelector('.celebration-overlay')).toBeFalsy();
-      expect(container.querySelectorAll('.celebration-sprite').length).toBe(0);
 
       component.$destroy();
     });

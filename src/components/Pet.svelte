@@ -236,33 +236,34 @@
     // Watch for container resize with fallback for older browsers
     if (!containerEl) return;
 
+    let cleanup: (() => void) | undefined;
     try {
       // Use debounced update for resize events to improve performance
       resizeObserver = new ResizeObserver(updateMovementRangeDebounced);
       resizeObserver.observe(containerEl);
-
-      // Return cleanup function for ResizeObserver
-      return () => {
+      cleanup = () => {
         resizeObserver?.disconnect();
         resizeObserver = null;
       };
     } catch (error) {
       console.warn('ResizeObserver not supported, using window resize fallback', error);
-      // Fallback: Use debounced update on window resize for performance
+      // Disconnect any partially-constructed observer before falling back
+      resizeObserver?.disconnect();
+      resizeObserver = null;
       window.addEventListener('resize', updateMovementRangeDebounced);
-
-      // Return cleanup function for fallback
-      return () => window.removeEventListener('resize', updateMovementRangeDebounced);
-    } finally {
-      // Fallback: if component mounts already in celebration state (e.g. restored session
-      // or test harness passing state='celebration' as initial prop), containerEl is now
-      // populated so spawn directly. prevState = 'celebration' prevents the $: block
-      // from double-spawning if Svelte re-evaluates it after mount.
-      if (state === 'celebration' && containerEl) {
-        spawnConfettiRain(containerEl, CELEBRATION_OVERLAY_CONSTANTS.CELEBRATION_DURATION_MS);
-        prevState = 'celebration';
-      }
+      cleanup = () => window.removeEventListener('resize', updateMovementRangeDebounced);
     }
+
+    // Handle initial celebration state: containerEl is now populated so spawn directly.
+    // prevState = 'celebration' prevents the $: reactive block from double-spawning
+    // if Svelte re-evaluates it after mount (e.g. restored session or test harness
+    // passing state='celebration' as initial prop).
+    if (state === 'celebration' && containerEl) {
+      spawnConfettiRain(containerEl, CELEBRATION_OVERLAY_CONSTANTS.CELEBRATION_DURATION_MS);
+      prevState = 'celebration';
+    }
+
+    return cleanup;
   });
 
   onDestroy(() => {
@@ -278,7 +279,7 @@
   class="pet-sprite-container"
   data-state={state}
   style:--pet-bottom="{background.petBottom}px"
-  style:background-image={backgroundPath ? `url("${backgroundPath}")` : 'none'}
+  style:background-image={backgroundPath ? `url("${backgroundPath.replace(/"/g, '%22')}")` : 'none'}
   style:background-color={background.skyColor}
   style:background-size="{background.displayWidth}px {background.displayHeight}px"
   bind:this={containerEl}>

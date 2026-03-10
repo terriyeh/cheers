@@ -1011,7 +1011,7 @@ describe('PetView', () => {
   // ─── updateStatsComponent guard paths ────────────────────────────────────
 
   describe('updateStatsComponent guard paths', () => {
-    it('calls $set({}) when plugin is present but dailyWordData is absent', async () => {
+    it('does not call $set when plugin is present but dailyWordData is absent', async () => {
       await petView.onOpen();
 
       // Set plugin without dailyWordData (simulates a partial stub)
@@ -1020,10 +1020,11 @@ describe('PetView', () => {
       delete plugin.dailyWordData;
       (petView as any).plugin = plugin;
 
+      const callsBefore = lastInstance?.$set.mock.calls.length ?? 0;
       petView.updateStatsComponent();
+      const callsAfter = lastInstance?.$set.mock.calls.length ?? 0;
 
-      const lastCall = lastInstance?.$set.mock.calls.at(-1)?.[0];
-      expect(lastCall).toEqual({});
+      expect(callsAfter).toBe(callsBefore);
     });
 
     it('is a no-op when statsComponent is null (before onOpen)', () => {

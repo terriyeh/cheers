@@ -57,11 +57,18 @@ export const BACKGROUNDS = {
 	},
 } as const satisfies Record<string, Background>;
 
+/** Maps theme string keys to their Background entries. */
+const BACKGROUND_FOR_THEME: Record<'day' | 'night', Background> = {
+	day: BACKGROUNDS.DAY,
+	night: BACKGROUNDS.NIGHT,
+};
+
 /**
  * Returns the background entry for the given theme.
+ * Adding a new theme requires only a new entry in BACKGROUNDS and BACKGROUND_FOR_THEME.
  */
 export function getBackgroundForTheme(theme: 'day' | 'night'): Background {
-	return theme === 'day' ? BACKGROUNDS.DAY : BACKGROUNDS.NIGHT;
+	return BACKGROUND_FOR_THEME[theme];
 }
 
 /**

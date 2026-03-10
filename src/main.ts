@@ -44,7 +44,7 @@ export default class CheersPlugin extends Plugin {
 		this.registerView(
 			VIEW_TYPE_PET,
 			(leaf) => {
-				const view = new PetView(leaf);
+				const view = new PetView(leaf, this);
 				this.petView = view;
 				return view;
 			}
