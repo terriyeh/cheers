@@ -41,7 +41,7 @@ Interactive Claude assistance triggered by @claude mentions.
 - Responds to your questions
 - Makes code changes per your request
 - Runs allowed commands (`npm run build`, `npm run test`, etc.)
-- Has context about the Cheers! project
+- Has context about the Cheers project
 
 **Examples:**
 ```

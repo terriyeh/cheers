@@ -1,4 +1,4 @@
-# Cheers! 🦊
+# Cheers 🦊
 
 Your vault companion that celebrates you.
 
@@ -10,9 +10,9 @@ Your vault companion that celebrates you.
 
 <!-- TODO: Add screenshot or GIF demo here -->
 
-If you've ever wished for a personal cheerleader to celebrate the progress in your Obsidian vault, Cheers! is for you. 
+If you've ever wished for a personal cheerleader to celebrate the progress in your Obsidian vault, Cheers is for you. 
 
-Cheers! puts an animated, vault-aware cat companion in your Obsidian sidebar. As you work in the vault, your companion notices — and celebrates. Whether you create a note, check off a task, reach a word goal (daily and per-document), or create a new link, your companion responds with fireworks and a cheerful status bar message.
+Cheers puts an animated, vault-aware cat companion in your Obsidian sidebar. As you work in the vault, your companion notices — and celebrates. Whether you create a note, check off a task, reach a word goal (daily and per-document), or create a new link, your companion responds with fireworks and a cheerful status bar message.
 
 Personalize the activities you want celebrated. Switch to Daily Stats for non-animated tallies.
 
@@ -37,7 +37,7 @@ Each activity triggers fireworks and a status bar message using your pet's name.
 ### From Obsidian Community Plugins (Recommended)
 
 1. Open Obsidian **Settings → Community plugins**
-2. Browse and search for **"Cheers!"**
+2. Browse and search for **"Cheers"**
 3. Click **Install**, then **Enable**
 
 ### Manual
@@ -50,9 +50,9 @@ Each activity triggers fireworks and a status bar message using your pet's name.
 
 ## Quick Start
 
-1. Open the **Cheers! panel** from the left sidebar (cat icon) or via **Command Palette → "Open Cheers!"**
+1. Open the **Cheers panel** from the left sidebar (cat icon) or via **Command Palette → "Open Cheers"**
 2. A welcome screen lets you name your pet (default: Kit) and optionally enter your own name
-3. Open **Settings → Cheers!** to turn on the celebrations you want
+3. Open **Settings → Cheers** to turn on the celebrations you want
 4. Start writing — your pet does the rest
 
 ---
@@ -61,7 +61,7 @@ Each activity triggers fireworks and a status bar message using your pet's name.
 
 ### Celebrations
 
-Open **Settings → Cheers! → Celebrations** to configure:
+Open **Settings → Cheers → Celebrations** to configure:
 
 - **Individual toggles** — enable or disable each celebration type independently
 - **Daily word goal** — set a vault-wide target; resets at midnight
@@ -97,7 +97,7 @@ The **Stats tab** (inside the pet panel) shows your writing activity at a glance
 - Check the Developer Console (Ctrl+Shift+I) for errors
 
 **Celebrations not triggering**
-- Verify the relevant toggle is on in **Settings → Cheers! → Celebrations**
+- Verify the relevant toggle is on in **Settings → Cheers → Celebrations**
 - Only one celebration plays at a time — if another is in progress, the next one queues
 - Link celebrations require content inside the brackets (`[[]]` alone won't trigger)
 - Word goal celebrations fire once when you cross 100% — not on every word after

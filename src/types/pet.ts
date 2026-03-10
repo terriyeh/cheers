@@ -1,5 +1,5 @@
 /**
- * Pet state types and interfaces for Cheers!
+ * Pet state types and interfaces for Cheers
  */
 
 /**

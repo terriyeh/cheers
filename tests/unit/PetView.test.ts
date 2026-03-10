@@ -33,7 +33,7 @@ describe('PetView', () => {
     });
 
     it('should return correct display text', () => {
-      expect(petView.getDisplayText()).toBe('Cheers!');
+      expect(petView.getDisplayText()).toBe('Cheers');
     });
 
     it('should return correct icon', () => {
@@ -152,7 +152,7 @@ describe('PetView', () => {
       const errorMessage = badView.containerEl.querySelector('.cheers-view-error-message');
       const errorHint = badView.containerEl.querySelector('.cheers-view-error-hint');
 
-      expect(errorHeading?.textContent).toBe('Failed to load Cheers!');
+      expect(errorHeading?.textContent).toBe('Failed to load Cheers');
       expect(errorMessage).toBeTruthy();
       expect(errorHint?.textContent).toBe('An unexpected error occurred. Check the console (Ctrl+Shift+I) for details.');
 

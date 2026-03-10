@@ -18,7 +18,7 @@ export interface DailyWordData {
 }
 
 /**
- * Cheers! Plugin Settings
+ * Cheers Plugin Settings
  */
 export interface CheersSettings {
 	/** Name of the pet companion */

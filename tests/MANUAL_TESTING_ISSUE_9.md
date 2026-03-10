@@ -66,7 +66,7 @@ This type-based approach is:
 ## Prerequisites for Manual Testing
 
 1. **Obsidian Running**: Open your test vault
-2. **Plugin Installed**: Cheers! plugin enabled
+2. **Plugin Installed**: Cheers plugin enabled
 3. **Daily Notes Plugin**: Enable Core Plugin "Daily Notes"
 4. **Template File**: Create a daily note template
 

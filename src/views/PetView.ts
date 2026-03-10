@@ -67,7 +67,7 @@ export class PetView extends ItemView {
    * Get the display text for the view
    */
   getDisplayText(): string {
-    return 'Cheers!';
+    return 'Cheers';
   }
 
   /**
@@ -332,7 +332,7 @@ export class PetView extends ItemView {
       container.empty();
       container.createDiv({
         cls: 'cheers-loading',
-        text: 'Loading Cheers!...',
+        text: 'Loading Cheers...',
       });
     } catch (error) {
       console.error('Failed to show loading state:', error);
@@ -384,7 +384,7 @@ export class PetView extends ItemView {
 
     // Generic error
     return {
-      title: 'Failed to load Cheers!',
+      title: 'Failed to load Cheers',
       message: errorMsg,
       hint: 'An unexpected error occurred. Check the console (Ctrl+Shift+I) for details.',
     };
@@ -417,12 +417,12 @@ export class PetView extends ItemView {
       });
 
       // Also show as notice for visibility
-      new Notice(`Cheers!: ${message}`, 8000);
+      new Notice(`Cheers: ${message}`, 8000);
     } catch (containerError) {
       console.error('Failed to show error state:', containerError);
       console.error('Original error:', error);
       // Fallback notice
-      new Notice('Cheers! failed to load. Check the console for details.', 8000);
+      new Notice('Cheers failed to load. Check the console for details.', 8000);
     }
   }
 
@@ -567,7 +567,7 @@ export class PetView extends ItemView {
     const manifest = appWithManifests.plugins?.manifests?.['cheers'];
 
     if (!manifest) {
-      console.warn('Cheers! manifest not found, using fallback path');
+      console.warn('Cheers manifest not found, using fallback path');
     }
 
     const pluginDir = manifest?.dir || '.obsidian/plugins/cheers';
