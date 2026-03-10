@@ -1011,7 +1011,7 @@ describe('PetView', () => {
   // ─── updateStatsComponent guard paths ────────────────────────────────────
 
   describe('updateStatsComponent guard paths', () => {
-    it('calls $set({}) when plugin is present but dailyWordData is absent', async () => {
+    it('does not call $set when plugin is present but dailyWordData is absent', async () => {
       await petView.onOpen();
 
       // Set plugin without dailyWordData (simulates a partial stub)
@@ -1020,10 +1020,11 @@ describe('PetView', () => {
       delete plugin.dailyWordData;
       (petView as any).plugin = plugin;
 
+      const callsBefore = lastInstance?.$set.mock.calls.length ?? 0;
       petView.updateStatsComponent();
+      const callsAfter = lastInstance?.$set.mock.calls.length ?? 0;
 
-      const lastCall = lastInstance?.$set.mock.calls.at(-1)?.[0];
-      expect(lastCall).toEqual({});
+      expect(callsAfter).toBe(callsBefore);
     });
 
     it('is a no-op when statsComponent is null (before onOpen)', () => {
@@ -1089,247 +1090,112 @@ describe('PetView', () => {
     });
   });
 
-  // ─── Day / night background ───────────────────────────────────────────────
+  // ─── getState / setState (workspace persistence) ─────────────────────────
   //
-  // PetView selects day or night background based on current hour and schedules
-  // a one-shot timeout to swap the background at the next 6am / 6pm boundary.
+  // Obsidian calls getState() before saving the workspace and setState() when
+  // restoring it so the view reopens on the same tab the user left.
 
-  describe('day/night background', () => {
-    /** Resolve the background filename from a full resource path. */
-    function backgroundFilenameFrom(resourcePath: string): string {
-      return resourcePath.split('/').pop() ?? '';
+  describe('getState / setState', () => {
+    it('getState returns { activeTab: "pet" } by default', async () => {
+      await petView.onOpen();
+      expect(petView.getState()).toEqual({ activeTab: 'pet' });
+    });
+
+    it('getState returns { activeTab: "stats" } after switching to stats', async () => {
+      await petView.onOpen();
+      const statsTab = petView.containerEl.querySelector('.vp-tab-stats') as HTMLElement;
+      statsTab.click();
+      expect(petView.getState()).toEqual({ activeTab: 'stats' });
+    });
+
+    it('setState with activeTab "stats" switches to stats tab', async () => {
+      await petView.onOpen();
+      await petView.setState({ activeTab: 'stats' }, { history: false });
+
+      const petPanel = petView.containerEl.querySelector('.vp-panel-pet');
+      const statsPanel = petView.containerEl.querySelector('.vp-panel-stats');
+      expect(petPanel?.classList.contains('vp-panel-hidden')).toBe(true);
+      expect(statsPanel?.classList.contains('vp-panel-hidden')).toBe(false);
+      expect(petView.getState()).toEqual({ activeTab: 'stats' });
+    });
+
+    it('setState with activeTab "pet" switches back from stats to pet', async () => {
+      await petView.onOpen();
+
+      // First switch to stats
+      const statsTab = petView.containerEl.querySelector('.vp-tab-stats') as HTMLElement;
+      statsTab.click();
+      expect(petView.getState()).toEqual({ activeTab: 'stats' });
+
+      // Restore to pet via setState
+      await petView.setState({ activeTab: 'pet' }, { history: false });
+
+      const petPanel = petView.containerEl.querySelector('.vp-panel-pet');
+      const statsPanel = petView.containerEl.querySelector('.vp-panel-stats');
+      expect(petPanel?.classList.contains('vp-panel-hidden')).toBe(false);
+      expect(statsPanel?.classList.contains('vp-panel-hidden')).toBe(true);
+      expect(petView.getState()).toEqual({ activeTab: 'pet' });
+    });
+
+    it('setState with unknown activeTab is a no-op (stays on pet)', async () => {
+      await petView.onOpen();
+      await petView.setState({ activeTab: 'unknown' }, { history: false });
+      expect(petView.getState()).toEqual({ activeTab: 'pet' });
+    });
+
+    it('setState with empty state is a no-op (stays on pet)', async () => {
+      await petView.onOpen();
+      await petView.setState({}, { history: false });
+      expect(petView.getState()).toEqual({ activeTab: 'pet' });
+    });
+  });
+
+  // ─── Background theme ────────────────────────────────────────────────────
+  //
+  // PetView reads backgroundTheme from plugin settings to select day or night scene.
+
+  describe('background theme', () => {
+    function setBackgroundTheme(theme: 'day' | 'night') {
+      const plugin = (petView.app as any).plugins.plugins['cheers'];
+      plugin.settings = { ...plugin.settings, backgroundTheme: theme };
     }
 
-    /** Spy on getResourcePath and return only calls that concern a background asset. */
-    function captureBackgroundResourceCall(view: PetView) {
-      return vi.spyOn(view.app.vault.adapter, 'getResourcePath');
-    }
+    it('mounts with day background when backgroundTheme is "day"', async () => {
+      setBackgroundTheme('day');
+      const spy = vi.spyOn(petView.app.vault.adapter, 'getResourcePath');
 
-    describe('initial background on mount', () => {
-      it('mounts with day background when opened at 9am', async () => {
-        vi.setSystemTime(new Date('2024-06-15T09:00:00'));
-        const spy = captureBackgroundResourceCall(petView);
+      await petView.onOpen();
 
-        await petView.onOpen();
-
-        const bgCall = spy.mock.calls.find(([p]) => p.includes('background'));
-        expect(bgCall).toBeDefined();
-        expect(backgroundFilenameFrom(bgCall![0])).toBe('background-day-8fps.gif');
-      });
-
-      it('mounts with day sky color when opened at 9am', async () => {
-        vi.setSystemTime(new Date('2024-06-15T09:00:00'));
-        await petView.onOpen();
-        expect(petView.petComponent!.props.backgroundColor).toBe(BACKGROUNDS.DAY.skyColor);
-      });
-
-      it('mounts with night background when opened at 10pm', async () => {
-        vi.setSystemTime(new Date('2024-06-15T22:00:00'));
-        const spy = captureBackgroundResourceCall(petView);
-
-        await petView.onOpen();
-
-        const bgCall = spy.mock.calls.find(([p]) => p.includes('background'));
-        expect(bgCall).toBeDefined();
-        expect(backgroundFilenameFrom(bgCall![0])).toBe('background-night-8fps.gif');
-      });
-
-      it('mounts with night sky color when opened at 10pm', async () => {
-        vi.setSystemTime(new Date('2024-06-15T22:00:00'));
-        await petView.onOpen();
-        expect(petView.petComponent!.props.backgroundColor).toBe(BACKGROUNDS.NIGHT.skyColor);
-      });
-
-      it('mounts with day background at exactly 6am boundary', async () => {
-        vi.setSystemTime(new Date('2024-06-15T06:00:00'));
-        const spy = captureBackgroundResourceCall(petView);
-
-        await petView.onOpen();
-
-        const bgCall = spy.mock.calls.find(([p]) => p.includes('background'));
-        expect(backgroundFilenameFrom(bgCall![0])).toBe('background-day-8fps.gif');
-      });
-
-      it('mounts with night background at exactly 6pm boundary', async () => {
-        vi.setSystemTime(new Date('2024-06-15T18:00:00'));
-        const spy = captureBackgroundResourceCall(petView);
-
-        await petView.onOpen();
-
-        const bgCall = spy.mock.calls.find(([p]) => p.includes('background'));
-        expect(backgroundFilenameFrom(bgCall![0])).toBe('background-night-8fps.gif');
-      });
-
-      it('mounts with night background at 5:59am (one minute before day starts)', async () => {
-        vi.setSystemTime(new Date('2024-06-15T05:59:00'));
-        const spy = captureBackgroundResourceCall(petView);
-
-        await petView.onOpen();
-
-        const bgCall = spy.mock.calls.find(([p]) => p.includes('background'));
-        expect(backgroundFilenameFrom(bgCall![0])).toBe('background-night-8fps.gif');
-      });
+      const bgCall = spy.mock.calls.find(([p]) => p.includes('background'));
+      expect(bgCall).toBeDefined();
+      expect(bgCall![0]).toContain(BACKGROUNDS.DAY.file);
     });
 
-    describe('background transition via scheduled timeout', () => {
-      it('switches to night background when 6pm boundary is reached (opened at 9am)', async () => {
-        vi.setSystemTime(new Date('2024-06-15T09:00:00'));
-        await petView.onOpen();
+    it('mounts with night background when backgroundTheme is "night"', async () => {
+      setBackgroundTheme('night');
+      const spy = vi.spyOn(petView.app.vault.adapter, 'getResourcePath');
 
-        const setSpy = vi.spyOn(petView.petComponent!, '$set');
+      await petView.onOpen();
 
-        // 9am → 6pm = 9 hours
-        vi.advanceTimersByTime(9 * 60 * 60 * 1000);
-
-        const bgCall = setSpy.mock.calls.find(([props]) =>
-          typeof props.backgroundPath === 'string' && props.backgroundPath.includes('background')
-        );
-        expect(bgCall).toBeDefined();
-        expect(backgroundFilenameFrom(bgCall![0].backgroundPath)).toBe('background-night-8fps.gif');
-        expect(bgCall![0].backgroundColor).toBe(BACKGROUNDS.NIGHT.skyColor);
-      });
-
-      it('switches to day background when 6am boundary is reached (opened at 10pm)', async () => {
-        vi.setSystemTime(new Date('2024-06-15T22:00:00'));
-        await petView.onOpen();
-
-        const setSpy = vi.spyOn(petView.petComponent!, '$set');
-
-        // 10pm → next 6am = 8 hours
-        vi.advanceTimersByTime(8 * 60 * 60 * 1000);
-
-        const bgCall = setSpy.mock.calls.find(([props]) =>
-          typeof props.backgroundPath === 'string' && props.backgroundPath.includes('background')
-        );
-        expect(bgCall).toBeDefined();
-        expect(backgroundFilenameFrom(bgCall![0].backgroundPath)).toBe('background-day-8fps.gif');
-        expect(bgCall![0].backgroundColor).toBe(BACKGROUNDS.DAY.skyColor);
-      });
-
-      it('does not swap background before the boundary is reached', async () => {
-        vi.setSystemTime(new Date('2024-06-15T09:00:00'));
-        await petView.onOpen();
-
-        const setSpy = vi.spyOn(petView.petComponent!, '$set');
-
-        // Advance 8 hours 59 minutes — boundary is at 9 hours
-        vi.advanceTimersByTime((9 * 60 * 60 - 60) * 1000);
-
-        const bgCall = setSpy.mock.calls.find(([props]) =>
-          typeof props.backgroundPath === 'string' && props.backgroundPath.includes('background')
-        );
-        expect(bgCall).toBeUndefined();
-      });
-
-      it('reschedules a second timeout after the first transition fires', async () => {
-        vi.setSystemTime(new Date('2024-06-15T09:00:00'));
-        await petView.onOpen();
-
-        const setSpy = vi.spyOn(petView.petComponent!, '$set');
-
-        // Trigger first transition (9am → 6pm = 9h)
-        vi.advanceTimersByTime(9 * 60 * 60 * 1000 + 1);
-
-        const firstCallCount = setSpy.mock.calls.filter(([props]) =>
-          typeof props.backgroundPath === 'string' && props.backgroundPath.includes('background')
-        ).length;
-        expect(firstCallCount).toBe(1);
-
-        // Trigger second transition (6pm → next 6am = 12h)
-        vi.advanceTimersByTime(12 * 60 * 60 * 1000);
-
-        const secondCallCount = setSpy.mock.calls.filter(([props]) =>
-          typeof props.backgroundPath === 'string' && props.backgroundPath.includes('background')
-        ).length;
-        expect(secondCallCount).toBe(2);
-      });
-
-      it('fires promptly when opened very close to a boundary (1 minute before 6pm)', async () => {
-        vi.setSystemTime(new Date('2024-06-15T17:59:00'));
-        await petView.onOpen();
-
-        const setSpy = vi.spyOn(petView.petComponent!, '$set');
-
-        // Advance just over 1 minute
-        vi.advanceTimersByTime(61 * 1000);
-
-        const bgCall = setSpy.mock.calls.find(([props]) =>
-          typeof props.backgroundPath === 'string' && props.backgroundPath.includes('background')
-        );
-        expect(bgCall).toBeDefined();
-        expect(backgroundFilenameFrom(bgCall![0].backgroundPath)).toBe('background-night-8fps.gif');
-        expect(bgCall![0].backgroundColor).toBe(BACKGROUNDS.NIGHT.skyColor);
-      });
+      const bgCall = spy.mock.calls.find(([p]) => p.includes('background'));
+      expect(bgCall).toBeDefined();
+      expect(bgCall![0]).toContain(BACKGROUNDS.NIGHT.file);
     });
 
-    describe('cleanup on onClose', () => {
-      it('does not call $set with backgroundPath after view is closed', async () => {
-        vi.setSystemTime(new Date('2024-06-15T09:00:00'));
-        await petView.onOpen();
+    it('applyBackground() is public and updates the pet component to the current theme', async () => {
+      setBackgroundTheme('night');
+      await petView.onOpen();
 
-        const setSpy = vi.spyOn(petView.petComponent!, '$set');
+      setBackgroundTheme('day');
+      const setSpy = vi.spyOn(petView.petComponent!, '$set');
 
-        await petView.onClose();
+      petView.applyBackground();
 
-        // Advance past the 6pm boundary
-        vi.advanceTimersByTime(9 * 60 * 60 * 1000 + 1);
-
-        const bgCall = setSpy.mock.calls.find(([props]) =>
-          typeof props?.backgroundPath === 'string' && props.backgroundPath.includes('background')
-        );
-        expect(bgCall).toBeUndefined();
-      });
-
-      it('does not throw when closed before any transition fires', async () => {
-        vi.setSystemTime(new Date('2024-06-15T09:00:00'));
-        await petView.onOpen();
-
-        await expect(petView.onClose()).resolves.not.toThrow();
-      });
-
-      it('does not throw if petComponent is null when background transition fires', async () => {
-        vi.setSystemTime(new Date('2024-06-15T09:00:00'));
-        await petView.onOpen();
-
-        // Simulate component being externally destroyed before the timeout fires
-        petView.petComponent?.$destroy();
-        petView.petComponent = null;
-
-        // Advancing past boundary should not throw even with null petComponent
-        expect(() => vi.advanceTimersByTime(9 * 60 * 60 * 1000 + 1)).not.toThrow();
-      });
-    });
-
-    describe('self-heal on reopen', () => {
-      it('shows night background when reopened at night after being open during the day', async () => {
-        // First open during the day
-        vi.setSystemTime(new Date('2024-06-15T09:00:00'));
-        await petView.onOpen();
-        await petView.onClose();
-
-        // Reopen at night
-        vi.setSystemTime(new Date('2024-06-15T22:00:00'));
-        const spy = captureBackgroundResourceCall(petView);
-        await petView.onOpen();
-
-        const bgCall = spy.mock.calls.find(([p]) => p.includes('background'));
-        expect(backgroundFilenameFrom(bgCall![0])).toBe('background-night-8fps.gif');
-      });
-
-      it('shows day background when reopened during day after being open at night', async () => {
-        // First open at night
-        vi.setSystemTime(new Date('2024-06-15T22:00:00'));
-        await petView.onOpen();
-        await petView.onClose();
-
-        // Reopen during day
-        vi.setSystemTime(new Date('2024-06-16T10:00:00'));
-        const spy = captureBackgroundResourceCall(petView);
-        await petView.onOpen();
-
-        const bgCall = spy.mock.calls.find(([p]) => p.includes('background'));
-        expect(backgroundFilenameFrom(bgCall![0])).toBe('background-day-8fps.gif');
-      });
+      const call = setSpy.mock.calls.find(([props]) =>
+        typeof props.backgroundPath === 'string' && props.backgroundPath.includes('background')
+      );
+      expect(call).toBeDefined();
+      expect(call![0].background).toBe(BACKGROUNDS.DAY);
     });
   });
 });

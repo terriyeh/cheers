@@ -43,6 +43,9 @@ describe('CelebrationService', () => {
 	let service: CelebrationService;
 	let mockStatusBarItem: MockStatusBarItem;
 
+	/** Shared mock file for task/link tests — in production file is always present */
+	const mockFile = { path: 'test-file.md' } as TFile;
+
 	beforeEach(() => {
 		vi.useFakeTimers();
 
@@ -211,7 +214,7 @@ describe('CelebrationService', () => {
 
 			// First call: no checked tasks — advance timer so baseline fires before mock clear
 			mockEditor.getValue = vi.fn().mockReturnValue('- [ ] Complete this task');
-			editorChangeHandler?.(mockEditor, { file: null });
+			editorChangeHandler?.(mockEditor, { file: mockFile });
 			vi.advanceTimersByTime(100);
 
 			vi.clearAllMocks();
@@ -220,7 +223,7 @@ describe('CelebrationService', () => {
 			mockEditor.getValue = vi.fn().mockReturnValue('- [x] Complete this task');
 
 			// Debounced handler should trigger after 100ms
-			editorChangeHandler?.(mockEditor, { file: null });
+			editorChangeHandler?.(mockEditor, { file: mockFile });
 			vi.advanceTimersByTime(100);
 
 			expect(plugin.petView?.transitionState).toHaveBeenCalledWith('celebration');
@@ -237,12 +240,12 @@ describe('CelebrationService', () => {
 
 			// Baseline: establish 0 tasks checked (per-file tracking requires first call to set baseline)
 			mockEditor.getValue = vi.fn().mockReturnValue('- [ ] Task 1\n- [ ] Task 2\n- [ ] Task 3');
-			editorChangeHandler?.(mockEditor, { file: null });
+			editorChangeHandler?.(mockEditor, { file: mockFile });
 			vi.advanceTimersByTime(100);
 
 			// First increase: 1 task checked → detected and celebrated
 			mockEditor.getValue = vi.fn().mockReturnValue('- [x] Task 1\n- [ ] Task 2\n- [ ] Task 3');
-			editorChangeHandler?.(mockEditor, { file: null });
+			editorChangeHandler?.(mockEditor, { file: mockFile });
 			vi.advanceTimersByTime(100);
 			expect(plugin.petView?.transitionState).toHaveBeenCalledWith('celebration');
 
@@ -252,7 +255,7 @@ describe('CelebrationService', () => {
 			mockEditor.getValue = vi
 				.fn()
 				.mockReturnValue('- [x] Task 1\n- [x] Task 2\n- [x] Task 3');
-			editorChangeHandler?.(mockEditor, { file: null });
+			editorChangeHandler?.(mockEditor, { file: mockFile });
 			vi.advanceTimersByTime(100);
 
 			// Second celebration blocked while celebrating (by design)
@@ -269,7 +272,7 @@ describe('CelebrationService', () => {
 			const editorChangeHandler = (mockWorkspace.on as any).mock.calls.find(
 				(call: any) => call[0] === 'editor-change'
 			)?.[1];
-			editorChangeHandler?.(mockEditor, { file: null });
+			editorChangeHandler?.(mockEditor, { file: mockFile });
 			vi.advanceTimersByTime(100);
 
 			expect(plugin.petView?.transitionState).not.toHaveBeenCalled();
@@ -286,14 +289,14 @@ describe('CelebrationService', () => {
 
 			// Initial state: 2 tasks checked
 			mockEditor.getValue = vi.fn().mockReturnValue('- [x] Task 1\n- [x] Task 2');
-			editorChangeHandler?.(mockEditor, { file: null });
+			editorChangeHandler?.(mockEditor, { file: mockFile });
 			vi.advanceTimersByTime(100);
 
 			vi.clearAllMocks();
 
 			// One task unchecked (count decreased from 2 to 1)
 			mockEditor.getValue = vi.fn().mockReturnValue('- [ ] Task 1\n- [x] Task 2');
-			editorChangeHandler?.(mockEditor, { file: null });
+			editorChangeHandler?.(mockEditor, { file: mockFile });
 			vi.advanceTimersByTime(100);
 
 			expect(plugin.petView?.transitionState).not.toHaveBeenCalled();
@@ -312,14 +315,14 @@ describe('CelebrationService', () => {
 
 			// Initial state: no links
 			mockEditor.getValue = vi.fn().mockReturnValue('Some text without links');
-			editorChangeHandler?.(mockEditor, { file: null });
+			editorChangeHandler?.(mockEditor, { file: mockFile });
 			vi.advanceTimersByTime(100);
 
 			vi.clearAllMocks();
 
 			// Link added
 			mockEditor.getValue = vi.fn().mockReturnValue('Some text with [[a link]]');
-			editorChangeHandler?.(mockEditor, { file: null });
+			editorChangeHandler?.(mockEditor, { file: mockFile });
 			vi.advanceTimersByTime(100);
 
 			expect(plugin.petView?.transitionState).toHaveBeenCalledWith('celebration');
@@ -336,14 +339,14 @@ describe('CelebrationService', () => {
 
 			// Initial state: no links
 			mockEditor.getValue = vi.fn().mockReturnValue('Some text');
-			editorChangeHandler?.(mockEditor, { file: null });
+			editorChangeHandler?.(mockEditor, { file: mockFile });
 			vi.advanceTimersByTime(100);
 
 			vi.clearAllMocks();
 
 			// Markdown link added
 			mockEditor.getValue = vi.fn().mockReturnValue('Some [text](https://example.com)');
-			editorChangeHandler?.(mockEditor, { file: null });
+			editorChangeHandler?.(mockEditor, { file: mockFile });
 			vi.advanceTimersByTime(100);
 
 			expect(plugin.petView?.transitionState).toHaveBeenCalledWith('celebration');
@@ -361,10 +364,82 @@ describe('CelebrationService', () => {
 			)?.[1];
 
 			mockEditor.getValue = vi.fn().mockReturnValue('Text with [[link]]');
-			editorChangeHandler?.(mockEditor, { file: null });
+			editorChangeHandler?.(mockEditor, { file: mockFile });
 			vi.advanceTimersByTime(100);
 
 			expect(plugin.petView?.transitionState).not.toHaveBeenCalled();
+		});
+
+		describe('cursor exclusion (mid-type suppression)', () => {
+			function makeEditorWithCursor(value: string, offset: number) {
+				return {
+					getValue: vi.fn().mockReturnValue(value),
+					getCursor: vi.fn().mockReturnValue({ line: 0, ch: offset }),
+					posToOffset: vi.fn().mockReturnValue(offset),
+				} as unknown as Editor;
+			}
+
+			function getEditorChangeHandler() {
+				return (mockWorkspace.on as any).mock.calls.find(
+					(call: any) => call[0] === 'editor-change'
+				)?.[1];
+			}
+
+			function establishBaseline(handler: any) {
+				const blankEditor = { getValue: vi.fn().mockReturnValue('') } as unknown as Editor;
+				handler?.(blankEditor, { file: mockFile });
+				vi.advanceTimersByTime(100);
+				vi.clearAllMocks();
+			}
+
+			it('does not celebrate when cursor is inside a wiki link being typed', () => {
+				const handler = getEditorChangeHandler();
+				establishBaseline(handler);
+
+				// Cursor at position 3, inside '[[link]]' (range 0–7)
+				const editor = makeEditorWithCursor('[[link]]', 3);
+				handler?.(editor, { file: mockFile });
+				vi.advanceTimersByTime(100);
+
+				expect(plugin.petView?.transitionState).not.toHaveBeenCalled();
+			});
+
+			it('celebrates when cursor is exactly at the end of a wiki link (past the closing ]])', () => {
+				const handler = getEditorChangeHandler();
+				establishBaseline(handler);
+
+				// '[[link]]'.length === 8; cursor at 8 is one past the last ']'
+				// Tests the >= boundary: position equal to end is outside the link.
+				const editor = makeEditorWithCursor('[[link]]', 8);
+				handler?.(editor, { file: mockFile });
+				vi.advanceTimersByTime(100);
+
+				expect(plugin.petView?.transitionState).toHaveBeenCalledWith('celebration');
+			});
+
+			it('does not celebrate when cursor is inside a markdown link being typed', () => {
+				const handler = getEditorChangeHandler();
+				establishBaseline(handler);
+
+				// '[text](url)' length 11, cursor at 3 (inside the text portion)
+				const editor = makeEditorWithCursor('[text](url)', 3);
+				handler?.(editor, { file: mockFile });
+				vi.advanceTimersByTime(100);
+
+				expect(plugin.petView?.transitionState).not.toHaveBeenCalled();
+			});
+
+			it('celebrates when cursor methods are present but cursor is past the link', () => {
+				const handler = getEditorChangeHandler();
+				establishBaseline(handler);
+
+				// Cursor at 20, well past the end of '[[link]]' (length 8)
+				const editor = makeEditorWithCursor('[[link]]', 20);
+				handler?.(editor, { file: mockFile });
+				vi.advanceTimersByTime(100);
+
+				expect(plugin.petView?.transitionState).toHaveBeenCalledWith('celebration');
+			});
 		});
 
 		it('should ignore link removal (count decrease)', () => {
@@ -378,14 +453,14 @@ describe('CelebrationService', () => {
 
 			// Initial state: 2 links
 			mockEditor.getValue = vi.fn().mockReturnValue('[[Link 1]] and [[Link 2]]');
-			editorChangeHandler?.(mockEditor, { file: null });
+			editorChangeHandler?.(mockEditor, { file: mockFile });
 			vi.advanceTimersByTime(100);
 
 			vi.clearAllMocks();
 
 			// One link removed
 			mockEditor.getValue = vi.fn().mockReturnValue('[[Link 1]] only');
-			editorChangeHandler?.(mockEditor, { file: null });
+			editorChangeHandler?.(mockEditor, { file: mockFile });
 			vi.advanceTimersByTime(100);
 
 			expect(plugin.petView?.transitionState).not.toHaveBeenCalled();
@@ -895,14 +970,14 @@ describe('CelebrationService', () => {
 			)?.[1];
 
 			// Establish baseline (0 checked tasks) so the rapid changes register as a delta
-			editorChangeHandler?.({ getValue: vi.fn().mockReturnValue('') }, { file: null });
+			editorChangeHandler?.({ getValue: vi.fn().mockReturnValue('') }, { file: mockFile });
 			vi.advanceTimersByTime(100);
 			vi.clearAllMocks();
 
 			// Trigger multiple rapid changes
-			editorChangeHandler?.(mockEditor, { file: null });
-			editorChangeHandler?.(mockEditor, { file: null });
-			editorChangeHandler?.(mockEditor, { file: null });
+			editorChangeHandler?.(mockEditor, { file: mockFile });
+			editorChangeHandler?.(mockEditor, { file: mockFile });
+			editorChangeHandler?.(mockEditor, { file: mockFile });
 
 			// Should not trigger yet
 			expect(plugin.petView?.transitionState).not.toHaveBeenCalled();
@@ -923,12 +998,12 @@ describe('CelebrationService', () => {
 
 			// First change: no content — advance full 100ms to fire debounce and set baseline
 			mockEditor.getValue = vi.fn().mockReturnValue('');
-			editorChangeHandler?.(mockEditor, { file: null });
+			editorChangeHandler?.(mockEditor, { file: mockFile });
 			vi.advanceTimersByTime(100);
 
 			// Second change before debounce completes (resets timer): adds a task
 			mockEditor.getValue = vi.fn().mockReturnValue('- [x] Task complete');
-			editorChangeHandler?.(mockEditor, { file: null });
+			editorChangeHandler?.(mockEditor, { file: mockFile });
 			vi.advanceTimersByTime(60);
 
 			// Still shouldn't have triggered (debounce not complete)
@@ -1120,11 +1195,11 @@ describe('CelebrationService', () => {
 					(call: any) => call[0] === 'editor-change'
 				)?.[1];
 				// Establish baseline (0 links) so the wiki link registers as a new creation
-				editorChangeHandler?.({ getValue: vi.fn().mockReturnValue('') }, { file: null });
+				editorChangeHandler?.({ getValue: vi.fn().mockReturnValue('') }, { file: mockFile });
 				vi.advanceTimersByTime(100);
 				vi.clearAllMocks();
 				const editorWithLink = { getValue: vi.fn().mockReturnValue('[[my-note]]') } as unknown as Editor;
-				editorChangeHandler?.(editorWithLink, { file: null });
+				editorChangeHandler?.(editorWithLink, { file: mockFile });
 				vi.advanceTimersByTime(100);
 				expect(mockStatusBarItem.setText).toHaveBeenCalledWith(expectedMsg('link-create'));
 				expect(mockStatusBarItem.show).toHaveBeenCalled();
@@ -1199,12 +1274,12 @@ describe('CelebrationService', () => {
 				expect(mockStatusBarItem.setText).toHaveBeenCalledWith(expectedMsg('note-create'));
 
 				// Establish task baseline (0 checked) so the checked task registers as a new completion
-				editorChangeHandler?.({ getValue: vi.fn().mockReturnValue('') }, { file: null });
+				editorChangeHandler?.({ getValue: vi.fn().mockReturnValue('') }, { file: mockFile });
 				vi.advanceTimersByTime(100);
 
 				// While isCelebrating, task completion fires status bar before the guard
 				const editorWithTask = { getValue: vi.fn().mockReturnValue('- [x] Done') } as unknown as Editor;
-				editorChangeHandler?.(editorWithTask, { file: null });
+				editorChangeHandler?.(editorWithTask, { file: mockFile });
 				vi.advanceTimersByTime(100); // trigger debounce
 
 				// Last setText call should be the task-complete message
@@ -1284,11 +1359,11 @@ describe('CelebrationService', () => {
 			const handler = getEditorChangeHandler();
 
 			// Baseline: no links
-			handler?.({ getValue: () => 'no links here' }, { file: null });
+			handler?.({ getValue: () => 'no links here' }, { file: mockFile });
 			vi.advanceTimersByTime(100);
 
 			// Add one link
-			handler?.({ getValue: () => 'no links here [[new-note]]' }, { file: null });
+			handler?.({ getValue: () => 'no links here [[new-note]]' }, { file: mockFile });
 			vi.advanceTimersByTime(100);
 
 			expect(plugin.dailyWordData.linksCreatedToday).toBe(1);
@@ -1299,11 +1374,11 @@ describe('CelebrationService', () => {
 			const handler = getEditorChangeHandler();
 
 			// Baseline: no links
-			handler?.({ getValue: () => '' }, { file: null });
+			handler?.({ getValue: () => '' }, { file: mockFile });
 			vi.advanceTimersByTime(100);
 
 			// Add link even though toggle is off
-			handler?.({ getValue: () => '[[link]]' }, { file: null });
+			handler?.({ getValue: () => '[[link]]' }, { file: mockFile });
 			vi.advanceTimersByTime(100);
 
 			expect(plugin.dailyWordData.linksCreatedToday).toBe(1);
@@ -1321,12 +1396,12 @@ describe('CelebrationService', () => {
 			const handler = getEditorChangeHandler();
 
 			// Baseline: no links
-			handler?.({ getValue: () => '' }, { file: null });
+			handler?.({ getValue: () => '' }, { file: mockFile });
 			vi.advanceTimersByTime(100);
 			vi.clearAllMocks();
 
 			// Add link
-			handler?.({ getValue: () => '[[new-link]]' }, { file: null });
+			handler?.({ getValue: () => '[[new-link]]' }, { file: mockFile });
 			vi.advanceTimersByTime(100);
 
 			expect((plugin.petView as any).updateStatsComponent).toHaveBeenCalled();
@@ -1376,12 +1451,12 @@ describe('CelebrationService', () => {
 			const handler = getEditorChangeHandler();
 
 			// Baseline: no links
-			handler?.({ getValue: () => '' }, { file: null });
+			handler?.({ getValue: () => '' }, { file: mockFile });
 			vi.advanceTimersByTime(100);
 			vi.clearAllMocks();
 
 			// Add a link
-			handler?.({ getValue: () => '[[new-link]]' }, { file: null });
+			handler?.({ getValue: () => '[[new-link]]' }, { file: mockFile });
 			vi.advanceTimersByTime(100);
 
 			expect(plugin.saveSettings).toHaveBeenCalled();

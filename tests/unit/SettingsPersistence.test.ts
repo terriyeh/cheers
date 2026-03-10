@@ -10,7 +10,7 @@ describe('Settings Persistence', () => {
 	describe('Default Settings Structure', () => {
 		it('provides complete default settings', () => {
 			expect(DEFAULT_SETTINGS).toBeDefined();
-			expect(DEFAULT_SETTINGS.petName).toBe('Kit');
+			expect(DEFAULT_SETTINGS.petName).toBe('Mochi');
 			expect(DEFAULT_SETTINGS.userName).toBe('');
 			expect(DEFAULT_SETTINGS.celebrations.onWordGoal).toBe(true);
 			expect(DEFAULT_SETTINGS.celebrations.dailyWordGoal).toBe(1667);
@@ -36,7 +36,7 @@ describe('Settings Persistence', () => {
 			const loadedData = {};
 			const merged = Object.assign({}, DEFAULT_SETTINGS, loadedData);
 
-			expect(merged.petName).toBe('Kit');
+			expect(merged.petName).toBe('Mochi');
 			expect(merged.userName).toBe('');
 		});
 
@@ -80,7 +80,7 @@ describe('Settings Persistence', () => {
 			expect(merged).toHaveProperty('movementSpeed');
 
 			// Verify no unexpected fields
-			const expectedKeys = ['petName', 'userName', 'movementSpeed', 'celebrations', 'dashboardColorMode'];
+			const expectedKeys = ['petName', 'userName', 'movementSpeed', 'celebrations', 'dashboardColorMode', 'backgroundTheme'];
 			const actualKeys = Object.keys(merged);
 			expect(actualKeys.sort()).toEqual(expectedKeys.sort());
 		});
@@ -163,7 +163,7 @@ describe('Settings Persistence', () => {
 		it('updates user name while preserving other fields', () => {
 			settings.userName = 'NewUser';
 
-			expect(settings.petName).toBe('Kit');
+			expect(settings.petName).toBe('Mochi');
 			expect(settings.userName).toBe('NewUser');
 		});
 
@@ -173,6 +173,32 @@ describe('Settings Persistence', () => {
 
 			expect(settings.petName).toBe('Rover');
 			expect(settings.userName).toBe('David');
+		});
+	});
+
+	// ─── backgroundTheme ─────────────────────────────────────────────────────
+
+	describe('backgroundTheme defaults and merging', () => {
+		it('DEFAULT_SETTINGS includes backgroundTheme defaulting to "day"', () => {
+			expect(DEFAULT_SETTINGS.backgroundTheme).toBe('day');
+		});
+
+		it('merging empty loaded data preserves default "day"', () => {
+			const loadedData = {};
+			const merged = { ...DEFAULT_SETTINGS, ...loadedData } as CheersSettings;
+			expect(merged.backgroundTheme).toBe('day');
+		});
+
+		it('merging with backgroundTheme: "night" overrides the default', () => {
+			const loadedData = { backgroundTheme: 'night' as const };
+			const merged = { ...DEFAULT_SETTINGS, ...loadedData } as CheersSettings;
+			expect(merged.backgroundTheme).toBe('night');
+		});
+
+		it('merging with backgroundTheme: "day" explicitly keeps "day"', () => {
+			const loadedData = { backgroundTheme: 'day' as const };
+			const merged = { ...DEFAULT_SETTINGS, ...loadedData } as CheersSettings;
+			expect(merged.backgroundTheme).toBe('day');
 		});
 	});
 

@@ -4,7 +4,6 @@
  */
 
 import type { PetState, StateChangeEvent } from '../../src/types/pet';
-import { calculateMovementDuration as utilCalculateMovementDuration } from '../../src/utils/animation';
 import { CELEBRATION_OVERLAY_CONSTANTS } from '../../src/utils/celebration-constants';
 
 /**
@@ -68,18 +67,6 @@ export function shouldAutoReturnToWalking(state: PetState): boolean {
  */
 export function getStateDuration(state: PetState): number {
   return STATE_DURATIONS[state];
-}
-
-/**
- * Calculate horizontal movement duration based on speed (0-100) and container width
- * Now maintains constant speed in px/s regardless of container size
- * Linear scaling: speed 0% = 33s (slowest), speed 100% = 6s (fastest)
- * @param speed - Movement speed (0-100)
- * @param containerWidth - Container width in pixels (defaults to reference width of 800px)
- */
-export function calculateMovementDuration(speed: number, containerWidth: number = 800): number {
-  // Delegate to centralized utility
-  return utilCalculateMovementDuration(speed, containerWidth);
 }
 
 /**

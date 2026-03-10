@@ -235,7 +235,7 @@ export class CelebrationService {
 
 		// Check all celebration types
 		this.checkTaskCompletion(content, file);
-		this.checkLinkCreation(content, file);
+		this.checkLinkCreation(content, editor, file);
 		this.checkWordGoals(content, file);
 	}
 
@@ -246,11 +246,12 @@ export class CelebrationService {
 	 * Counter tracking is unconditional; celebration requires the toggle.
 	 */
 	private checkTaskCompletion(content: string, file: TFile | null): void {
+		if (!file) return;
 		const taskPattern = /- \[x\]/gi;
 		const matches = content.match(taskPattern);
 		const currentTaskCount = matches ? matches.length : 0;
 
-		const filePath = file?.path ?? '';
+		const filePath = file.path;
 		if (!this.fileTaskCounts.has(filePath)) {
 			this.fileTaskCounts.set(filePath, currentTaskCount);
 			return;
@@ -279,17 +280,37 @@ export class CelebrationService {
 	 * pre-existing links from inflating today's count on file open.
 	 * Counter tracking is unconditional; celebration requires the toggle.
 	 */
-	private checkLinkCreation(content: string, file: TFile | null): void {
+	private checkLinkCreation(content: string, editor: Editor, file: TFile | null): void {
+		if (!file) return;
 		// Require at least 1 character inside brackets to avoid celebrating on [[]] or []()
 		// Length bounds prevent O(n*m) backtracking on files with many unclosed [[
 		const wikiLinkPattern = /\[\[.{1,500}?\]\]/g;
 		const markdownLinkPattern = /\[.{1,500}?\]\(.{1,2000}?\)/g;
 
-		const wikiLinks = content.match(wikiLinkPattern) || [];
-		const markdownLinks = content.match(markdownLinkPattern) || [];
-		const currentLinkCount = wikiLinks.length + markdownLinks.length;
+		// Cursor offset: exclude any link whose range contains the cursor so we don't
+		// fire mid-type (e.g. CM6 auto-pairing inserts [[|]] the moment [[ is typed).
+		// Falls back to -1 if the editor doesn't expose position methods (e.g. in tests),
+		// which is always outside any link so all completed links are counted normally.
+		const cursorOffset = (typeof editor.getCursor === 'function' && typeof editor.posToOffset === 'function')
+			? editor.posToOffset(editor.getCursor())
+			: -1;
 
-		const filePath = file?.path ?? '';
+		let currentLinkCount = 0;
+		let m: RegExpExecArray | null;
+		wikiLinkPattern.lastIndex = 0;
+		while ((m = wikiLinkPattern.exec(content)) !== null) {
+			if (cursorOffset < m.index || cursorOffset >= m.index + m[0].length) {
+				currentLinkCount++;
+			}
+		}
+		markdownLinkPattern.lastIndex = 0;
+		while ((m = markdownLinkPattern.exec(content)) !== null) {
+			if (cursorOffset < m.index || cursorOffset >= m.index + m[0].length) {
+				currentLinkCount++;
+			}
+		}
+
+		const filePath = file.path;
 		if (!this.fileLinkCounts.has(filePath)) {
 			this.fileLinkCounts.set(filePath, currentLinkCount);
 			return;
@@ -388,9 +409,7 @@ export class CelebrationService {
 
 		const daily = this.plugin.dailyWordData;
 
-		// Midnight reset — processEditorChange calls resetDailyStatsIfNeeded() before
-		// reaching here, so this is a safety net for any future direct callers.
-		this.resetDailyStatsIfNeeded();
+		// Precondition: caller (processEditorChange) has already called resetDailyStatsIfNeeded().
 
 		// Always track net word change — deletions shrink the count, additions grow it.
 		// Clamped to [0, MAX_DAILY_COUNTER]. goalCelebrated only gates the celebration.

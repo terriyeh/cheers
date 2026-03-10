@@ -23,9 +23,9 @@ export interface DailyWordData {
 export interface CheersSettings {
 	/** Name of the pet companion */
 	petName: string;
-	/** Name of the user (what pet calls them) */
+	/** Name of the user (what the pet calls them) — reserved for future personalised speech; no UI yet */
 	userName: string;
-	/** Movement speed (0-100%): 0-60 = walking, 61-100 = running */
+	/** Movement speed (0-100%) */
 	movementSpeed: number;
 	/** Celebration settings */
 	celebrations: {
@@ -42,13 +42,15 @@ export interface CheersSettings {
 	};
 	/** Dashboard color theme: 'warm' (amber/orange) or 'cool' (blue/teal) */
 	dashboardColorMode: 'warm' | 'cool';
+	/** Background scene: 'day' or 'night' */
+	backgroundTheme: 'day' | 'night';
 }
 
 /**
  * Default settings values
  */
 export const DEFAULT_SETTINGS: CheersSettings = {
-	petName: 'Kit',
+	petName: 'Mochi',
 	userName: '',
 	movementSpeed: 50,
 	celebrations: {
@@ -59,6 +61,7 @@ export const DEFAULT_SETTINGS: CheersSettings = {
 		dailyWordGoal: 1667,
 	},
 	dashboardColorMode: 'warm',
+	backgroundTheme: 'day',
 };
 
 /**

@@ -7,6 +7,7 @@ import { DEFAULT_SETTINGS, VALIDATION_RULES } from './types/settings';
 import { CelebrationService } from './celebrations/CelebrationService';
 import { CheersSettingTab } from './settings/SettingsTab';
 import { parseDailyWordData } from './utils/daily-word-data';
+import { removeConfettiStyles } from './utils/confetti';
 
 // Build-time constant injected by esbuild
 declare const __DEV__: boolean;
@@ -44,7 +45,7 @@ export default class CheersPlugin extends Plugin {
 		this.registerView(
 			VIEW_TYPE_PET,
 			(leaf) => {
-				const view = new PetView(leaf);
+				const view = new PetView(leaf, this);
 				this.petView = view;
 				return view;
 			}
@@ -150,6 +151,9 @@ Available states:
 
 		// Clean up celebration service
 		this.celebrationService?.cleanup();
+
+		// Remove injected confetti style tag so it doesn't persist after plugin reload
+		removeConfettiStyles();
 
 		// Clean up debug interface (development only)
 		if (__DEV__ && window.cheersDebug) {

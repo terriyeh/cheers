@@ -17,20 +17,21 @@ export class CheersSettingTab extends PluginSettingTab {
 		new Setting(containerEl)
 			.setName('Pet name')
 			.setDesc('What should we call your pet?')
-			.addText((text) =>
-				text
-					.setPlaceholder('Kit')
+			.addText((text) => {
+				text.inputEl.maxLength = 30;
+				return text
+					.setPlaceholder('Mochi')
 					.setValue(this.plugin.settings.petName)
 					.onChange(async (value) => {
 						this.plugin.settings.petName = value;
 						await this.plugin.saveSettings();
-					})
-			);
+					});
+			});
 
 		// Movement Speed
 		new Setting(containerEl)
 			.setName('Movement speed')
-			.setDesc('How fast your pet moves (0-60: walking, 61-100: running)')
+			.setDesc('How fast your pet moves')
 			.addSlider((slider) =>
 				slider
 					.setLimits(0, 100, 1)
@@ -105,13 +106,16 @@ export class CheersSettingTab extends PluginSettingTab {
 					.onChange(async (value) => {
 						this.plugin.settings.celebrations.onWordGoal = value;
 						await this.plugin.saveSettings();
-						this.display();
+						wordGoalSubSettings.style.display = value ? '' : 'none';
 						this.plugin.petView?.updateStatsComponent();
 					})
 			);
 
-		if (this.plugin.settings.celebrations.onWordGoal) {
-			new Setting(containerEl)
+		// Sub-settings for word goals — always created, shown/hidden to avoid scroll reset
+		const wordGoalSubSettings = containerEl.createDiv();
+		wordGoalSubSettings.style.display = this.plugin.settings.celebrations.onWordGoal ? '' : 'none';
+
+		new Setting(wordGoalSubSettings)
 				.setName('Daily word goal')
 				.setDesc('Words written today across your vault (resets at midnight).')
 				.addText((text) =>
@@ -120,7 +124,7 @@ export class CheersSettingTab extends PluginSettingTab {
 						.setValue(this.plugin.settings.celebrations.dailyWordGoal?.toString() ?? '')
 						.onChange(async (value) => {
 							const num = parseInt(value.trim(), 10);
-							const errorEl = containerEl.querySelector<HTMLElement>('.cheers-word-goal-error');
+							const errorEl = wordGoalSubSettings.querySelector<HTMLElement>('.cheers-word-goal-error');
 							if (Number.isFinite(num) && num > 0 && num <= 100_000) {
 								this.plugin.settings.celebrations.dailyWordGoal = num;
 								await this.plugin.saveSettings();
@@ -132,21 +136,20 @@ export class CheersSettingTab extends PluginSettingTab {
 						})
 				);
 
-			// Error appears below the input (correct visual order)
-			const wordGoalError = containerEl.createEl('p', {
-				text: 'Daily word goal is required when word count celebrations are enabled.',
-				cls: 'setting-item-description cheers-word-goal-error',
-			});
-			wordGoalError.style.color = 'var(--text-error)';
-			wordGoalError.style.display =
-				this.plugin.settings.celebrations.dailyWordGoal === null ? 'block' : 'none';
+		// Error appears below the input (correct visual order)
+		const wordGoalError = wordGoalSubSettings.createEl('p', {
+			text: 'Daily word goal is required when word count celebrations are enabled.',
+			cls: 'setting-item-description cheers-word-goal-error',
+		});
+		wordGoalError.style.color = 'var(--text-error)';
+		wordGoalError.style.display =
+			this.plugin.settings.celebrations.dailyWordGoal === null ? 'block' : 'none';
 
-			// Per-note goal hint
-			containerEl.createEl('p', {
-				text: "To add a note-specific word goal, add the word-goal file property and enter a numerical value as the word target for that file. For example, word-goal: 500 sets a word target of 500 for that file.",
-				cls: 'setting-item-description',
-			});
-		}
+		// Per-note goal hint
+		wordGoalSubSettings.createEl('p', {
+			text: "To add a note-specific word goal, add the word-goal file property and enter a numerical value as the word target for that file. For example, word-goal: 500 sets a word target of 500 for that file.",
+			cls: 'setting-item-description',
+		});
 
 		containerEl.createEl('h3', { text: 'Dashboard' });
 
@@ -163,6 +166,23 @@ export class CheersSettingTab extends PluginSettingTab {
 							this.plugin.settings.dashboardColorMode = value;
 							await this.plugin.saveSettings();
 							this.plugin.petView?.updateStatsComponent();
+						}
+					})
+			);
+
+		new Setting(containerEl)
+			.setName('Background')
+			.setDesc('Scene shown behind your pet')
+			.addDropdown((dropdown) =>
+				dropdown
+					.addOption('day', 'Day')
+					.addOption('night', 'Night')
+					.setValue(this.plugin.settings.backgroundTheme)
+					.onChange(async (value: string) => {
+						if (value === 'day' || value === 'night') {
+							this.plugin.settings.backgroundTheme = value;
+							await this.plugin.saveSettings();
+							this.plugin.petView?.applyBackground();
 						}
 					})
 			);
