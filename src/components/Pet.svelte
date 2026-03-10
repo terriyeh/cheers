@@ -4,9 +4,8 @@
   import {
     ANIMATION_CONSTANTS,
     clampMovementSpeed,
-    calculateSpeedInPixelsPerSecond,
   } from '../utils/animation';
-  import { PET_SPRITES, BACKGROUNDS } from '../utils/asset-paths';
+  import { PET_SPRITES, BACKGROUNDS, type Background } from '../utils/asset-paths';
   import { CELEBRATION_OVERLAY_CONSTANTS } from '../utils/celebration-constants';
   import { spawnConfettiRain, cancelConfettiCleanup } from '../utils/confetti';
 
@@ -36,15 +35,16 @@
   export let backgroundPath: string = '';
 
   /**
-   * Sky fill color matching the current background scene (passed from PetView).
-   * Fills the container above the tiled GIF so the sky extends seamlessly upward.
+   * Background scene data — drives sky color, tile size, and pet walk offset.
+   * Path construction is handled by PetView (platform-specific); only scene
+   * metadata lives here so all values travel together and stay in sync.
    */
-  export let backgroundColor: string = BACKGROUNDS.DAY.skyColor;
+  export let background: Background = BACKGROUNDS.DAY;
 
   /**
    * Pet's name (from settings)
    */
-  export let petName: string = 'Kit';
+  export let petName: string = 'Mochi';
 
   /**
    * Movement speed (0-100) from settings
@@ -79,46 +79,66 @@
    */
   $: clampedSpeed = clampMovementSpeed(movementSpeed);
 
-  /**
-   * Calculate base speed in pixels per second using reference container width
-   * This ensures consistent movement speed regardless of actual container size
-   * Uses fixed 100px display width for calculations (PET_DISPLAY_SIZE)
-   */
-  $: speedInPixelsPerSecond = calculateSpeedInPixelsPerSecond(clampedSpeed, petWidth);
-
-  // Movement duration will be calculated dynamically based on actual container width
-  let movementDuration = 15; // Default fallback value
+  // Baseline duration (seconds) set at init and after each container resize.
+  // Speed changes use playbackRate relative to this baseline instead of changing
+  // animation-duration — changing duration while an animation is running clips
+  // currentTime to the new duration if it exceeds it, causing the visible jump.
+  let movementBaseDurationS = 0;
+  // Last measured maxLeft; changing this means the container was resized.
+  let movementLastMaxLeft = -1;
 
   /**
-   * Calculate movement range for adaptive edge-to-edge movement
-   * Also calculates duration based on constant speed to maintain consistent px/s across window sizes
-   * Uses fixed 100px display width for boundary calculations (PET_DISPLAY_SIZE)
+   * Update layout and movement speed.
+   *
+   * px/s model: speedPxPerS = MIN + (clampedSpeed/100) × (MAX − MIN)
+   *             durationS   = maxLeft / speedPxPerS
+   *
+   * On first call / resize → set --movement-duration, start at midpoint via
+   *   --animation-delay, reset playbackRate to 1.
+   *
+   * On speed-only change → only adjust playbackRate = baseDuration / durationS.
+   *   The CSS animation-duration stays fixed; playbackRate scales how fast it plays
+   *   without touching the timing model, so position is always preserved.
    */
   function updateMovementRange(): void {
     if (!containerEl) return;
-
     const containerWidth = containerEl.offsetWidth;
-
-    // Maximum left position (container width - pet width)
-    // This gives true edge-to-edge movement using fixed 100px display width
     const maxLeft = containerWidth - petWidth;
+    if (maxLeft <= 0) return;
 
-    // Calculate duration to maintain constant speed in px/s
-    // Linear speed scaling: duration = distance / speed
-    // Ensures movement speed (px/s) is consistent regardless of container width
-    // Prevent division by zero - fallback to slowest speed
-    movementDuration = speedInPixelsPerSecond > 0 && maxLeft > 0
-      ? maxLeft / speedInPixelsPerSecond
-      : ANIMATION_CONSTANTS.MAX_DURATION;
+    const { MIN_SPEED_PX_PER_S, MAX_SPEED_PX_PER_S } = ANIMATION_CONSTANTS;
+    const speedPxPerS = MIN_SPEED_PX_PER_S + (clampedSpeed / 100) * (MAX_SPEED_PX_PER_S - MIN_SPEED_PX_PER_S);
+    const durationS = maxLeft / speedPxPerS;
 
-    // Set CSS custom properties for keyframes and positioning
     containerEl.style.setProperty('--container-width', `${containerWidth}px`);
     containerEl.style.setProperty('--max-left', `${maxLeft}px`);
-    containerEl.style.setProperty('--movement-duration', `${movementDuration}s`);
     containerEl.style.setProperty('--pet-width', `${petWidth}px`);
     containerEl.style.setProperty('--pet-display-size', `${ANIMATION_CONSTANTS.PET_DISPLAY_SIZE}px`);
     containerEl.style.setProperty('--celebration-display-size', `${ANIMATION_CONSTANTS.CELEBRATION_DISPLAY_SIZE}px`);
+
+    const posAnim = containerEl.querySelector<HTMLElement>('.pet-position-wrapper')?.getAnimations()[0];
+    const flipAnim = containerEl.querySelector<HTMLElement>('.pet-flip-wrapper')?.getAnimations()[0];
+
+    if (maxLeft !== movementLastMaxLeft || !posAnim || !flipAnim) {
+      // First call or resize: set a fresh duration and midpoint start, reset rate to 1.
+      containerEl.style.setProperty('--movement-duration', `${durationS}s`);
+      containerEl.style.setProperty('--animation-delay', `${-(durationS / 2)}s`);
+      if (posAnim) posAnim.playbackRate = 1;
+      if (flipAnim) flipAnim.playbackRate = 1;
+      movementBaseDurationS = durationS;
+      movementLastMaxLeft = maxLeft;
+      return;
+    }
+
+    // Speed-only change: scale playbackRate, leave animation-duration untouched.
+    const rate = movementBaseDurationS / durationS;
+    posAnim.playbackRate = rate;
+    flipAnim.playbackRate = rate;
   }
+
+  // Re-run whenever speed changes (resize is handled by ResizeObserver).
+  // The void reference makes clampedSpeed a tracked reactive dependency.
+  $: { void clampedSpeed; updateMovementRange(); }
 
   /**
    * Debounce utility to prevent excessive calls during rapid events
@@ -206,12 +226,6 @@
     prevState = state;
   }
 
-  // Recalculate movement duration when speed changes
-  // Maintains constant px/s speed across different container widths
-  $: if (speedInPixelsPerSecond && containerEl) {
-    updateMovementRange();
-  }
-
   // Confetti rain is spawned by spawnConfettiRain() into containerEl on celebration entry.
   // Walking animation handled by GIF (browser-native frame animation)
 
@@ -263,9 +277,10 @@
 <div
   class="pet-sprite-container"
   data-state={state}
-  style:--movement-duration="{movementDuration}s"
+  style:--pet-bottom="{background.petBottom}px"
   style:background-image={backgroundPath ? `url("${backgroundPath}")` : 'none'}
-  style:background-color={backgroundColor}
+  style:background-color={background.skyColor}
+  style:background-size="{background.displayWidth}px {background.displayHeight}px"
   bind:this={containerEl}>
   <!-- Position wrapper handles horizontal movement -->
   <div class="pet-position-wrapper">
@@ -308,20 +323,16 @@
     overflow: hidden; /* Contain pet within view */
 
     /* Background scene - tiled horizontally, no vertical scaling */
-    /* Display size constrained to 400x400 per tile, tiles left-right, anchored to bottom */
-    background-size: 400px 400px;
+    /* background-size and --pet-bottom driven by Background data via style: directives */
     background-position: bottom center;
     background-repeat: repeat-x;
-
-    /* Sky fill color is set dynamically via style:background-color (see backgroundColor prop) */
   }
 
   /* Position wrapper handles horizontal movement */
-  /* Anchored to bottom with offset to align pet with path center */
-  /* Position cat on the road in the background, re-check when changing backgrounds */
+  /* bottom offset driven by background.petBottom via --pet-bottom CSS custom property */
   .pet-position-wrapper {
     position: absolute;
-    bottom: 64px; /* Offset from bottom - aligns pet (100px) with center of background path */
+    bottom: var(--pet-bottom, 10px);
     left: 0;
   }
 
@@ -376,12 +387,12 @@
   /* Movement speed is controlled by --movement-duration CSS variable */
   .pet-sprite-container .pet-position-wrapper {
     animation: move-back-and-forth var(--movement-duration, 15s) linear infinite;
-    animation-delay: -7.5s; /* Fixed delay (midpoint of 20s-10s and 10s-4s ranges) */
+    animation-delay: var(--animation-delay, -7.5s);
   }
 
   .pet-sprite-container .pet-flip-wrapper {
     animation: flip-at-edges var(--movement-duration, 15s) steps(2, jump-both) infinite;
-    animation-delay: -7.5s; /* Sync with position animation */
+    animation-delay: var(--animation-delay, -7.5s); /* Sync with position animation */
   }
 
   /* Pause pet movement during celebration and petting */

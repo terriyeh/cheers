@@ -367,6 +367,78 @@ describe('CelebrationService', () => {
 			expect(plugin.petView?.transitionState).not.toHaveBeenCalled();
 		});
 
+		describe('cursor exclusion (mid-type suppression)', () => {
+			function makeEditorWithCursor(value: string, offset: number) {
+				return {
+					getValue: vi.fn().mockReturnValue(value),
+					getCursor: vi.fn().mockReturnValue({ line: 0, ch: offset }),
+					posToOffset: vi.fn().mockReturnValue(offset),
+				} as unknown as Editor;
+			}
+
+			function getEditorChangeHandler() {
+				return (mockWorkspace.on as any).mock.calls.find(
+					(call: any) => call[0] === 'editor-change'
+				)?.[1];
+			}
+
+			function establishBaseline(handler: any) {
+				const blankEditor = { getValue: vi.fn().mockReturnValue('') } as unknown as Editor;
+				handler?.(blankEditor, { file: null });
+				vi.advanceTimersByTime(100);
+				vi.clearAllMocks();
+			}
+
+			it('does not celebrate when cursor is inside a wiki link being typed', () => {
+				const handler = getEditorChangeHandler();
+				establishBaseline(handler);
+
+				// Cursor at position 3, inside '[[link]]' (range 0–7)
+				const editor = makeEditorWithCursor('[[link]]', 3);
+				handler?.(editor, { file: null });
+				vi.advanceTimersByTime(100);
+
+				expect(plugin.petView?.transitionState).not.toHaveBeenCalled();
+			});
+
+			it('celebrates when cursor is exactly at the end of a wiki link (past the closing ]])', () => {
+				const handler = getEditorChangeHandler();
+				establishBaseline(handler);
+
+				// '[[link]]'.length === 8; cursor at 8 is one past the last ']'
+				// Tests the >= boundary: position equal to end is outside the link.
+				const editor = makeEditorWithCursor('[[link]]', 8);
+				handler?.(editor, { file: null });
+				vi.advanceTimersByTime(100);
+
+				expect(plugin.petView?.transitionState).toHaveBeenCalledWith('celebration');
+			});
+
+			it('does not celebrate when cursor is inside a markdown link being typed', () => {
+				const handler = getEditorChangeHandler();
+				establishBaseline(handler);
+
+				// '[text](url)' length 11, cursor at 3 (inside the text portion)
+				const editor = makeEditorWithCursor('[text](url)', 3);
+				handler?.(editor, { file: null });
+				vi.advanceTimersByTime(100);
+
+				expect(plugin.petView?.transitionState).not.toHaveBeenCalled();
+			});
+
+			it('celebrates when cursor methods are present but cursor is past the link', () => {
+				const handler = getEditorChangeHandler();
+				establishBaseline(handler);
+
+				// Cursor at 20, well past the end of '[[link]]' (length 8)
+				const editor = makeEditorWithCursor('[[link]]', 20);
+				handler?.(editor, { file: null });
+				vi.advanceTimersByTime(100);
+
+				expect(plugin.petView?.transitionState).toHaveBeenCalledWith('celebration');
+			});
+		});
+
 		it('should ignore link removal (count decrease)', () => {
 			const mockEditor = {
 				getValue: vi.fn(),

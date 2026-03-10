@@ -4,20 +4,24 @@
  */
 
 /**
- * Movement speed constants for linear scaling
- * These define the duration range for full traversal across the reference container width
+ * Movement speed constants for the px/s speed model.
+ * Speed is defined in pixels per second; duration = maxLeft / speedPxPerS.
+ * This keeps the cat's apparent speed constant regardless of panel width —
+ * a wider panel simply takes proportionally longer to traverse.
+ *
+ * The speed curve is linear: speedPxPerS = MIN + (slider/100) * (MAX - MIN)
+ * The narrow range keeps the whole spectrum in "stroll" territory:
+ *   0%  → 15 px/s (slow stroll)
+ *  50%  → 30 px/s (comfortable midpoint)
+ * 100%  → 45 px/s (brisk walk)
  */
 export const ANIMATION_CONSTANTS = {
-  /** Slowest speed (0%) - 33 seconds for full traversal */
-  MAX_DURATION: 33,
-  /** Fastest speed (100%) - 6 seconds for full traversal */
-  MIN_DURATION: 6,
-  /** Reference container width for speed calibration (pixels) */
-  REFERENCE_CONTAINER_WIDTH: 800,
-  /** Default pet width (pixels) - used as fallback before GIF loads */
-  DEFAULT_PET_WIDTH: 100,
+  /** Slowest speed (slider at 0%) in pixels per second */
+  MIN_SPEED_PX_PER_S: 15,
+  /** Fastest speed (slider at 100%) in pixels per second */
+  MAX_SPEED_PX_PER_S: 45,
   /** Fixed display size for pet sprites (pixels) - all pet GIFs render at this size */
-  PET_DISPLAY_SIZE: 100,
+  PET_DISPLAY_SIZE: 75,
   /** Fixed display size for celebration overlay elements (pixels) */
   CELEBRATION_DISPLAY_SIZE: 128,
 } as const;
@@ -29,49 +33,4 @@ export const ANIMATION_CONSTANTS = {
  */
 export function clampMovementSpeed(speed: number): number {
   return Math.max(0, Math.min(100, speed));
-}
-
-/**
- * Calculate base movement speed in pixels per second
- * Uses reference container width to ensure consistent speed regardless of actual container size
- * @param speed - Movement speed (0-100)
- * @param petWidth - Width of the pet sprite in pixels
- * @returns Speed in pixels per second
- */
-export function calculateSpeedInPixelsPerSecond(speed: number, petWidth: number = ANIMATION_CONSTANTS.DEFAULT_PET_WIDTH): number {
-  const clampedSpeed = clampMovementSpeed(speed);
-  const { MAX_DURATION, MIN_DURATION, REFERENCE_CONTAINER_WIDTH } = ANIMATION_CONSTANTS;
-
-  // Calculate reference duration at reference container width
-  const referenceDuration = MAX_DURATION - (clampedSpeed / 100) * (MAX_DURATION - MIN_DURATION);
-
-  // Calculate distance at reference width
-  const referenceDistance = REFERENCE_CONTAINER_WIDTH - petWidth;
-
-  // Return speed in px/s
-  return referenceDistance / referenceDuration;
-}
-
-/**
- * Calculate movement duration for a specific container width
- * Maintains constant px/s speed across different container widths
- * @param speed - Movement speed (0-100)
- * @param containerWidth - Container width in pixels
- * @param petWidth - Width of the pet sprite in pixels
- * @returns Movement duration in seconds
- */
-export function calculateMovementDuration(
-  speed: number,
-  containerWidth: number,
-  petWidth: number = ANIMATION_CONSTANTS.DEFAULT_PET_WIDTH
-): number {
-  const speedInPixelsPerSecond = calculateSpeedInPixelsPerSecond(speed, petWidth);
-  const actualDistance = containerWidth - petWidth;
-
-  // Prevent division by zero - fallback to slowest speed
-  if (speedInPixelsPerSecond <= 0 || actualDistance <= 0) {
-    return ANIMATION_CONSTANTS.MAX_DURATION;
-  }
-
-  return actualDistance / speedInPixelsPerSecond;
 }

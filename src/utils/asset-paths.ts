@@ -18,13 +18,19 @@ export const PET_SPRITES = {
 
 
 /**
- * A background scene entry: the GIF filename and its matching sky fill color.
- * Adding a new season/theme is a single entry here — file and skyColor travel together
- * so they can never get out of sync.
+ * A background scene entry. All scene-specific values travel together
+ * so they can never get out of sync when adding new themes.
  */
 export type Background = {
 	readonly file: string;
+	/** Sky fill color — fills the container above the tiled GIF for seamless extension */
 	readonly skyColor: string;
+	/** Display width of one background tile (px) */
+	readonly displayWidth: number;
+	/** Display height of one background tile (px) */
+	readonly displayHeight: number;
+	/** CSS bottom offset (px) aligning the pet sprite with the walking path */
+	readonly petBottom: number;
 };
 
 /**
@@ -37,20 +43,25 @@ export const BACKGROUNDS = {
 	DAY: {
 		file: 'background-day-8fps.gif',
 		skyColor: '#98BAFF',
+		displayWidth: 400,
+		displayHeight: 270,
+		petBottom: 10,
 	},
 	/** Nighttime scene (6pm–6am) */
 	NIGHT: {
 		file: 'background-night-8fps.gif',
 		skyColor: '#4c4f85',
+		displayWidth: 400,
+		displayHeight: 270,
+		petBottom: 10,
 	},
 } as const satisfies Record<string, Background>;
 
 /**
- * Returns the background entry (file + skyColor) for the current (or provided) hour.
- * Day = 6am–6pm (hours 6–17), Night = everything else.
+ * Returns the background entry for the given theme.
  */
-export function getTimeOfDayBackground(hour: number = new Date().getHours()): Background {
-	return (hour >= 6 && hour < 18) ? BACKGROUNDS.DAY : BACKGROUNDS.NIGHT;
+export function getBackgroundForTheme(theme: 'day' | 'night'): Background {
+	return theme === 'day' ? BACKGROUNDS.DAY : BACKGROUNDS.NIGHT;
 }
 
 /**

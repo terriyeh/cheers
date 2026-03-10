@@ -1,10 +1,10 @@
-import { ItemView, MarkdownView, setIcon, type WorkspaceLeaf, Notice } from 'obsidian';
+import { ItemView, MarkdownView, setIcon, type WorkspaceLeaf, Notice, type ViewStateResult } from 'obsidian';
 import type { PetState, StateChangeListener } from '../types/pet';
 import { PetStateMachine } from '../pet/PetStateMachine';
 import PetComponent from '../components/Pet.svelte';
 import StatsComponent from '../components/Stats.svelte';
 import type CheersPlugin from '../main';
-import { PET_SPRITES, ASSET_DIRECTORIES, getTimeOfDayBackground } from '../utils/asset-paths';
+import { PET_SPRITES, ASSET_DIRECTORIES, getBackgroundForTheme } from '../utils/asset-paths';
 import { CelebrationService } from '../celebrations/CelebrationService';
 
 // Build-time constant injected by esbuild
@@ -51,8 +51,6 @@ export class PetView extends ItemView {
   private plugin: CheersPlugin | null = null;
   private activeTab: 'pet' | 'stats' = 'pet';
   private statsEditorChangeTimeout: number | undefined;
-  private backgroundTransitionTimeout: number | undefined;
-
   constructor(leaf: WorkspaceLeaf) {
     super(leaf);
   }
@@ -76,6 +74,18 @@ export class PetView extends ItemView {
    */
   getIcon(): string {
     return 'cat';
+  }
+
+  getState(): Record<string, unknown> {
+    return { activeTab: this.activeTab };
+  }
+
+  async setState(state: Record<string, unknown>, result: ViewStateResult): Promise<void> {
+    await super.setState(state, result);
+    const tab = state.activeTab;
+    if (tab === 'pet' || tab === 'stats') {
+      this.switchTab(tab);
+    }
   }
 
   /**
@@ -141,12 +151,11 @@ export class PetView extends ItemView {
       const walkingSpritePath = this.getAssetPath(PET_SPRITES.WALKING);
       const pettingSpritePath = this.getAssetPath(PET_SPRITES.PETTING);
       const celebrationSpritePath = this.getAssetPath(PET_SPRITES.CELEBRATING);
-      const bg = getTimeOfDayBackground();
+      const bg = getBackgroundForTheme(plugin?.settings?.backgroundTheme ?? 'day');
       const backgroundPath = this.getAssetPath(bg.file, ASSET_DIRECTORIES.BACKGROUNDS);
-      const backgroundColor = bg.skyColor;
 
       // Get plugin settings for pet name and movement speed (reuse plugin variable from above)
-      const petName = plugin?.settings?.petName ?? 'Kit';
+      const petName = plugin?.settings?.petName ?? 'Mochi';
       const movementSpeed = plugin?.settings?.movementSpeed ?? 50;
 
       // Mount Svelte component with asset path and settings
@@ -158,7 +167,7 @@ export class PetView extends ItemView {
           pettingSpritePath: pettingSpritePath,
           celebrationSpritePath: celebrationSpritePath,
           backgroundPath: backgroundPath,
-          backgroundColor: backgroundColor,
+          background: bg,
           petName: petName,
           movementSpeed: movementSpeed,
         },
@@ -198,9 +207,6 @@ export class PetView extends ItemView {
       // Setup pet interaction event handling
       this.setupPetInteraction();
 
-      // Schedule background transition at next 6am/6pm boundary
-      this.scheduleNextBackgroundTransition();
-
       // Hide loading state
       this.hideLoading();
     } catch (error) {
@@ -210,10 +216,6 @@ export class PetView extends ItemView {
       this.hideLoading();
 
       // Cleanup any partially initialized resources
-      if (this.backgroundTransitionTimeout !== undefined) {
-        window.clearTimeout(this.backgroundTransitionTimeout);
-        this.backgroundTransitionTimeout = undefined;
-      }
       if (this.stateMachine && this.stateChangeListener) {
         this.stateMachine.removeListener(this.stateChangeListener);
         this.stateChangeListener = null;
@@ -266,12 +268,6 @@ export class PetView extends ItemView {
     if (this.statsEditorChangeTimeout !== undefined) {
       window.clearTimeout(this.statsEditorChangeTimeout);
       this.statsEditorChangeTimeout = undefined;
-    }
-
-    // Clear background transition timer
-    if (this.backgroundTransitionTimeout !== undefined) {
-      window.clearTimeout(this.backgroundTransitionTimeout);
-      this.backgroundTransitionTimeout = undefined;
     }
 
     // Clear container
@@ -639,47 +635,19 @@ export class PetView extends ItemView {
   }
 
   /**
-   * Apply the correct day/night background to the pet component.
+   * Apply the background from the current backgroundTheme setting to the pet component.
+   * Called by SettingsTab when the user changes the background theme.
    */
-  private applyBackground(): void {
+  applyBackground(): void {
     if (!this.petComponent) return;
-    const bg = getTimeOfDayBackground();
-    const backgroundPath = this.getAssetPath(bg.file, ASSET_DIRECTORIES.BACKGROUNDS);
-    this.petComponent.$set({ backgroundPath, backgroundColor: bg.skyColor });
-  }
-
-  /**
-   * Schedule a one-shot timeout to fire at the next 6am or 6pm boundary,
-   * then swap the background and reschedule.
-   */
-  private scheduleNextBackgroundTransition(): void {
-    const now = new Date();
-    const hour = now.getHours();
-    const minute = now.getMinutes();
-    const second = now.getSeconds();
-
-    // Determine next boundary: 6am (hour 6) or 6pm (hour 18)
-    let nextBoundaryHour: number;
-    if (hour < 6) {
-      nextBoundaryHour = 6;
-    } else if (hour < 18) {
-      nextBoundaryHour = 18;
-    } else {
-      nextBoundaryHour = 30; // next day's 6am = 24 + 6
+    try {
+      const theme = this.plugin?.settings?.backgroundTheme ?? 'day';
+      const bg = getBackgroundForTheme(theme);
+      const backgroundPath = this.getAssetPath(bg.file, ASSET_DIRECTORIES.BACKGROUNDS);
+      this.petComponent.$set({ backgroundPath, background: bg });
+    } catch (error) {
+      console.error('Failed to apply background:', error);
     }
-
-    const msUntilBoundary =
-      ((nextBoundaryHour - hour) * 3600 - minute * 60 - second) * 1000 - now.getMilliseconds();
-
-    this.backgroundTransitionTimeout = window.setTimeout(() => {
-      this.backgroundTransitionTimeout = undefined;
-      try {
-        this.applyBackground();
-      } catch (error) {
-        console.error('Failed to apply background transition:', error);
-      }
-      this.scheduleNextBackgroundTransition();
-    }, msUntilBoundary);
   }
 
 

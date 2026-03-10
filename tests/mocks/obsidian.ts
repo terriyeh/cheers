@@ -248,6 +248,14 @@ export class ItemView {
     return 'circle';
   }
 
+  getState(): Record<string, unknown> {
+    return {};
+  }
+
+  async setState(state: Record<string, unknown>, _result: any): Promise<void> {
+    // Override in subclass
+  }
+
   async onOpen(): Promise<void> {
     // Override in subclass
   }

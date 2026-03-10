@@ -19,7 +19,7 @@ export class CheersSettingTab extends PluginSettingTab {
 			.setDesc('What should we call your pet?')
 			.addText((text) =>
 				text
-					.setPlaceholder('Kit')
+					.setPlaceholder('Mochi')
 					.setValue(this.plugin.settings.petName)
 					.onChange(async (value) => {
 						this.plugin.settings.petName = value;
@@ -30,7 +30,7 @@ export class CheersSettingTab extends PluginSettingTab {
 		// Movement Speed
 		new Setting(containerEl)
 			.setName('Movement speed')
-			.setDesc('How fast your pet moves (0-60: walking, 61-100: running)')
+			.setDesc('How fast your pet moves')
 			.addSlider((slider) =>
 				slider
 					.setLimits(0, 100, 1)
@@ -163,6 +163,23 @@ export class CheersSettingTab extends PluginSettingTab {
 							this.plugin.settings.dashboardColorMode = value;
 							await this.plugin.saveSettings();
 							this.plugin.petView?.updateStatsComponent();
+						}
+					})
+			);
+
+		new Setting(containerEl)
+			.setName('Background')
+			.setDesc('Scene shown behind your pet')
+			.addDropdown((dropdown) =>
+				dropdown
+					.addOption('day', 'Day')
+					.addOption('night', 'Night')
+					.setValue(this.plugin.settings.backgroundTheme)
+					.onChange(async (value: string) => {
+						if (value === 'day' || value === 'night') {
+							this.plugin.settings.backgroundTheme = value;
+							await this.plugin.saveSettings();
+							this.plugin.petView?.applyBackground();
 						}
 					})
 			);

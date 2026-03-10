@@ -277,12 +277,157 @@ describe('Pet.svelte Component', () => {
   });
 
 
-  describe('duration formula calculations', () => {
-    it('should render correctly for speed=30', () => {
-      const component = new MockPetComponent({ target: container, props: { ...defaultProps, state: 'walking', movementSpeed: 30 } });
+  describe('px/s speed model — CSS custom properties', () => {
+    // The real Pet.svelte sets --movement-duration and --animation-delay on the
+    // container element via updateMovementRange(). The mock simulates this so
+    // these tests can verify the correct values without mounting a real Svelte
+    // component in JSDOM.
+    //
+    // Duration formula (mirrors Pet.svelte updateMovementRange):
+    //   speedPxPerS = MIN_SPEED_PX_PER_S + (clampedSpeed / 100) * (MAX - MIN)
+    //   duration    = maxLeft / speedPxPerS      where maxLeft = containerWidth - petWidth
+    // Mock uses containerWidth = 800px for all CSS property assertions.
+
+    it('sets --movement-duration on the container element', () => {
+      const component = new MockPetComponent({
+        target: container,
+        props: { ...defaultProps, movementSpeed: 50 },
+      });
       const petContainer = container.querySelector('.pet-sprite-container') as HTMLElement;
-      expect(petContainer.dataset.state).toBe('walking');
+      const duration = petContainer.style.getPropertyValue('--movement-duration');
+      expect(duration).toBeTruthy();
+      expect(duration).toMatch(/^\d+(\.\d+)?s$/); // e.g. "2.45s"
       component.$destroy();
+    });
+
+    it('sets --animation-delay on the container element', () => {
+      const component = new MockPetComponent({
+        target: container,
+        props: { ...defaultProps, movementSpeed: 50 },
+      });
+      const petContainer = container.querySelector('.pet-sprite-container') as HTMLElement;
+      const delay = petContainer.style.getPropertyValue('--animation-delay');
+      expect(delay).toBeTruthy();
+      expect(delay).toMatch(/^-?\d+(\.\d+)?s$/); // e.g. "-3.2s"
+      component.$destroy();
+    });
+
+    it('speed 0 → longer --movement-duration than speed 100', () => {
+      const slow = new MockPetComponent({
+        target: container,
+        props: { ...defaultProps, movementSpeed: 0 },
+      });
+      const fastContainer = document.createElement('div');
+      document.body.appendChild(fastContainer);
+      const fast = new MockPetComponent({
+        target: fastContainer,
+        props: { ...defaultProps, movementSpeed: 100 },
+      });
+
+      const slowDuration = parseFloat(
+        (container.querySelector('.pet-sprite-container') as HTMLElement)
+          .style.getPropertyValue('--movement-duration')
+      );
+      const fastDuration = parseFloat(
+        (fastContainer.querySelector('.pet-sprite-container') as HTMLElement)
+          .style.getPropertyValue('--movement-duration')
+      );
+
+      expect(slowDuration).toBeGreaterThan(fastDuration);
+
+      slow.$destroy();
+      fast.$destroy();
+      document.body.removeChild(fastContainer);
+    });
+
+    it('speed 50 → --movement-duration between speed-0 and speed-100 values', () => {
+      const containers = [0, 50, 100].map(speed => {
+        const el = document.createElement('div');
+        document.body.appendChild(el);
+        const comp = new MockPetComponent({ target: el, props: { ...defaultProps, movementSpeed: speed } });
+        return { el, comp };
+      });
+
+      const [d0, d50, d100] = containers.map(({ el }) =>
+        parseFloat(
+          (el.querySelector('.pet-sprite-container') as HTMLElement)
+            .style.getPropertyValue('--movement-duration')
+        )
+      );
+
+      expect(d50).toBeGreaterThan(d100);
+      expect(d50).toBeLessThan(d0);
+
+      containers.forEach(({ el, comp }) => { comp.$destroy(); document.body.removeChild(el); });
+    });
+
+    it('updating movementSpeed via $set recalculates --movement-duration', () => {
+      const component = new MockPetComponent({
+        target: container,
+        props: { ...defaultProps, movementSpeed: 0 },
+      });
+      const petContainer = container.querySelector('.pet-sprite-container') as HTMLElement;
+
+      const durationBefore = parseFloat(
+        petContainer.style.getPropertyValue('--movement-duration')
+      );
+
+      component.$set({ movementSpeed: 100 });
+
+      const durationAfter = parseFloat(
+        petContainer.style.getPropertyValue('--movement-duration')
+      );
+
+      expect(durationAfter).toBeLessThan(durationBefore);
+      component.$destroy();
+    });
+
+    it('clamped speed -10 produces same duration as speed 0', () => {
+      const atZero = document.createElement('div');
+      const atNeg = document.createElement('div');
+      document.body.appendChild(atZero);
+      document.body.appendChild(atNeg);
+
+      const c0 = new MockPetComponent({ target: atZero, props: { ...defaultProps, movementSpeed: 0 } });
+      const cn = new MockPetComponent({ target: atNeg,  props: { ...defaultProps, movementSpeed: -10 } });
+
+      const d0 = parseFloat(
+        (atZero.querySelector('.pet-sprite-container') as HTMLElement)
+          .style.getPropertyValue('--movement-duration')
+      );
+      const dn = parseFloat(
+        (atNeg.querySelector('.pet-sprite-container') as HTMLElement)
+          .style.getPropertyValue('--movement-duration')
+      );
+
+      expect(dn).toBeCloseTo(d0, 5);
+
+      c0.$destroy(); cn.$destroy();
+      document.body.removeChild(atZero); document.body.removeChild(atNeg);
+    });
+
+    it('clamped speed 110 produces same duration as speed 100', () => {
+      const at100 = document.createElement('div');
+      const at110 = document.createElement('div');
+      document.body.appendChild(at100);
+      document.body.appendChild(at110);
+
+      const c1 = new MockPetComponent({ target: at100, props: { ...defaultProps, movementSpeed: 100 } });
+      const c2 = new MockPetComponent({ target: at110, props: { ...defaultProps, movementSpeed: 110 } });
+
+      const d100 = parseFloat(
+        (at100.querySelector('.pet-sprite-container') as HTMLElement)
+          .style.getPropertyValue('--movement-duration')
+      );
+      const d110 = parseFloat(
+        (at110.querySelector('.pet-sprite-container') as HTMLElement)
+          .style.getPropertyValue('--movement-duration')
+      );
+
+      expect(d110).toBeCloseTo(d100, 5);
+
+      c1.$destroy(); c2.$destroy();
+      document.body.removeChild(at100); document.body.removeChild(at110);
     });
   });
 

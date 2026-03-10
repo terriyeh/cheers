@@ -4,7 +4,21 @@
  */
 
 import type { PetState } from '../../src/types/pet';
-import { clampMovementSpeed } from '../../src/utils/animation';
+import { clampMovementSpeed, ANIMATION_CONSTANTS } from '../../src/utils/animation';
+
+/**
+ * Mirrors the px/s duration formula in Pet.svelte's updateMovementRange().
+ * Tests use a fixed reference container width so assertions are deterministic.
+ */
+const MOCK_CONTAINER_WIDTH = 800;
+
+function computeMovementDuration(movementSpeed: number): number {
+  const { MIN_SPEED_PX_PER_S, MAX_SPEED_PX_PER_S, PET_DISPLAY_SIZE } = ANIMATION_CONSTANTS;
+  const clamped = clampMovementSpeed(movementSpeed);
+  const speedPxPerS = MIN_SPEED_PX_PER_S + (clamped / 100) * (MAX_SPEED_PX_PER_S - MIN_SPEED_PX_PER_S);
+  const maxLeft = MOCK_CONTAINER_WIDTH - PET_DISPLAY_SIZE;
+  return maxLeft / speedPxPerS;
+}
 
 export default class MockPetComponent {
   private target: HTMLElement;
@@ -28,12 +42,19 @@ export default class MockPetComponent {
     this.container.dataset.state = options.props.state;
 
     // Apply initial background styles
-    if (options.props.backgroundColor !== undefined) {
-      this.container.style.backgroundColor = options.props.backgroundColor;
+    if (options.props.background !== undefined) {
+      this.container.style.backgroundColor = options.props.background.skyColor;
+      this.container.style.backgroundSize = `${options.props.background.displayWidth}px ${options.props.background.displayHeight}px`;
+      this.container.style.setProperty('--pet-bottom', `${options.props.background.petBottom}px`);
     }
     if (options.props.backgroundPath !== undefined) {
       this.container.style.backgroundImage = `url("${options.props.backgroundPath}")`;
     }
+
+    // Set movement animation CSS custom properties (mirrors updateMovementRange)
+    const initialDuration = computeMovementDuration(options.props.movementSpeed ?? 50);
+    this.container.style.setProperty('--movement-duration', `${initialDuration}s`);
+    this.container.style.setProperty('--animation-delay', `-${initialDuration / 2}s`);
 
     // Wrapper with interactive attributes
     this.wrapper = document.createElement('div');
@@ -86,11 +107,15 @@ export default class MockPetComponent {
       }
 
       if (newProps.movementSpeed !== undefined) {
-        clampMovementSpeed(newProps.movementSpeed); // validate range
+        const newDuration = computeMovementDuration(newProps.movementSpeed);
+        this.container.style.setProperty('--movement-duration', `${newDuration}s`);
+        this.container.style.setProperty('--animation-delay', `-${newDuration / 2}s`);
       }
 
-      if (newProps.backgroundColor !== undefined) {
-        this.container.style.backgroundColor = newProps.backgroundColor;
+      if (newProps.background !== undefined) {
+        this.container.style.backgroundColor = newProps.background.skyColor;
+        this.container.style.backgroundSize = `${newProps.background.displayWidth}px ${newProps.background.displayHeight}px`;
+        this.container.style.setProperty('--pet-bottom', `${newProps.background.petBottom}px`);
       }
 
       if (newProps.backgroundPath !== undefined) {
