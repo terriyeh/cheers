@@ -1,28 +1,32 @@
 /**
- * Asset path constants
- * Centralized location for all asset file paths to maintain single source of truth
+ * Asset constants — GIFs are inlined as base64 data URLs by esbuild at build time.
+ * No filesystem access is required at runtime.
  */
 
+import walkingGif     from '../../assets/cat-walking-6fps.gif';
+import pettingGif     from '../../assets/cat-petting-6fps.gif';
+import celebratingGif from '../../assets/cat-celebrating-6fps.gif';
+import dayBgGif       from '../../assets/backgrounds/background-day-8fps.gif';
+import nightBgGif     from '../../assets/backgrounds/background-night-8fps.gif';
+
 /**
- * Pet sprite GIF filenames
- * Each pet state has its own animated GIF file
+ * Pet sprite data URLs (base64-inlined by esbuild).
  */
 export const PET_SPRITES = {
 	/** Walking animation GIF (continuous loop) */
-	WALKING: 'cat-walking-6fps.gif',
+	WALKING: walkingGif,
 	/** Petting reaction animation GIF */
-	PETTING: 'cat-petting-6fps.gif',
+	PETTING: pettingGif,
 	/** Celebration animation GIF */
-	CELEBRATING: 'cat-celebrating-6fps.gif',
+	CELEBRATING: celebratingGif,
 } as const;
-
 
 /**
  * A background scene entry. All scene-specific values travel together
  * so they can never get out of sync when adding new themes.
  */
 export type Background = {
-	readonly file: string;
+	readonly src: string;
 	/** Sky fill color — fills the container above the tiled GIF for seamless extension */
 	readonly skyColor: string;
 	/** Display width of one background tile (px) */
@@ -35,13 +39,13 @@ export type Background = {
 
 /**
  * Background scene definitions.
- * Each entry bundles the GIF filename with the sky color that fills the container
+ * Each entry bundles the data URL with the sky color that fills the container
  * above the tiled image, keeping the scene seamless at any panel height.
  */
 export const BACKGROUNDS = {
 	/** Daytime scene (6am–6pm) */
 	DAY: {
-		file: 'background-day-8fps.gif',
+		src: dayBgGif,
 		skyColor: '#98BAFF',
 		displayWidth: 400,
 		displayHeight: 270,
@@ -49,7 +53,7 @@ export const BACKGROUNDS = {
 	},
 	/** Nighttime scene (6pm–6am) */
 	NIGHT: {
-		file: 'background-night-8fps.gif',
+		src: nightBgGif,
 		skyColor: '#4c4f85',
 		displayWidth: 400,
 		displayHeight: 270,
@@ -70,13 +74,3 @@ const BACKGROUND_FOR_THEME: Record<'day' | 'night', Background> = {
 export function getBackgroundForTheme(theme: 'day' | 'night'): Background {
 	return BACKGROUND_FOR_THEME[theme];
 }
-
-/**
- * Asset subdirectories within assets/
- */
-export const ASSET_DIRECTORIES = {
-	/** Root assets directory (pet sprites) */
-	ROOT: '',
-	/** Backgrounds subdirectory (scenes) */
-	BACKGROUNDS: 'backgrounds',
-} as const;

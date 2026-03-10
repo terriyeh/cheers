@@ -33,7 +33,7 @@ jobs:
           test -f main.js || (echo "main.js not found after build" && exit 1)
           test -f manifest.json || (echo "manifest.json not found" && exit 1)
 
-      - name: Create release
+      - name: Create GitHub release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -44,3 +44,30 @@ jobs:
             main.js \
             manifest.json \
             styles.css
+
+      - name: Deploy release files to main branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag="${GITHUB_REF#refs/tags/}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Stash the files that belong on main
+          mkdir /tmp/cheers-dist
+          cp main.js manifest.json styles.css README.md LICENSE versions.json /tmp/cheers-dist/
+
+          # Switch to main and replace its contents with release files only
+          git fetch origin main
+          git checkout main
+          git rm -rf . --quiet
+          cp /tmp/cheers-dist/main.js .
+          cp /tmp/cheers-dist/manifest.json .
+          cp /tmp/cheers-dist/styles.css .
+          cp /tmp/cheers-dist/README.md .
+          cp /tmp/cheers-dist/LICENSE .
+          cp /tmp/cheers-dist/versions.json .
+
+          git add .
+          git diff --staged --quiet || git commit -m "Release $tag"
+          git push --force-with-lease origin main

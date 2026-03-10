@@ -17,17 +17,17 @@
   /**
    * Path to the walking sprite GIF (passed from PetView)
    */
-  export let walkingSpritePath: string = `assets/${PET_SPRITES.WALKING}`;
+  export let walkingSpritePath: string = PET_SPRITES.WALKING;
 
   /**
    * Path to the petting sprite GIF (passed from PetView)
    */
-  export let pettingSpritePath: string = `assets/${PET_SPRITES.PETTING}`;
+  export let pettingSpritePath: string = PET_SPRITES.PETTING;
 
   /**
    * Path to the celebration sprite GIF (passed from PetView)
    */
-  export let celebrationSpritePath: string = `assets/${PET_SPRITES.CELEBRATING}`;
+  export let celebrationSpritePath: string = PET_SPRITES.CELEBRATING;
 
   /**
    * Path to the background scene (passed from PetView)

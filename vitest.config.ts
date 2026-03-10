@@ -1,7 +1,19 @@
 import { defineConfig } from 'vitest/config';
 import path from 'path';
+import type { Plugin } from 'vite';
+
+/** Stub GIF imports in tests — esbuild handles real inlining at build time. */
+const gifStub: Plugin = {
+  name: 'gif-stub',
+  transform(_, id) {
+    if (id.endsWith('.gif')) {
+      return { code: 'export default "data:image/gif;base64,stub"', map: null };
+    }
+  },
+};
 
 export default defineConfig({
+  plugins: [gifStub],
   define: {
     __DEV__: false,
   },

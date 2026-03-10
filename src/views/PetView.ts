@@ -4,11 +4,8 @@ import { PetStateMachine } from '../pet/PetStateMachine';
 import PetComponent from '../components/Pet.svelte';
 import StatsComponent from '../components/Stats.svelte';
 import type CheersPlugin from '../main';
-import { PET_SPRITES, ASSET_DIRECTORIES, getBackgroundForTheme } from '../utils/asset-paths';
+import { PET_SPRITES, getBackgroundForTheme } from '../utils/asset-paths';
 import { CelebrationService } from '../celebrations/CelebrationService';
-
-// Build-time constant injected by esbuild
-declare const __DEV__: boolean;
 
 /** Debounce delay (ms) for refreshing the stats panel on editor-change events. */
 const STATS_DEBOUNCE_MS = 150;
@@ -150,12 +147,8 @@ export class PetView extends ItemView {
       };
       this.stateMachine.addListener(this.stateChangeListener);
 
-      // Get asset paths with validation using centralized constants
-      const walkingSpritePath = this.getAssetPath(PET_SPRITES.WALKING);
-      const pettingSpritePath = this.getAssetPath(PET_SPRITES.PETTING);
-      const celebrationSpritePath = this.getAssetPath(PET_SPRITES.CELEBRATING);
+      // GIFs are inlined as base64 data URLs by esbuild — no filesystem access needed
       const bg = getBackgroundForTheme(plugin?.settings?.backgroundTheme ?? 'day');
-      const backgroundPath = this.getAssetPath(bg.file, ASSET_DIRECTORIES.BACKGROUNDS);
 
       // Get plugin settings for pet name and movement speed (reuse plugin variable from above)
       const petName = plugin?.settings?.petName ?? 'Mochi';
@@ -166,10 +159,10 @@ export class PetView extends ItemView {
         target: this.containerDiv,
         props: {
           state: this.stateMachine.getCurrentState(),
-          walkingSpritePath: walkingSpritePath,
-          pettingSpritePath: pettingSpritePath,
-          celebrationSpritePath: celebrationSpritePath,
-          backgroundPath: backgroundPath,
+          walkingSpritePath: PET_SPRITES.WALKING,
+          pettingSpritePath: PET_SPRITES.PETTING,
+          celebrationSpritePath: PET_SPRITES.CELEBRATING,
+          backgroundPath: bg.src,
           background: bg,
           petName: petName,
           movementSpeed: movementSpeed,
@@ -537,119 +530,14 @@ export class PetView extends ItemView {
   }
 
   /**
-   * Check if a path is absolute (cross-platform)
-   * @param pathStr - Path to check
-   * @returns true if path is absolute
-   */
-  private isAbsolutePath(pathStr: string): boolean {
-    // Unix/Linux/Mac absolute paths start with /
-    if (pathStr.startsWith('/')) return true;
-    // Windows absolute paths: C:\ or C:/ (drive letter followed by colon and slash)
-    if (/^[a-zA-Z]:[/\\]/.test(pathStr)) return true;
-    // UNC paths: \\server\share
-    if (pathStr.startsWith('\\\\')) return true;
-    return false;
-  }
-
-  /**
-   * Get the path to an asset file with validation
-   * @param assetFileName - Name of the asset file (e.g., 'pet-sprite-sheet.png'), or empty string for directory path
-   * @param subdirectory - Optional subdirectory within assets/ (e.g., 'backgrounds')
-   * @returns The resource path to the asset
-   * @throws Error if path validation fails
-   */
-  private getAssetPath(assetFileName: string, subdirectory?: string): string {
-    // Access plugin manifest safely using type assertion (undocumented Obsidian API)
-    interface AppWithManifests {
-      plugins: { manifests: Record<string, { dir?: string }> };
-    }
-    const appWithManifests = this.app as unknown as AppWithManifests;
-    const manifest = appWithManifests.plugins?.manifests?.['cheers'];
-
-    if (!manifest) {
-      console.warn('Cheers manifest not found, using fallback path');
-    }
-
-    const pluginDir = manifest?.dir || '.obsidian/plugins/cheers';
-
-    // Validate path doesn't contain traversal sequences or absolute paths
-    if (
-      pluginDir.includes('..') ||
-      pluginDir.includes('~') ||
-      this.isAbsolutePath(pluginDir)
-    ) {
-      throw new Error('Invalid plugin directory path detected');
-    }
-
-    // Security: Validate subdirectory if provided
-    if (subdirectory) {
-      if (!/^[a-zA-Z0-9_-]+$/.test(subdirectory)) {
-        throw new Error('Invalid subdirectory: must be alphanumeric with dash/underscore only');
-      }
-      if (subdirectory.includes('..') || subdirectory.includes('/') || subdirectory.includes('\\')) {
-        throw new Error('Invalid subdirectory: path traversal detected');
-      }
-    }
-
-    // Security: Validate asset filename to prevent path traversal and DoS
-    // Allow empty string for directory paths, otherwise must be valid filename
-    if (assetFileName !== '') {
-      // Length validation to prevent DoS attacks
-      if (assetFileName.length > 255) {
-        throw new Error('Invalid asset filename: exceeds maximum length (255 characters)');
-      }
-
-      // Only allow alphanumeric, dash, underscore, and dot for file extension
-      // Filename: 1-200 chars, Extension: 1-10 chars
-      if (!/^[a-zA-Z0-9_-]{1,200}\.[a-zA-Z0-9]{1,10}$/.test(assetFileName)) {
-        throw new Error('Invalid asset filename: must be alphanumeric with valid file extension');
-      }
-
-      // Additional check: ensure no path separators or traversal sequences
-      if (assetFileName.includes('..') || assetFileName.includes('/') || assetFileName.includes('\\')) {
-        throw new Error('Invalid asset filename: path traversal detected');
-      }
-
-      // Whitelist common asset extensions for additional security
-      const allowedExtensions = ['gif', 'png', 'jpg', 'jpeg', 'svg', 'webp'];
-      const extension = assetFileName.split('.').pop()?.toLowerCase();
-      if (!extension || !allowedExtensions.includes(extension)) {
-        throw new Error(`Invalid asset extension: only ${allowedExtensions.join(', ')} are allowed`);
-      }
-    }
-
-    // Normalize path and construct resource path
-    const normalizedDir = pluginDir.replace(/\\/g, '/').replace(/\/\//g, '/');
-    const assetSubpath = subdirectory
-      ? assetFileName !== ''
-        ? `${subdirectory}/${assetFileName}`
-        : subdirectory
-      : assetFileName;
-    const relativePath = `${normalizedDir}/assets/${assetSubpath}`;
-    const assetPath = this.app.vault.adapter.getResourcePath(relativePath);
-
-    // Gate debug logging behind __DEV__ flag
-    if (__DEV__) {
-      console.debug(`Asset path for ${assetFileName || subdirectory} resolved to: ${assetPath}`);
-    }
-
-    return assetPath;
-  }
-
-  /**
    * Apply the background from the current backgroundTheme setting to the pet component.
    * Called by SettingsTab when the user changes the background theme.
    */
   applyBackground(): void {
     if (!this.petComponent) return;
-    try {
-      const theme = this.plugin?.settings?.backgroundTheme ?? 'day';
-      const bg = getBackgroundForTheme(theme);
-      const backgroundPath = this.getAssetPath(bg.file, ASSET_DIRECTORIES.BACKGROUNDS);
-      this.petComponent.$set({ backgroundPath, background: bg });
-    } catch (error) {
-      console.error('Failed to apply background:', error);
-    }
+    const theme = this.plugin?.settings?.backgroundTheme ?? 'day';
+    const bg = getBackgroundForTheme(theme);
+    this.petComponent.$set({ backgroundPath: bg.src, background: bg });
   }
 
 

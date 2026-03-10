@@ -12,7 +12,7 @@ Your vault companion that celebrates you.
 
 If you've ever wished for a personal cheerleader to celebrate the progress in your Obsidian vault, Cheers is for you. 
 
-Cheers puts an animated, vault-aware cat companion in your Obsidian sidebar. As you work in the vault, your companion notices — and celebrates. Whether you create a note, check off a task, reach a word goal (daily and per-document), or create a new link, your companion responds with fireworks and a cheerful status bar message.
+Cheers puts an animated, vault-aware cat companion in your Obsidian sidebar. As you work in the vault, your companion notices — and celebrates. Whether you create a note, check off a task, reach a word goal (daily and per-document), or create a new link, your companion responds with confetti and a cheerful status bar message.
 
 Personalize the activities you want celebrated. Switch to Daily Stats for non-animated tallies.
 
@@ -22,7 +22,7 @@ Minimal distraction. Maximum delight. This plugin gently rewards with cozy momen
 
 ## Celebrated Vault Activities
 
-Each activity triggers fireworks and a status bar message using your pet's name. Every trigger has its own on/off toggle.
+Each activity triggers confetti and a status bar message using your pet's name. Every trigger has its own on/off toggle.
 
 - Create any `.md` note
 - Check off a task `- [x]`
@@ -42,8 +42,8 @@ Each activity triggers fireworks and a status bar message using your pet's name.
 
 ### Manual
 
-1. Download the [latest release](https://github.com/terriyeh/cheers/releases)
-2. Extract the files to `.obsidian/plugins/cheers/` in your vault
+1. Download the [latest release](https://github.com/terriyeh/cheers/releases) and grab `main.js`, `manifest.json`, and `styles.css`
+2. Create a folder at `.obsidian/plugins/cheers/` in your vault and place the three files inside
 3. Reload Obsidian and enable the plugin under Community plugins
 
 ---

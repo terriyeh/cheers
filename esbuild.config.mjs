@@ -19,6 +19,7 @@ try {
 		format: "cjs",
 		target: "es2018",
 		logLevel: "info",
+		loader: { '.gif': 'dataurl' },
 		sourcemap: production ? false : "inline",
 		treeShaking: true,
 		minify: production,

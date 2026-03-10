@@ -107,15 +107,14 @@ describe('PetView', () => {
       expect(component?.getAttribute('data-state')).toBe('walking');
     });
 
-    it('should generate correct sprite sheet path', async () => {
+    it('should mount the pet component with sprite data URLs', async () => {
       await petView.onOpen();
 
-      // The path should be generated using app.vault.adapter.getResourcePath
-      // which in our mock returns app://local/{path}
-      const expectedPath = 'app://local/.obsidian/plugins/cheers/assets/pet-sprite-sheet.png';
-
-      // We can't directly access the petSpritePath prop, but we can verify
-      // the component was mounted successfully which means the path was provided
+      // GIFs are inlined as base64 data URLs by esbuild — verify props are data URLs
+      const props = (petView.petComponent as any).props;
+      expect(props.walkingSpritePath).toMatch(/^data:/);
+      expect(props.pettingSpritePath).toMatch(/^data:/);
+      expect(props.celebrationSpritePath).toMatch(/^data:/);
       const component = petView.containerEl.querySelector('.pet-sprite-container');
       expect(component).toBeTruthy();
     });
@@ -1162,24 +1161,18 @@ describe('PetView', () => {
 
     it('mounts with day background when backgroundTheme is "day"', async () => {
       setBackgroundTheme('day');
-      const spy = vi.spyOn(petView.app.vault.adapter, 'getResourcePath');
-
       await petView.onOpen();
 
-      const bgCall = spy.mock.calls.find(([p]) => p.includes('background'));
-      expect(bgCall).toBeDefined();
-      expect(bgCall![0]).toContain(BACKGROUNDS.DAY.file);
+      expect((petView.petComponent as any).props.background).toBe(BACKGROUNDS.DAY);
+      expect((petView.petComponent as any).props.backgroundPath).toBe(BACKGROUNDS.DAY.src);
     });
 
     it('mounts with night background when backgroundTheme is "night"', async () => {
       setBackgroundTheme('night');
-      const spy = vi.spyOn(petView.app.vault.adapter, 'getResourcePath');
-
       await petView.onOpen();
 
-      const bgCall = spy.mock.calls.find(([p]) => p.includes('background'));
-      expect(bgCall).toBeDefined();
-      expect(bgCall![0]).toContain(BACKGROUNDS.NIGHT.file);
+      expect((petView.petComponent as any).props.background).toBe(BACKGROUNDS.NIGHT);
+      expect((petView.petComponent as any).props.backgroundPath).toBe(BACKGROUNDS.NIGHT.src);
     });
 
     it('applyBackground() is public and updates the pet component to the current theme', async () => {
@@ -1191,11 +1184,10 @@ describe('PetView', () => {
 
       petView.applyBackground();
 
-      const call = setSpy.mock.calls.find(([props]) =>
-        typeof props.backgroundPath === 'string' && props.backgroundPath.includes('background')
-      );
-      expect(call).toBeDefined();
-      expect(call![0].background).toBe(BACKGROUNDS.DAY);
+      expect(setSpy).toHaveBeenCalledOnce();
+      const call = setSpy.mock.calls[0][0];
+      expect(call.background).toBe(BACKGROUNDS.DAY);
+      expect(call.backgroundPath).toBe(BACKGROUNDS.DAY.src);
     });
   });
 });
