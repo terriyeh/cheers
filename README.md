@@ -1,34 +1,42 @@
-# Cheers 🦊
+# Cheers 🎉
 
-Your vault companion that celebrates you.
+A vault companion that celebrates your writing, notetaking, linking, and task completions. Choose between an animated cat companion, or a daily dashboard with progress bar and number stats. Minimal distraction, maximum delight, equally motivating and satisfying.
+
+![Cheers celebration demo](docs/media/CheersCelebration.gif)
 
 ![Version](https://img.shields.io/badge/version-0.1.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
-![Obsidian](https://img.shields.io/badge/Obsidian-1.0.0+-purple)
+![Obsidian](https://img.shields.io/badge/Obsidian-1.4.0+-purple)
 
 ---
 
-<!-- TODO: Add screenshot or GIF demo here -->
+Cheers is your personal cheerleader that automatically celebrates progress and achievements in your Obsidian vault.   
 
-If you've ever wished for a personal cheerleader to celebrate the progress in your Obsidian vault, Cheers is for you. 
+Cheers puts an animated cat companion in your sidebar. As you work in the vault, your companion notices—and celebrates. Whether you create new notes, reach word goals (daily or per-document), create new links, or check off a task... your companion releases a celebratory confetti rain (in the sidebar, non-intrusive to workspace), displays an uplifting status bar message, and adds a count to your dashboard.
 
-Cheers puts an animated, vault-aware cat companion in your Obsidian sidebar. As you work in the vault, your companion notices — and celebrates. Whether you create a note, check off a task, reach a word goal (daily and per-document), or create a new link, your companion responds with confetti and a cheerful status bar message.
+Minimal distraction. Maximum delight. Intentional customization. 
 
-Personalize the activities you want celebrated. Switch to Daily Stats for non-animated tallies.
+Cheers gently rewards with cozy, visually rewarding moments when you make progress.
 
-Minimal distraction. Maximum delight. This plugin gently rewards with cozy moments of recognition when you make progress.
+Personalization options mean you can use what serves your motivation and aesthetics, and turn off what doesn't.
+- Each celebratory event comes with its own toggle. Only turn on what matters to you.
+- Customize overall daily word goals for the vault.
+- Additionally, customize daily word goals per document.  
+- Choose between day and night backgrounds. Seasonal backgrounds to come to keep you immersed even when working in Obsidian!
+- Choose between warm and cool color palettes for the dashboard.
+- Customize how fast your companion moves.
 
 ---
 
-## Celebrated Vault Activities
+## What Cheers Celebrates
 
-Each activity triggers confetti and a status bar message using your pet's name. Every trigger has its own on/off toggle.
+Each activity triggers confetti and a status bar message from your pet. Every activity has its own on/off toggle in Settings.
 
 - Create any `.md` note
 - Check off a task `- [x]`
 - Add a link `[[wiki]]` or `[md](url)`
 - Reach your **daily word goal** (set in Settings)
-- Reach a **per-note word goal** (set via `word-goal:` frontmatter)
+- Reach a **per-note word goal** (set via `word-goal` frontmatter)
 
 ---
 
@@ -38,7 +46,7 @@ Each activity triggers confetti and a status bar message using your pet's name. 
 
 1. Open Obsidian **Settings → Community plugins**
 2. Browse and search for **"Cheers"**
-3. Click **Install**, then **Enable**
+3. Click **Install**, then **Enable**  
 
 ### Manual
 
@@ -48,66 +56,70 @@ Each activity triggers confetti and a status bar message using your pet's name. 
 
 ---
 
-## Quick Start
+## UI Preview
 
-1. Open the **Cheers panel** from the left sidebar (cat icon) or via **Command Palette → "Open Cheers"**
-2. A welcome screen lets you name your pet (default: Kit) and optionally enter your own name
-3. Open **Settings → Cheers** to turn on the celebrations you want
-4. Start writing — your pet does the rest
+Leave on Pet view for a chill companion as you work. Select day or night mode in Settings.
+
+![Cheers pet view](docs/media/CheersPet.gif)
+![Cheers pet view night](docs/media/CheersPetNight.gif)
+
+Switch to Today's Stats to recap your progress for the day.
+
+![Cheers stats dashboard](docs/media/CheersStats.png)
+
+The **Stats tab** shows your daily activity at a glance:
+
+- **Outer ring** — daily word progress toward your goal
+- **Inner circle** — per-note word progress for the currently open document
+- **Activity tallies** — notes created, links added, and tasks completed today (shown when the corresponding celebration is enabled)
 
 ---
 
 ## Configuration
 
-### Celebrations
+1. Open the **Cheers panel** from the ribbon (🎉 icon) or the left sidebar tab
+2. Open **Settings → Cheers** and toggle on the activities you want to celebrate
+3. Start playing in your vault—your pet does the rest
 
-Open **Settings → Cheers → Celebrations** to configure:
+### Optional Personalization
 
-- **Individual toggles** — enable or disable each celebration type independently
-- **Daily word goal** — set a vault-wide target; resets at midnight
-- **Per-note word goal** — add `word-goal: 200` to any note's frontmatter
+- Customize your pet's name for a personal touch in the celebration message!
 
-Both goal types can be active at the same time. The per-note goal is checked against the current open file only.
+![Mochi is energized by a fresh new note](docs/media/CheersPetName.png) ![Meowth loves a fresh new link](docs/media/CheersPetName2.png) ![Sir Meow is doing a happy dance](docs/media/CheersPetName3.png)
 
-### Pet & Appearance
+- Tune your pet's movement speed
 
-- **Pet name** — 1–30 characters, letters and spaces
-- **Your name** — optional; used in status bar messages (e.g. "✨ Kit cheers for Alex!")
-- **Animation speed** — 0–100% slider (0% = leisurely, 100% = very fast)
-- **Background** — automatically switches between a day scene (6am–8pm) and a night scene
-- **Stats color palette** — warm (pink / yellow / orange) or cool (blue / cyan / green) for the Stats tab tallies
+- Choose your background (day or night, more options to come!)
 
----
+- Choose your dashboard color palette (warm or cool)
 
-## Stats Dashboard
-
-The **Stats tab** (inside the pet panel) shows your writing activity at a glance:
-
-- **Outer ring** — daily word progress toward your goal
-- **Inner circle** — per-note word progress for the currently open file
-- **Activity tallies** — notes created, links added, and tasks completed today (shown when the corresponding celebration is enabled)
+![Warm color palette](docs/media/CheersWarm.png) ![Cool color palette](docs/media/CheersCool.png)
 
 ---
 
-## Troubleshooting
+## FAQ
 
-**Pet won't load**
-- Confirm you're on Obsidian 1.0.0 or higher
+**Why doesn't my pet load?**
+- Confirm you're on Obsidian 1.4.0 or higher
 - Disable and re-enable the plugin
 - Check the Developer Console (Ctrl+Shift+I) for errors
 
-**Celebrations not triggering**
+**Why are celebrations not triggering?**
 - Verify the relevant toggle is on in **Settings → Cheers → Celebrations**
 - Only one celebration plays at a time — if another is in progress, the next one queues
 - Link celebrations require content inside the brackets (`[[]]` alone won't trigger)
-- Word goal celebrations fire once when you cross 100% — not on every word after
+- Word goal celebrations fire once when you cross 100% — not on every word after. The daily word goal resets at midnight; per-document word goal is a one-time event.
 
-**Stats rings not showing**
+**Does the daily word count only track new notes, or edits too?**
+All edits count. Cheers tracks the net word change each time you save — adding words counts up, deleting words counts down. Rewriting an existing note counts; only the net difference matters. The daily total resets at midnight.
+
+**Will the confetti cover my editor?**
+No. Confetti is contained entirely within the Cheers sidebar panel and never overlaps your workspace.
+
+**My word goal stats rings aren't showing in Today's Stats panel.**
 - The outer ring requires a daily word goal set in Settings
-- The inner circle requires `word-goal: [number]` in the current file's frontmatter
-
-**Welcome modal doesn't appear**
-- Use **Command Palette → "Edit Pet Settings"** to reopen it at any time
+- The inner circle requires `word-goal: [number]` in the current document's frontmatter.
+- The inner circle does not display when the document is not in focus. Simply click on the document to focus it. If there is a `word-goal` frontmatter, the inner circle should display.
 
 ---
 
@@ -123,11 +135,12 @@ MIT — see [LICENSE](LICENSE) for details.
 
 ---
 
-## Support
+## Say Thanks 🙏
 
-- **Issues**: [GitHub Issues](https://github.com/terriyeh/cheers/issues)
-- **Community**: [Obsidian Forum](https://forum.obsidian.md/)
+- **Support continued development of Cheers & receive new background(s) of your choice**: Cozy Engineer on Ko-fi *(link coming soon)*
+- **Request features**: [GitHub Issues](https://github.com/terriyeh/cheers/issues)
+
 
 ---
 
-*"Your vault celebrates you."*
+*"Let your vault celebrate you."*

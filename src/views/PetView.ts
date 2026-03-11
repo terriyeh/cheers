@@ -71,7 +71,7 @@ export class PetView extends ItemView {
    * Get the icon for the view tab
    */
   getIcon(): string {
-    return 'cat';
+    return 'party-popper';
   }
 
   getState(): Record<string, unknown> {
@@ -539,6 +539,4 @@ export class PetView extends ItemView {
     const bg = getBackgroundForTheme(theme);
     this.petComponent.$set({ backgroundPath: bg.src, background: bg });
   }
-
-
 }

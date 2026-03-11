@@ -57,23 +57,9 @@ export default class CheersPlugin extends Plugin {
 		// Add settings tab
 		this.addSettingTab(new CheersSettingTab(this.app, this));
 
-		// Add command to open pet view (for command palette)
-		this.addCommand({
-			id: 'open-cheers',
-			name: 'Open Cheers',
-			callback: () => {
-				this.activatePetView();
-			},
-		});
-
-		// Add command to edit pet settings
-		this.addCommand({
-			id: 'edit-pet-settings',
-			name: 'Edit settings',
-			callback: () => {
-				(this.app as any).setting.open();
-				(this.app as any).setting.openTabById('cheers');
-			},
+		// Add ribbon icon to open Cheers panel
+		this.addRibbonIcon('party-popper', 'Open Cheers', () => {
+			this.activatePetView();
 		});
 
 		// Don't auto-open on startup - let user open manually via ribbon/command

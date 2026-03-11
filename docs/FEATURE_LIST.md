@@ -11,12 +11,11 @@ A plugin you feel, not think about.
 ## Core Features
 
 ### 1. Scene Rendering
-- **Background system**: Tileable 128x128px image file per season (4 total: spring, summer, autumn, winter)
+- **Background system**: Two animated GIF scenes — day (6am–6pm) and night (6pm–6am); transitions automatically
 - **Background tiling**: Horizontal tiling only (repeat-x), no vertical/horizontal scaling
 - **Pet positioning**: bottom: 64px (aligns with center of 128px background tile)
-- **Scene elements**: Fountain + unmanned cart (painted into background images)
 - **Rendering**: 2-layer system (background image + character GIF sprites)
-- **Season switching**: Image file swap via CSS `background-image` property
+- **[V1.2] Seasonal scenes**: 4 season variants (spring, summer, autumn, winter)
 
 ### 2. Character System
 - **Main pet**: 1 sprite with cosmetics support (hats, scarves, accessories)
@@ -30,7 +29,7 @@ A plugin you feel, not think about.
 - **Petting**: Click/tap pet → heart sprite appears → return to previous state
 - **Butterfly chase**: User clicks button → butterfly sprite released → pets chase → butterfly exits → pets return to walking
 - **Cart approach**: Pets periodically approach cart → pause → return to walking (ambient behavior)
-- **Celebrations**: Vault events trigger celebration animation state + separate fireworks animation
+- **Celebrations**: Vault events trigger celebration animation state + confetti rain
 
 ### 4. Vault-Aware Celebrations
 - **Triggers** (user-configurable on/off):
@@ -40,12 +39,12 @@ A plugin you feel, not think about.
   - Task completion
   - Word count goals (see below)
 - **Per-trigger options** (independent toggles for each trigger type):
-  - **Fireworks**: Show fireworks overlay animation (on by default)
+  - **Confetti rain**: CSS confetti animation (on by default)
   - **Status bar notification**: Show a brief message in the status bar for 3 seconds (fires automatically with each enabled trigger)
 - **Word count goal types** (at least one required when word count celebration is enabled):
   - **Per-note goal**: Set via frontmatter in the note (`word-goal: 10000`). Celebrates when note reaches 100% of goal.
   - **Per-day goal**: Single number in plugin settings (vault-wide total words written today, resets at midnight). Celebrates when daily total reaches 100% of goal.
-  - **Consideration (not decided)**: Also celebrate at 50% of each goal to keep the pet lively during longer sessions.
+  - **[Later]**: Also celebrate at 50% of each goal to keep the pet lively during longer sessions.
 - **Cooldown system**: Prevent celebration spam
 - **Animation**: Play celebration sprite state when triggered
 
@@ -84,7 +83,7 @@ A plugin you feel, not think about.
   - Movement speed (0-100%)
 - **Celebration settings**:
   - Toggle for each trigger type (daily notes, tasks, links, word count)
-  - Per-trigger fireworks toggle (on/off, default on)
+  - Confetti rain fires automatically per trigger (always on)
   - Status bar notification: fires automatically when a celebration trigger fires (no separate toggle)
   - Daily word goal (number, required when word count celebration is on)
   - Per-note word goal: set in note frontmatter (`word-goal: [number]`), not in plugin settings
@@ -121,9 +120,9 @@ A plugin you feel, not think about.
 - Background scene (garden path)
 - Vault event listeners + celebration triggers (note creation, task completion, link creation)
 - Main character animations (walk, pet, celebrate)
-- Production fireworks animation
+- Confetti rain animation (CSS keyframes, no external assets)
 - Settings persistence
-- Status bar notification system (global toggle, off by default, independent of fireworks)
+- Status bar notification system (fires automatically with each celebration, always on)
 - Word count goals: per-note goal (frontmatter `word-goal`) + per-day goal (settings), replacing milestone list
 - Stats dashboard (Today tab): concentric word count rings, activity tallies, warm/cool color mode
 
@@ -148,7 +147,7 @@ A plugin you feel, not think about.
 1. **Background**: Image asset management + CSS swap logic
 2. **Sprites**: GIF-based animation per state
 3. **State machine**: Pet animation state transitions
-4. **Event system**: Vault listeners → celebration triggers → fireworks + status bar notification
+4. **Event system**: Vault listeners → celebration triggers → confetti rain + status bar notification
 5. **Word count tracking**: Delta accumulation per file for daily total; frontmatter reader for per-note goal
 6. **Dashboard**: Tab-switched view within same panel; SVG concentric rings (pure CSS/SVG, no charting library); daily counters with midnight reset
 7. **Settings**: Plugin Settings tab UI + data persistence layer
