@@ -292,3 +292,48 @@
   overflow-wrap: break-word;
   word-wrap: break-word;
 }
+
+/* ── Settings utilities ───────────────────────────────────────────────────── */
+
+/* Generic hide helper — toggled by JS instead of element.style.display */
+.cheers-hidden {
+  display: none !important;
+}
+
+/* Word-goal validation error text */
+.cheers-word-goal-error {
+  color: var(--text-error);
+}
+
+/* ── Confetti rain ────────────────────────────────────────────────────────── */
+
+/*
+ * Particles are created via document.createElement() and appended directly to
+ * the pet-sprite-container element. Because styles.css is a plain CSS file (not
+ * a Svelte component), there is no scoped hash — bare class selectors work here.
+ */
+.vp-confetti-particle {
+  position: absolute;
+  top: -12px;
+  left: var(--left);
+  width: 8px;
+  height: 10px;
+  background-color: var(--color);
+  border-radius: 1px;
+  pointer-events: none;
+  z-index: 20;
+  will-change: transform;
+  animation: vp-confetti-fall var(--duration, 3s) var(--delay, 0s) linear infinite;
+}
+
+.vp-confetti-particle[data-shape="circle"] { width: 8px;  height: 8px;  border-radius: 50%; }
+.vp-confetti-particle[data-shape="rect"]   { width: 12px; height: 5px;  border-radius: 1px; }
+.vp-confetti-particle[data-shape="square"] { width: 8px;  height: 8px;  border-radius: 1px; }
+
+@keyframes vp-confetti-fall {
+  0%   { transform: translateX(0)     translateY(-12px) rotateZ(var(--rot-z));                }
+  25%  { transform: translateX(-15px) translateY(120px) rotateZ(calc(var(--rot-z) + 90deg));  }
+  50%  { transform: translateX(10px)  translateY(250px) rotateZ(calc(var(--rot-z) + 180deg)); }
+  75%  { transform: translateX(-20px) translateY(380px) rotateZ(calc(var(--rot-z) + 270deg)); }
+  100% { transform: translateX(8px)   translateY(520px) rotateZ(calc(var(--rot-z) + 360deg)); }
+}

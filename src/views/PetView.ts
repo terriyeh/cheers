@@ -1,4 +1,4 @@
-import { ItemView, MarkdownView, setIcon, type WorkspaceLeaf, Notice, type ViewStateResult } from 'obsidian';
+import { App, ItemView, MarkdownView, setIcon, type WorkspaceLeaf, Notice, type ViewStateResult } from 'obsidian';
 import type { PetState, StateChangeListener } from '../types/pet';
 import { PetStateMachine } from '../pet/PetStateMachine';
 import PetComponent from '../components/Pet.svelte';
@@ -88,12 +88,12 @@ export class PetView extends ItemView {
   /**
    * Called when the view is opened
    */
-  async onOpen(): Promise<void> {
+  onOpen(): Promise<void> {
     try {
       // Resolve plugin: prefer constructor-injected instance (production path via main.ts),
       // fall back to internal registry lookup (test / late-open path).
       if (this.plugin === null) {
-        const appWithPlugins = this.app as any;
+        const appWithPlugins = this.app as App & { plugins?: { plugins?: Record<string, unknown> } };
         this.plugin = (appWithPlugins.plugins?.plugins?.['cheers'] as CheersPlugin | undefined) ?? null;
       }
       const plugin = this.plugin;
@@ -124,11 +124,11 @@ export class PetView extends ItemView {
       this.statsPanel.classList.add('vp-panel-hidden');
 
       // Wire tab click handlers
-      this.registerDomEvent(this.petTabEl!, 'click', () => this.switchTab('pet'));
-      this.registerDomEvent(this.statsTabEl!, 'click', () => this.switchTab('stats'));
+      if (this.petTabEl) this.registerDomEvent(this.petTabEl, 'click', () => this.switchTab('pet'));
+      if (this.statsTabEl) this.registerDomEvent(this.statsTabEl, 'click', () => this.switchTab('stats'));
 
       // Create pet component container inside the pet panel
-      this.containerDiv = this.petPanel!.createDiv({
+      this.containerDiv = this.petPanel?.createDiv({
         cls: 'cheers-container',
       });
 
@@ -226,12 +226,13 @@ export class PetView extends ItemView {
 
       this.showError(error);
     }
+    return Promise.resolve();
   }
 
   /**
    * Called when the view is closed
    */
-  async onClose(): Promise<void> {
+  onClose(): Promise<void> {
     // Remove state change listener before cleanup
     if (this.stateMachine && this.stateChangeListener) {
       this.stateMachine.removeListener(this.stateChangeListener);
@@ -273,6 +274,7 @@ export class PetView extends ItemView {
     this.petTabEl = null;
     this.statsTabEl = null;
     this.plugin = null;
+    return Promise.resolve();
   }
 
   /**

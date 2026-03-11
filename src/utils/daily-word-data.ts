@@ -18,11 +18,10 @@ export function parseDailyWordData(stored: unknown, today: string): DailyWordDat
 		linksCreatedToday: 0,
 	};
 
-	if (!stored || typeof stored !== 'object' || (stored as any).date !== today) {
+	const s = stored as Record<string, unknown>;
+	if (!stored || typeof stored !== 'object' || s.date !== today) {
 		return defaultData;
 	}
-
-	const s = stored as any;
 	const int = (v: unknown): number =>
 		typeof v === 'number' ? Math.max(0, Math.floor(v)) : 0;
 

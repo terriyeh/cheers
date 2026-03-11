@@ -48,7 +48,7 @@ export class CheersSettingTab extends PluginSettingTab {
 			);
 
 		// Celebrations Section
-		containerEl.createEl('h3', { text: 'Celebrations' });
+		new Setting(containerEl).setName('Celebrations').setHeading();
 		containerEl.createEl('p', {
 			text: 'Choose what vault event you want to celebrate.',
 			cls: 'setting-item-description',
@@ -106,14 +106,14 @@ export class CheersSettingTab extends PluginSettingTab {
 					.onChange(async (value) => {
 						this.plugin.settings.celebrations.onWordGoal = value;
 						await this.plugin.saveSettings();
-						wordGoalSubSettings.style.display = value ? '' : 'none';
+						wordGoalSubSettings.classList.toggle('cheers-hidden', !value);
 						this.plugin.petView?.updateStatsComponent();
 					})
 			);
 
 		// Sub-settings for word goals — always created, shown/hidden to avoid scroll reset
 		const wordGoalSubSettings = containerEl.createDiv();
-		wordGoalSubSettings.style.display = this.plugin.settings.celebrations.onWordGoal ? '' : 'none';
+		wordGoalSubSettings.classList.toggle('cheers-hidden', !this.plugin.settings.celebrations.onWordGoal);
 
 		new Setting(wordGoalSubSettings)
 				.setName('Daily word goal')
@@ -128,10 +128,10 @@ export class CheersSettingTab extends PluginSettingTab {
 							if (Number.isFinite(num) && num > 0 && num <= 100_000) {
 								this.plugin.settings.celebrations.dailyWordGoal = num;
 								await this.plugin.saveSettings();
-								if (errorEl) errorEl.style.display = 'none';
+								errorEl?.classList.add('cheers-hidden');
 								this.plugin.petView?.updateStatsComponent();
 							} else {
-								if (errorEl) errorEl.style.display = 'block';
+								errorEl?.classList.remove('cheers-hidden');
 							}
 						})
 				);
@@ -141,9 +141,10 @@ export class CheersSettingTab extends PluginSettingTab {
 			text: 'Daily word goal is required when word count celebrations are enabled.',
 			cls: 'setting-item-description cheers-word-goal-error',
 		});
-		wordGoalError.style.color = 'var(--text-error)';
-		wordGoalError.style.display =
-			this.plugin.settings.celebrations.dailyWordGoal === null ? 'block' : 'none';
+		wordGoalError.classList.toggle(
+			'cheers-hidden',
+			this.plugin.settings.celebrations.dailyWordGoal !== null
+		);
 
 		// Per-note goal hint
 		wordGoalSubSettings.createEl('p', {
@@ -151,27 +152,11 @@ export class CheersSettingTab extends PluginSettingTab {
 			cls: 'setting-item-description',
 		});
 
-		containerEl.createEl('h3', { text: 'Dashboard' });
+		// Appearance Section
+		new Setting(containerEl).setName('Appearance').setHeading();
 
 		new Setting(containerEl)
-			.setName('Color palette')
-			.setDesc('Tally column colors shown in the Stats tab')
-			.addDropdown((dropdown) =>
-				dropdown
-					.addOption('warm', 'Warm — pink / yellow / orange')
-					.addOption('cool', 'Cool — blue / cyan / green')
-					.setValue(this.plugin.settings.dashboardColorMode)
-					.onChange(async (value: string) => {
-						if (value === 'warm' || value === 'cool') {
-							this.plugin.settings.dashboardColorMode = value;
-							await this.plugin.saveSettings();
-							this.plugin.petView?.updateStatsComponent();
-						}
-					})
-			);
-
-		new Setting(containerEl)
-			.setName('Background')
+			.setName('Pet view background')
 			.setDesc('Scene shown behind your pet')
 			.addDropdown((dropdown) =>
 				dropdown
@@ -183,6 +168,23 @@ export class CheersSettingTab extends PluginSettingTab {
 							this.plugin.settings.backgroundTheme = value;
 							await this.plugin.saveSettings();
 							this.plugin.petView?.applyBackground();
+						}
+					})
+			);
+
+		new Setting(containerEl)
+			.setName('Stats dashboard color palette')
+			.setDesc('Tally column colors shown in the Stats tab')
+			.addDropdown((dropdown) =>
+				dropdown
+					.addOption('warm', 'Warm — pink / yellow / orange')
+					.addOption('cool', 'Cool — blue / cyan / green')
+					.setValue(this.plugin.settings.dashboardColorMode)
+					.onChange(async (value: string) => {
+						if (value === 'warm' || value === 'cool') {
+							this.plugin.settings.dashboardColorMode = value;
+							await this.plugin.saveSettings();
+							this.plugin.petView?.updateStatsComponent();
 						}
 					})
 			);

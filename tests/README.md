@@ -326,4 +326,3 @@ npm install --save-dev @vitest/coverage-v8
 - [Vitest Documentation](https://vitest.dev/)
 - [Testing Library Best Practices](https://kentcdodds.com/blog/common-mistakes-with-react-testing-library)
 - [Test Coverage Reports](../coverage/index.html) (generated after running `npm run test:coverage`)
-- [Test Summary](../TEST_SUMMARY.md)

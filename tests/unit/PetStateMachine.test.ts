@@ -445,38 +445,19 @@ describe('PetStateMachine', () => {
   });
 
   describe('negative cases', () => {
-    it('should handle invalid state gracefully', () => {
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-
-      const result = stateMachine.transition('invalid-state' as PetState);
-
+    it('should return false when transitioning to the current state', () => {
+      // Already in walking state (default)
+      const result = stateMachine.transition('walking');
       expect(result).toBe(false);
       expect(stateMachine.getCurrentState()).toBe('walking');
-      expect(consoleErrorSpy).toHaveBeenCalledWith('Invalid pet state: invalid-state');
-
-      consoleErrorSpy.mockRestore();
     });
 
-    it('should reject transition to empty string state', () => {
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    it('should return false when re-triggering celebration while already celebrating', () => {
+      stateMachine.transition('celebration');
+      expect(stateMachine.getCurrentState()).toBe('celebration');
 
-      const result = stateMachine.transition('' as PetState);
-
+      const result = stateMachine.transition('celebration');
       expect(result).toBe(false);
-      expect(stateMachine.getCurrentState()).toBe('walking');
-
-      consoleErrorSpy.mockRestore();
-    });
-
-    it('should reject transition to null/undefined state', () => {
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-
-      const result = stateMachine.transition(null as unknown as PetState);
-
-      expect(result).toBe(false);
-      expect(stateMachine.getCurrentState()).toBe('walking');
-
-      consoleErrorSpy.mockRestore();
     });
   });
 });

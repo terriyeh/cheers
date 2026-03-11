@@ -5,15 +5,16 @@
  * achievements occur (note creation, task completion, link creation, word goals).
  *
  * Features:
- * - Event-based celebration triggers (note creation, editor changes)
- * - Debounced editor change handling (500ms)
+ * - Event-based celebration triggers (note creation, editor changes, metadata cache)
+ * - Debounced editor change handling (100ms)
  * - Race condition prevention (blocks overlapping celebrations)
  * - Per-file word count tracking for delta accumulation and crossing detection
  * - Daily word goal with midnight reset and persistence
  * - Per-note word goal read from frontmatter
+ * - Link detection for files not open in any editor (via metadataCache 'changed' event)
  */
 
-import type { TFile, Editor, EventRef, MarkdownFileInfo, MarkdownView } from 'obsidian';
+import type { TFile, TAbstractFile, Editor, EventRef, MarkdownFileInfo, MarkdownView, CachedMetadata } from 'obsidian';
 import type CheersPlugin from '../main';
 import { CELEBRATION_OVERLAY_CONSTANTS, STATUS_BAR_NOTIFICATION_DURATION_MS } from '../utils/celebration-constants';
 
@@ -39,8 +40,9 @@ export class CelebrationService {
 	private eventRefs: EventRef[] = [];
 
 	// Handler functions (stored for cleanup)
-	private noteCreationHandler: ((file: TFile) => void) | null = null;
+	private noteCreationHandler: ((file: TAbstractFile) => void) | null = null;
 	private editorChangeHandler: ((editor: Editor, info: MarkdownView | MarkdownFileInfo) => void) | null = null;
+	private metadataCacheHandler: ((file: TFile, data: string, cache: CachedMetadata) => void) | null = null;
 
 	// Debounce timer for editor changes
 	private editorChangeTimeout: number | undefined;
@@ -114,37 +116,48 @@ export class CelebrationService {
 	 */
 	private registerEventListeners(): void {
 		const { vault, workspace } = this.plugin.app;
+		const metadataCache = this.plugin.app.metadataCache;
 
 		// Create bound handlers
 		this.noteCreationHandler = this.handleNoteCreation.bind(this);
 		this.editorChangeHandler = this.handleEditorChange.bind(this);
+		this.metadataCacheHandler = this.handleMetadataCacheChange.bind(this);
 
 		try {
-			// Delay 'create' listener until after vault initialisation to avoid counting
-			// all existing notes as "created today" on plugin load.
+			// Delay 'create' and 'changed' listeners until after vault initialisation to avoid
+			// counting all existing notes/links as "created today" on plugin load.
 			workspace.onLayoutReady(() => {
-				if (typeof (vault as any).on === 'function') {
-					const createRef = (vault as any).on('create', this.noteCreationHandler);
-					if (createRef) {
-						this.eventRefs.push(createRef);
-					} else {
-						console.warn('[CelebrationService] Vault event registration returned null');
-					}
+				const createRef = vault.on('create', this.noteCreationHandler!);
+				if (createRef) {
+					this.eventRefs.push(createRef);
 				} else {
-					console.warn('[CelebrationService] Vault event registration unavailable');
+					console.warn('[CelebrationService] Vault event registration returned null');
+				}
+
+				const metadataCacheRef = metadataCache.on('changed', this.metadataCacheHandler!);
+				if (metadataCacheRef) {
+					this.eventRefs.push(metadataCacheRef);
+				} else {
+					console.warn('[CelebrationService] MetadataCache event registration returned null');
+				}
+
+				// Pre-populate link count baselines from the current cache state.
+				// Without this, the first metadataCache:changed event for any file would be
+				// treated as a "first observation" and set the baseline instead of detecting
+				// a delta — causing Unlinked Mentions "Link" clicks to never celebrate.
+				for (const file of vault.getMarkdownFiles()) {
+					const cache = metadataCache.getFileCache(file);
+					const linkCount = (cache?.links?.length ?? 0) + (cache?.embeds?.length ?? 0);
+					this.fileLinkCounts.set(file.path, linkCount);
 				}
 			});
 
-			// Listen for editor changes (debounced)
-			if (typeof (workspace as any).on === 'function') {
-				const editorChangeRef = (workspace as any).on('editor-change', this.editorChangeHandler);
-				if (editorChangeRef) {
-					this.eventRefs.push(editorChangeRef);
-				} else {
-					console.warn('[CelebrationService] Workspace event registration returned null');
-				}
+			// Listen for editor changes (debounced) — not deferred so typing responsiveness is immediate
+			const editorChangeRef = workspace.on('editor-change', this.editorChangeHandler!);
+			if (editorChangeRef) {
+				this.eventRefs.push(editorChangeRef);
 			} else {
-				console.warn('[CelebrationService] Workspace event registration unavailable');
+				console.warn('[CelebrationService] Workspace event registration returned null');
 			}
 		} catch (error) {
 			console.error('[CelebrationService] Failed to register event listeners:', error);
@@ -155,11 +168,9 @@ export class CelebrationService {
 	 * Handle note creation event
 	 * @param file - The file that was created
 	 */
-	private handleNoteCreation(file: TFile): void {
+	private handleNoteCreation(file: TAbstractFile): void {
 		// Only process markdown files
-		// Check extension property first, fall back to path check for test mocks
-		const isMarkdown = file.extension === 'md' || file.path.endsWith('.md');
-		if (!isMarkdown) {
+		if (!file.path.endsWith('.md')) {
 			return;
 		}
 
@@ -214,6 +225,50 @@ export class CelebrationService {
 		this.editorChangeTimeout = window.setTimeout(() => {
 			this.processEditorChange(editor, file);
 		}, CelebrationService.EDITOR_DEBOUNCE_MS);
+	}
+
+	/**
+	 * Handle metadataCache 'changed' event — detects links created in files that are
+	 * not currently open in any editor (e.g. via Unlinked Mentions panel).
+	 *
+	 * Files open in an editor leaf are skipped here; the `editor-change` path handles
+	 * those with cursor-exclusion for a more responsive, mid-type-safe experience.
+	 *
+	 * Link count = cache.links (wiki + markdown) + cache.embeds (![[...]] + ![alt](...))
+	 * so the baseline matches what the regex-based editor-change path counts.
+	 */
+	private handleMetadataCacheChange(file: TFile, _data: string, cache: CachedMetadata): void {
+		// Skip files open in any markdown editor leaf — editor-change handles those
+		const isOpenInEditor = this.plugin.app.workspace
+			.getLeavesOfType('markdown')
+			.some((leaf) => (leaf.view as { file?: TFile }).file?.path === file.path);
+		if (isOpenInEditor) return;
+
+		const currentLinkCount = (cache.links?.length ?? 0) + (cache.embeds?.length ?? 0);
+		const filePath = file.path;
+
+		if (!this.fileLinkCounts.has(filePath)) {
+			// First observation — set baseline without counting
+			this.fileLinkCounts.set(filePath, currentLinkCount);
+			return;
+		}
+
+		const prevCount = this.fileLinkCounts.get(filePath)!;
+		const delta = Math.max(currentLinkCount - prevCount, 0);
+		this.fileLinkCounts.set(filePath, currentLinkCount);
+
+		if (delta > 0) {
+			this.resetDailyStatsIfNeeded();
+			this.plugin.dailyWordData.linksCreatedToday = Math.min(
+				this.plugin.dailyWordData.linksCreatedToday + delta,
+				CelebrationService.MAX_DAILY_COUNTER
+			);
+			this.persistActivityUpdate();
+
+			if (this.plugin.settings.celebrations.onLinkCreate) {
+				this.celebrate('link-create');
+			}
+		}
 	}
 
 	/**
@@ -275,11 +330,30 @@ export class CelebrationService {
 	}
 
 	/**
-	 * Check for link creation (increase in wiki or markdown links).
+	 * Check for link creation (increase in wiki or markdown links) in the active editor.
 	 * First observation of each file sets a baseline without counting — prevents
 	 * pre-existing links from inflating today's count on file open.
 	 * Counter tracking is unconditional; celebration requires the toggle.
+	 *
+	 * Links created in files not open in any editor are detected by handleMetadataCacheChange.
 	 */
+	/**
+	 * Count regex matches in `content` that do not contain `cursorOffset`.
+	 * Cursor exclusion prevents mid-type false positives (e.g. CM6 auto-pairs [[|]]).
+	 * Pass cursorOffset = -1 to count all matches unconditionally.
+	 */
+	private static countNonCursorMatches(pattern: RegExp, content: string, cursorOffset: number): number {
+		let count = 0;
+		let m: RegExpExecArray | null;
+		pattern.lastIndex = 0;
+		while ((m = pattern.exec(content)) !== null) {
+			if (cursorOffset < m.index || cursorOffset >= m.index + m[0].length) {
+				count++;
+			}
+		}
+		return count;
+	}
+
 	private checkLinkCreation(content: string, editor: Editor, file: TFile | null): void {
 		if (!file) return;
 		// Require at least 1 character inside brackets to avoid celebrating on [[]] or []()
@@ -295,20 +369,9 @@ export class CelebrationService {
 			? editor.posToOffset(editor.getCursor())
 			: -1;
 
-		let currentLinkCount = 0;
-		let m: RegExpExecArray | null;
-		wikiLinkPattern.lastIndex = 0;
-		while ((m = wikiLinkPattern.exec(content)) !== null) {
-			if (cursorOffset < m.index || cursorOffset >= m.index + m[0].length) {
-				currentLinkCount++;
-			}
-		}
-		markdownLinkPattern.lastIndex = 0;
-		while ((m = markdownLinkPattern.exec(content)) !== null) {
-			if (cursorOffset < m.index || cursorOffset >= m.index + m[0].length) {
-				currentLinkCount++;
-			}
-		}
+		const currentLinkCount =
+			CelebrationService.countNonCursorMatches(wikiLinkPattern, content, cursorOffset) +
+			CelebrationService.countNonCursorMatches(markdownLinkPattern, content, cursorOffset);
 
 		const filePath = file.path;
 		if (!this.fileLinkCounts.has(filePath)) {
@@ -593,6 +656,7 @@ export class CelebrationService {
 		// Clear handler references
 		this.noteCreationHandler = null;
 		this.editorChangeHandler = null;
+		this.metadataCacheHandler = null;
 
 		// Clear status bar hide timeout and ensure element is hidden
 		if (this.statusBarClearTimeout !== undefined) {

@@ -7,7 +7,6 @@ import { DEFAULT_SETTINGS, VALIDATION_RULES } from './types/settings';
 import { CelebrationService } from './celebrations/CelebrationService';
 import { CheersSettingTab } from './settings/SettingsTab';
 import { parseDailyWordData } from './utils/daily-word-data';
-import { removeConfettiStyles } from './utils/confetti';
 
 // Build-time constant injected by esbuild
 declare const __DEV__: boolean;
@@ -36,7 +35,7 @@ export default class CheersPlugin extends Plugin {
 	celebrationService?: CelebrationService;
 
 	async onload() {
-		console.log('🎉 Cheers loading...');
+		console.debug('Cheers loading');
 
 		// Load settings
 		await this.loadSettings();
@@ -54,7 +53,7 @@ export default class CheersPlugin extends Plugin {
 		// Initialize the view in the left sidebar after the workspace is ready.
 		// getLeftLeaf() returns null if called before layout is mounted (e.g. fresh Obsidian open).
 		this.app.workspace.onLayoutReady(() => {
-			this.initializePetView();
+			void this.initializePetView();
 		});
 
 		// Add settings tab
@@ -62,7 +61,7 @@ export default class CheersPlugin extends Plugin {
 
 		// Add ribbon icon to open Cheers panel
 		this.addRibbonIcon('party-popper', 'Open Cheers', () => {
-			this.activatePetView();
+			void this.activatePetView();
 		});
 
 		// Don't auto-open on startup - let user open manually via ribbon/command
@@ -85,38 +84,38 @@ export default class CheersPlugin extends Plugin {
 					const view = this.getActivePetView();
 					if (view) {
 						view.transitionState(state);
-						console.log(`🎉 Transitioned to: ${state}`);
+						console.debug(`Transitioned to: ${state}`);
 					} else {
-						console.error('🎉 No active pet view. Open Cheers first.');
+						console.error('No active pet view. Open Cheers first.');
 					}
 				},
 				getCurrentState: () => {
 					const view = this.getActivePetView();
 					const state = view?.getCurrentState() ?? null;
-					console.log(`🎉 Current state: ${state ?? 'no view'}`);
+					console.debug(`Current state: ${state ?? 'no view'}`);
 					return state;
 				},
 				reset: () => {
 					const view = this.getActivePetView();
 					if (view) {
 						view.transitionState('walking');
-						console.log('🎉 Reset to walking');
+						console.debug('Reset to walking');
 					} else {
-						console.error('🎉 No active pet view. Open Cheers first.');
+						console.error('No active pet view. Open Cheers first.');
 					}
 				},
 				setSpeed: (speed: number) => {
 					const view = this.getActivePetView();
 					if (view?.petComponent) {
 						view.petComponent.$set({ movementSpeed: speed });
-						console.log(`🎉 Movement speed set to: ${speed}%`);
+						console.debug(`Movement speed set to: ${speed}%`);
 					} else {
-						console.error('🎉 No active pet view. Open Cheers first.');
+						console.error('No active pet view. Open Cheers first.');
 					}
 				},
 				help: () => {
-					console.log(`
-🎉 Cheers Debug Commands:
+					console.debug(`
+Cheers Debug Commands:
   cheersDebug.transitionState('state') - Transition to a state
   cheersDebug.getCurrentState()        - Get current state
   cheersDebug.reset()                  - Reset to walking
@@ -131,26 +130,23 @@ Available states:
 				}
 			};
 
-			console.log('🎉 Debug commands available: window.cheersDebug.help()');
+			console.debug('Debug commands available: window.cheersDebug.help()');
 		}
 	}
 
 	onunload() {
-		console.log('🎉 Cheers unloaded');
+		console.debug('Cheers unloaded');
 
 		// Clean up celebration service
 		this.celebrationService?.cleanup();
-
-		// Remove injected confetti style tag so it doesn't persist after plugin reload
-		removeConfettiStyles();
 
 		// Clean up debug interface (development only)
 		if (__DEV__ && window.cheersDebug) {
 			delete window.cheersDebug;
 		}
 
-		// Detach all pet views
-		this.app.workspace.detachLeavesOfType(VIEW_TYPE_PET);
+		// Note: do NOT call detachLeavesOfType here — Obsidian handles leaf cleanup
+		// on plugin unload; detaching would reset the user's chosen panel position.
 	}
 
 	/**
@@ -274,8 +270,9 @@ Available states:
 				validated.celebrations.dailyWordGoal = DEFAULT_SETTINGS.celebrations.dailyWordGoal;
 			}
 			// Clean up legacy field from older settings files
-			if ('showStatusBar' in validated.celebrations) {
-				delete (validated.celebrations as any).showStatusBar;
+			const cel = validated.celebrations as Record<string, unknown>;
+			if ('showStatusBar' in cel) {
+				delete cel.showStatusBar;
 			}
 		}
 
@@ -287,13 +284,14 @@ Available states:
 	 */
 	async loadSettings() {
 		const loadedData = await this.loadData();
-		const { daily, ...settingsData } = (loadedData ?? {}) as any;
+		const raw = (loadedData ?? {}) as Record<string, unknown>;
+		const { daily, ...settingsData } = raw;
 		const mergedSettings: CheersSettings = {
 			...DEFAULT_SETTINGS,
-			...settingsData,
+			...(settingsData as Partial<CheersSettings>),
 			celebrations: {
 				...DEFAULT_SETTINGS.celebrations,
-				...(settingsData.celebrations ?? {}),
+				...((settingsData.celebrations ?? {}) as Partial<CheersSettings['celebrations']>),
 			},
 		};
 		this.settings = this.validateSettings(mergedSettings);

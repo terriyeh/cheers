@@ -41,12 +41,12 @@ export function computeRingData(
 	const showInnerCircle = fileWordGoal !== null && fileWordGoal > 0 && fileWordCount !== null;
 	const showRingSection = showOuterRing || showInnerCircle;
 
-	const dailyProgress = showOuterRing
-		? Math.min(wordsAddedToday / dailyWordGoal!, 1)
+	const dailyProgress = showOuterRing && dailyWordGoal !== null
+		? Math.min(wordsAddedToday / dailyWordGoal, 1)
 		: 0;
 
-	const fileProgress = showInnerCircle
-		? Math.min(fileWordCount! / fileWordGoal!, 1)
+	const fileProgress = showInnerCircle && fileWordCount !== null && fileWordGoal !== null
+		? Math.min(fileWordCount / fileWordGoal, 1)
 		: 0;
 
 	const outerOffset = CIRCUMFERENCE * (1 - dailyProgress);

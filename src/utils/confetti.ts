@@ -2,10 +2,12 @@
  * Confetti rain particle spawner
  *
  * Spawns CSS-animated confetti particles directly into a container element.
- * All motion is handled by a CSS @keyframes animation — no JS animation loop.
+ * All motion is handled by the `@keyframes vp-confetti-fall` rule defined in
+ * styles.css — no JS animation loop and no injected <style> tags.
  *
  * @see src/components/Pet.svelte - imports and calls spawnConfettiRain()
  * @see src/utils/celebration-constants.ts - CONFETTI_COUNT, CONFETTI_CLEANUP_GRACE_MS
+ * @see styles.css - vp-confetti-fall keyframes and .vp-confetti-particle rules
  */
 
 import { CELEBRATION_OVERLAY_CONSTANTS } from './celebration-constants';
@@ -13,35 +15,11 @@ import { CELEBRATION_OVERLAY_CONSTANTS } from './celebration-constants';
 /** Cheerful, theme-independent particle color palette */
 const CONFETTI_COLORS = ['#ff6abc', '#fbc534', '#4f3cf8', '#f68217', '#57bbff', '#ff3131'] as const;
 
-/** Particle shape variants (matched by CSS [data-shape] selectors in Pet.svelte) */
+/** Particle shape variants (matched by CSS [data-shape] selectors in styles.css) */
 const CONFETTI_SHAPES = ['square', 'rect', 'circle'] as const;
 
 /** Tracks active cleanup timeout so rapid re-triggers cancel the previous one */
 let confettiCleanupId: ReturnType<typeof setTimeout> | null = null;
-
-/**
- * Inject the confetti @keyframes definition into document.head on first call.
- *
- * Why here and not in Pet.svelte's <style> block:
- * Svelte 4 silently drops @keyframes rules inside `:global { }` block syntax —
- * only the animation *reference* is emitted, never the *definition*.
- * Injecting a plain <style> tag bypasses Svelte's CSS scoping pipeline entirely.
- */
-const CONFETTI_STYLE_ID = 'vp-confetti-keyframes';
-function ensureConfettiStyles(): void {
-  if (document.getElementById(CONFETTI_STYLE_ID)) return;
-  const style = document.createElement('style');
-  style.id = CONFETTI_STYLE_ID;
-  style.textContent = `
-@keyframes vp-confetti-fall {
-  0%   { transform: translateX(0)     translateY(0)      rotateZ(var(--rot-z));                }
-  25%  { transform: translateX(-15px) translateY(100px)  rotateZ(calc(var(--rot-z) + 90deg));  }
-  50%  { transform: translateX(10px)  translateY(210px)  rotateZ(calc(var(--rot-z) + 180deg)); }
-  75%  { transform: translateX(-20px) translateY(310px)  rotateZ(calc(var(--rot-z) + 270deg)); }
-  100% { transform: translateX(8px)   translateY(420px)  rotateZ(calc(var(--rot-z) + 360deg)); }
-}`;
-  document.head.appendChild(style);
-}
 
 /**
  * Cancel any in-flight confetti cleanup timer.
@@ -56,20 +34,12 @@ export function cancelConfettiCleanup(): void {
 }
 
 /**
- * Remove the injected confetti @keyframes style tag from document.head.
- * Call from the plugin's onunload() so no DOM nodes leak between plugin reloads.
- */
-export function removeConfettiStyles(): void {
-  document.getElementById(CONFETTI_STYLE_ID)?.remove();
-}
-
-/**
  * Spawn confetti rain particles into the given container element.
  *
  * Each particle is a `<div class="vp-confetti-particle">` with CSS custom properties
  * controlling its color, horizontal start position, fall speed, initial rotation, and
- * animation delay. The CSS `@keyframes vp-confetti-fall` (injected at runtime by
- * `ensureConfettiStyles()`) drives all motion — no JS animation loop is used.
+ * animation delay. The CSS `@keyframes vp-confetti-fall` (defined in styles.css)
+ * drives all motion — no JS animation loop is used.
  *
  * Cancels any in-progress cleanup before spawning, so rapid re-triggers
  * (celebration → walking → celebration within 4820ms) replace rather than accumulate.
@@ -80,7 +50,6 @@ export function removeConfettiStyles(): void {
  *   durationMs + CONFETTI_CLEANUP_GRACE_MS.
  */
 export function spawnConfettiRain(container: HTMLElement, durationMs: number): void {
-  ensureConfettiStyles();
   const { CONFETTI_COUNT, CONFETTI_CLEANUP_GRACE_MS } = CELEBRATION_OVERLAY_CONSTANTS;
 
   // Cancel any pending cleanup and remove leftover particles from a previous run

@@ -56,6 +56,7 @@ describe('CelebrationService', () => {
 			off: vi.fn(),
 			offref: vi.fn(),
 			cachedRead: vi.fn().mockRejectedValue(new Error('vault not available in tests')),
+			getMarkdownFiles: vi.fn().mockReturnValue([]),
 		};
 
 		// Mock Workspace with event registration (returns EventRef-like object)
@@ -63,6 +64,7 @@ describe('CelebrationService', () => {
 			on: vi.fn().mockReturnValue({} as any),
 			off: vi.fn(),
 			onLayoutReady: vi.fn().mockImplementation((cb: () => void) => cb()),
+			getLeavesOfType: vi.fn().mockReturnValue([]),
 		};
 
 		// Mock Plugin with default settings
@@ -71,6 +73,7 @@ describe('CelebrationService', () => {
 				vault: mockVault,
 				workspace: mockWorkspace,
 				metadataCache: {
+					on: vi.fn().mockReturnValue({} as any),
 					getFileCache: vi.fn().mockReturnValue(null),
 				},
 			} as unknown as App,
@@ -132,8 +135,8 @@ describe('CelebrationService', () => {
 		it('should unregister all event listeners on cleanup', () => {
 			service.cleanup();
 
-			// offref should be called twice (once for each registered event)
-			expect(mockVault.offref).toHaveBeenCalledTimes(2);
+			// offref called 3 times: vault:create, workspace:editor-change, metadataCache:changed
+			expect(mockVault.offref).toHaveBeenCalledTimes(3);
 		});
 
 		it('should clear celebration timeout on cleanup', () => {
@@ -462,6 +465,93 @@ describe('CelebrationService', () => {
 			mockEditor.getValue = vi.fn().mockReturnValue('[[Link 1]] only');
 			editorChangeHandler?.(mockEditor, { file: mockFile });
 			vi.advanceTimersByTime(100);
+
+			expect(plugin.petView?.transitionState).not.toHaveBeenCalled();
+		});
+	});
+
+	describe('metadataCache link detection (non-active files)', () => {
+		function getMetadataCacheHandler() {
+			const app = plugin.app as unknown as { metadataCache: { on: ReturnType<typeof vi.fn> } };
+			return app.metadataCache.on.mock.calls.find(
+				(call: any[]) => call[0] === 'changed'
+			)?.[1];
+		}
+
+		const closedFile = { path: 'closed-note.md' } as TFile;
+		const openFile = { path: 'open-note.md' } as TFile;
+
+		it('should register metadataCache changed listener on initialization', () => {
+			const app = plugin.app as unknown as { metadataCache: { on: ReturnType<typeof vi.fn> } };
+			expect(app.metadataCache.on).toHaveBeenCalledWith('changed', expect.any(Function));
+		});
+
+		it('should celebrate when a link is added to a closed file', () => {
+			const handler = getMetadataCacheHandler();
+
+			// First call: baseline (0 links)
+			handler?.(closedFile, '', { links: [], embeds: [] });
+			// Second call: 1 link added
+			handler?.(closedFile, '', { links: [{ link: 'Target' }], embeds: [] });
+
+			expect(plugin.petView?.transitionState).toHaveBeenCalledWith('celebration');
+		});
+
+		it('should set baseline on first observation without celebrating', () => {
+			const handler = getMetadataCacheHandler();
+
+			// First call with pre-existing links — should NOT celebrate
+			handler?.(closedFile, '', { links: [{ link: 'Existing' }, { link: 'Existing2' }], embeds: [] });
+
+			expect(plugin.petView?.transitionState).not.toHaveBeenCalled();
+		});
+
+		it('should include embeds in link count', () => {
+			const handler = getMetadataCacheHandler();
+
+			// Baseline: 0 links
+			handler?.(closedFile, '', {});
+			// Add an embed (![[image]])
+			handler?.(closedFile, '', { links: [], embeds: [{ link: 'image.png' }] });
+
+			expect(plugin.petView?.transitionState).toHaveBeenCalledWith('celebration');
+		});
+
+		it('should skip files open in any markdown leaf', () => {
+			// Simulate the file being open in an editor leaf
+			(mockWorkspace.getLeavesOfType as ReturnType<typeof vi.fn>).mockReturnValue([
+				{ view: { file: openFile } },
+			]);
+
+			const handler = getMetadataCacheHandler();
+
+			// Baseline
+			handler?.(openFile, '', {});
+			// Link added — but file is open, so editor-change handles it
+			handler?.(openFile, '', { links: [{ link: 'NewLink' }] });
+
+			expect(plugin.petView?.transitionState).not.toHaveBeenCalled();
+		});
+
+		it('should not celebrate if onLinkCreate is disabled', () => {
+			plugin.settings.celebrations.onLinkCreate = false;
+			const handler = getMetadataCacheHandler();
+
+			handler?.(closedFile, '', {});
+			handler?.(closedFile, '', { links: [{ link: 'NewLink' }] });
+
+			expect(plugin.petView?.transitionState).not.toHaveBeenCalled();
+		});
+
+		it('should not celebrate when link count decreases', () => {
+			const handler = getMetadataCacheHandler();
+
+			// Baseline: 2 links
+			handler?.(closedFile, '', { links: [{ link: 'A' }, { link: 'B' }] });
+			vi.clearAllMocks();
+
+			// Link removed
+			handler?.(closedFile, '', { links: [{ link: 'A' }] });
 
 			expect(plugin.petView?.transitionState).not.toHaveBeenCalled();
 		});

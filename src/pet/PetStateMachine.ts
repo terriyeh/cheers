@@ -51,28 +51,12 @@ export class PetStateMachine {
   }
 
   /**
-   * Validate that a state is a valid PetState
-   * @param state - The state to validate
-   * @returns true if state is valid
-   */
-  private isValidState(state: string): state is PetState {
-    return state in this.stateConfigs;
-  }
-
-  /**
    * Transition to a new state
    * @param newState - The state to transition to
    * @param returnTarget - Optional state to return to after duration (defaults to 'walking')
    * @returns true if transition occurred, false if already in that state
-   * @throws Error if state is invalid
    */
   transition(newState: PetState, returnTarget?: PetState): boolean {
-    // Validate state at runtime
-    if (!this.isValidState(newState)) {
-      console.error(`Invalid pet state: ${newState}`);
-      return false;
-    }
-
     if (newState === this.currentState) {
       return false;
     }

@@ -430,56 +430,5 @@
     }
   }
 
-  /* ── Confetti rain ──────────────────────────────────────────────────────────── */
-
-  /*
-   * :global() is REQUIRED here.
-   * Particles are created via document.createElement() and appended directly to
-   * containerEl — they are NOT rendered by Svelte's template. Svelte's scoped CSS
-   * compiler adds a hash suffix (e.g. .vp-confetti-particle.svelte-abc123) to all
-   * class selectors. Dynamically created elements never receive this hash attribute,
-   * so without :global() these rules are silently ignored and particles are invisible.
-   */
-  :global(.vp-confetti-particle) {
-    position: absolute;
-    top: -12px;
-    left: var(--left);
-    width: 8px;
-    height: 10px;
-    background-color: var(--color);
-    border-radius: 1px;
-    pointer-events: none;
-    z-index: 20;
-    will-change: transform;
-    animation: vp-confetti-fall var(--duration, 3s) var(--delay, 0s) linear infinite;
-  }
-
-  /* Shape variants */
-  :global(.vp-confetti-particle[data-shape="circle"]) { width: 8px;  height: 8px;  border-radius: 50%; }
-  :global(.vp-confetti-particle[data-shape="rect"])   { width: 12px; height: 5px;  border-radius: 1px; }
-  :global(.vp-confetti-particle[data-shape="square"]) { width: 8px;  height: 8px;  border-radius: 1px; }
-
-  /*
-   * Sway pattern: fixed px lateral drift gives visible wobble independent of particle size.
-   * translateX uses px NOT % — in CSS transforms, % is relative to the element's own
-   * width, not the container. 5% of an 8px particle = 0.4px (imperceptible drift).
-   * ±8–20px gives ~3–8% of a 250px sidebar width, which is visually meaningful.
-   *
-   * rotateZ only — rotateY omitted: a genuine Y-axis flip requires a perspective context
-   * (perspective: Xpx on an ancestor). The sidebar has none, so rotateY produces a flat
-   * horizontal-squish artifact and forces GPU compositing layers with zero visual payoff.
-   *
-   * No opacity animation — avoids the hard 0.3→1 flash at each loop boundary that occurs
-   * when animation-iteration-count: infinite resets from 100% back to 0%.
-   *
-   * translateY uses px NOT % — same reason as translateX. 115% of a 10px particle = 11.5px
-   * (imperceptible fall). Fixed px values (0→420px) travel the full container height.
-   */
-  /*
-   * @keyframes vp-confetti-fall is intentionally NOT defined here.
-   * Svelte 4 silently drops @keyframes rules inside :global{} block syntax —
-   * only the animation reference is emitted, never the definition.
-   * The keyframes are injected at runtime via ensureConfettiStyles() in
-   * src/utils/confetti.ts, called at the start of every spawnConfettiRain() invocation.
-   */
+  /* Confetti rain styles are defined in styles.css (.vp-confetti-particle + @keyframes vp-confetti-fall) */
 </style>
