@@ -1,0 +1,294 @@
+/**
+ * Vault Pal Plugin Styles
+ * Theme-compatible styles for the pet companion view
+ */
+
+/* Main container for the pet view */
+.cheers-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  /* No background color - inherit from parent for consistency */
+}
+
+/* Loading state */
+.cheers-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
+/* Error state container (for pet view only) */
+.cheers-view-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  text-align: center;
+  max-width: 300px;
+}
+
+.cheers-view-error h3 {
+  color: var(--text-error);
+  margin-bottom: 0.5rem;
+  font-size: 1.1rem;
+}
+
+.cheers-view-error-message {
+  color: var(--text-normal);
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.cheers-view-error-hint {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-style: italic;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .cheers-container {
+    padding: 0;
+  }
+}
+
+/* Theme compatibility - no background overrides, use Obsidian defaults */
+
+/* Welcome Modal Styles */
+.cheers-welcome-modal .modal-content {
+  max-width: 500px;
+  padding: 1.5rem;
+}
+
+.cheers-welcome-modal h2 {
+  text-align: center;
+  margin-bottom: 0.5rem;
+  color: var(--text-normal);
+}
+
+.cheers-welcome-subtitle {
+  text-align: center;
+  color: var(--text-muted);
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+}
+
+.cheers-info-box {
+  background-color: var(--background-secondary);
+  border-left: 3px solid var(--interactive-accent);
+  padding: 0.75rem 1rem;
+  margin: 1rem 0;
+  border-radius: 4px;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.cheers-button-container {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--background-modifier-border);
+}
+
+/* View Header and Action Buttons - Graph View Style */
+/* Background colors inherit from Obsidian theme for automatic light/dark mode support */
+
+.workspace-leaf-content[data-type="cheers-pet-view"] {
+  position: relative;
+}
+
+/* Override Obsidian's default .view-content padding for immersive background */
+.workspace-leaf-content[data-type="cheers-pet-view"] .view-content {
+  padding: 3px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Tab bar ──────────────────────────────────────────────────────────────── */
+
+.vp-tab-bar {
+  display: flex;
+  flex-shrink: 0;
+  justify-content: center;
+  gap: 4px;
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.vp-tab-pet,
+.vp-tab-stats {
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--text-muted);
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vp-tab-pet:hover,
+.vp-tab-stats:hover {
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
+}
+
+.vp-tab-pet.is-active,
+.vp-tab-stats.is-active {
+  background: var(--background-modifier-active-hover);
+  color: var(--text-normal);
+}
+
+/* ── Panels ───────────────────────────────────────────────────────────────── */
+
+/* Wrapper so both panels can stack absolutely — lets the pet animation keep running
+   while the stats panel is shown (visibility: hidden keeps layout + dimensions intact). */
+.vp-panels-container {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.vp-panel-pet,
+.vp-panel-stats {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.vp-panel-stats {
+  overflow-y: auto;
+}
+
+/* Use visibility: hidden (not display: none) so the pet panel retains its dimensions
+   and CSS animations continue uninterrupted — prevents position snapping on tab switch. */
+.vp-panel-hidden {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.workspace-leaf-content[data-type="cheers-pet-view"] .view-header {
+  /* !important required to override Obsidian's default display: none on view headers */
+  display: flex !important;
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 10;
+  background: transparent;
+  border: none;
+  padding: 0;
+  height: auto;
+  min-height: 0;
+  pointer-events: none; /* Hide header chrome but keep action buttons clickable */
+}
+
+/* Re-enable pointer events for action buttons */
+.workspace-leaf-content[data-type="cheers-pet-view"] .view-actions {
+  pointer-events: auto;
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-end;
+}
+
+/* Hide the view header title and navigation */
+.workspace-leaf-content[data-type="cheers-pet-view"] .view-header-title,
+.workspace-leaf-content[data-type="cheers-pet-view"] .view-header-nav-buttons,
+.workspace-leaf-content[data-type="cheers-pet-view"] .view-header-icon {
+  display: none;
+}
+
+/* Style individual action buttons - floating style like Graph view */
+/* Background colors inherit from Obsidian for automatic theme adaptation */
+.workspace-leaf-content[data-type="cheers-pet-view"] .view-action {
+  border-radius: 4px;
+  padding: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+}
+
+/* Icon styling */
+.workspace-leaf-content[data-type="cheers-pet-view"] .view-action svg {
+  width: 18px;
+  height: 18px;
+  color: var(--icon-color);
+}
+
+/* Inline error display */
+
+.cheers-error {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  padding: 1rem;
+  margin: 0.5rem 0;
+  background-color: var(--background-secondary);
+  border-left: 4px solid var(--text-error);
+  border-radius: 4px;
+  box-sizing: border-box;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+}
+
+.cheers-error-message {
+  color: var(--text-error);
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+  white-space: pre-wrap;
+}
+
+.cheers-error-hint {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-style: italic;
+  margin: 0;
+  font-family: var(--font-monospace);
+  white-space: pre-wrap;
+}
+
+.cheers-preview {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  padding: 1rem;
+  margin: 0.5rem 0;
+  background-color: var(--background-secondary);
+  border-left: 4px solid var(--interactive-accent);
+  border-radius: 4px;
+  box-sizing: border-box;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+}
+
+.cheers-preview-content {
+  color: var(--text-normal);
+  font-size: 1rem;
+  line-height: 1.6;
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+}
