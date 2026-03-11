@@ -1,30 +1,28 @@
 # Cheers 🎉
 
-A vault companion that celebrates your writing, notetaking, linking, and task completions. Choose between an animated cat companion, or a daily dashboard with progress bar and number stats. Minimal distraction, maximum delight, equally motivating and satisfying.
-
-![Cheers celebration demo](docs/media/CheersCelebration.gif)
-
 ![Version](https://img.shields.io/badge/version-0.1.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Obsidian](https://img.shields.io/badge/Obsidian-1.4.0+-purple)
+
+A vault companion that celebrates your writing, notetaking, linking, and task completions. 
+
+Choose between an animated cat companion, or a daily dashboard with progress bar and number stats. 
+
+Minimal distraction, maximum delight, equally motivating and satisfying.
+
+![Cheers celebration demo](docs/media/CheersCelebration.gif)
 
 ---
 
 Cheers is your personal cheerleader that automatically celebrates progress and achievements in your Obsidian vault.   
 
-Cheers puts an animated cat companion in your sidebar. As you work in the vault, your companion notices—and celebrates. Whether you create new notes, reach word goals (daily or per-document), create new links, or check off a task... your companion releases a celebratory confetti rain (in the sidebar, non-intrusive to workspace), displays an uplifting status bar message, and adds a count to your dashboard.
+Cheers puts an animated cat companion in your sidebar. As you work in the vault, your companion notices—and celebrates. 
 
-Minimal distraction. Maximum delight. Intentional customization. 
+Your companion's celebratory confetti rain is the perfect hit of dopamine when you create new notes, reach word goals (daily or per-document), create new links, or check off a task
 
-Cheers gently rewards with cozy, visually rewarding moments when you make progress.
+Cheers gently rewards with cozy, visually rewarding moments when you make progress. Confetti rain, status bar congratulatory messages, and dashboard increments, celebrate your way! 
 
-Personalization options mean you can use what serves your motivation and aesthetics, and turn off what doesn't.
-- Each celebratory event comes with its own toggle. Only turn on what matters to you.
-- Customize overall daily word goals for the vault.
-- Additionally, customize daily word goals per document.  
-- Choose between day and night backgrounds. Seasonal backgrounds to come to keep you immersed even when working in Obsidian!
-- Choose between warm and cool color palettes for the dashboard.
-- Customize how fast your companion moves.
+(Confetti rain resides in the sidebar only, non-intrusive to your workspace.)
 
 ---
 
@@ -83,15 +81,23 @@ The **Stats tab** shows your daily activity at a glance:
 
 ### Optional Personalization
 
+Personalization options mean you can use what serves your motivation and aesthetics, and turn off what doesn't.
+
 - Customize your pet's name for a personal touch in the celebration message!
 
 ![Mochi is energized by a fresh new note](docs/media/CheersPetName.png) ![Meowth loves a fresh new link](docs/media/CheersPetName2.png) ![Sir Meow is doing a happy dance](docs/media/CheersPetName3.png)
 
 - Tune your pet's movement speed
 
-- Choose your background (day or night, more options to come!)
+- Each celebratory event comes with its own toggle. Only turn on what matters to you.
 
-- Choose your dashboard color palette (warm or cool)
+- Customize overall daily word goals for the vault.
+
+- Additionally, customize daily word goals per document.  
+
+- Choose between day and night background. Seasonal backgrounds to come to keep you immersed even when working in Obsidian!
+
+- Choose between warm and cool dashboard color palettes.
 
 ![Warm color palette](docs/media/CheersWarm.png) ![Cool color palette](docs/media/CheersCool.png)
 
