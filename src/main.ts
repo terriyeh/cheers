@@ -31,6 +31,7 @@ declare global {
 
 export default class CheersPlugin extends Plugin {
 	settings: CheersSettings = DEFAULT_SETTINGS;
+	petView?: PetView;
 	dailyWordData: DailyWordData = this.getDefaultDailyData();
 	celebrationService?: CelebrationService;
 
@@ -43,7 +44,11 @@ export default class CheersPlugin extends Plugin {
 		// Register the pet view
 		this.registerView(
 			VIEW_TYPE_PET,
-			(leaf) => new PetView(leaf, this)
+			(leaf) => {
+				const view = new PetView(leaf, this);
+				this.petView = view;
+				return view;
+			}
 		);
 
 		// Initialize the view in the left sidebar after the workspace is ready.
