@@ -145,7 +145,7 @@
     /* Grow to fill available height; shrink when panel is short.
      * min-height: 0 lets flexbox shrink below natural content size. */
     flex: 1 1 0;
-    min-height: 0;
+    min-height: 80px;
     overflow: hidden;
   }
 
