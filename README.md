@@ -87,6 +87,7 @@ Personalization options mean you can use what serves your motivation and aesthet
 - Additionally, customize daily word goals per document.  
 - Choose between day and night background. Seasonal backgrounds to come to keep you immersed even when working in Obsidian!
 - Choose between warm and cool dashboard color palettes.
+
 ![Warm color palette](docs/media/CheersWarm.png) ![Cool color palette](docs/media/CheersCool.png)
 
 ---
