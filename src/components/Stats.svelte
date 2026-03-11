@@ -14,8 +14,6 @@
   export let showLinksColumn: boolean = false;
   export let showTasksColumn: boolean = false;
   export let colorMode: 'warm' | 'cool' = 'warm';
-  export let ringWidthPercent: number = 80;
-
   $: ring = computeRingData(wordsAddedToday, dailyWordGoal, fileWordCount, fileWordGoal);
 
   // Inner circle radius: 80% of outer ring so they read as one concentric object.
@@ -40,7 +38,7 @@
 <div class="vp-stats" data-color-mode={colorMode}>
 
   {#if ring.showRingSection}
-    <div class="vp-stats-rings" style="width: {ringWidthPercent}%">
+    <div class="vp-stats-rings">
 
       {#if ring.showInnerCircle && fileWordGoal !== null}
         <p class="vp-stats-label">File goal: {fileWordCount ?? 0}/{fileWordGoal} words</p>
@@ -122,6 +120,7 @@
     padding: 16px 8px;
     box-sizing: border-box;
     overflow-y: auto;
+    container-type: size;
     --vp-ring-color: var(--color-purple);
   }
 
@@ -142,9 +141,11 @@
     flex-direction: column;
     align-items: center;
     margin-bottom: 16px;
+    width: 80%;
+    flex-shrink: 0;
   }
 
-  /* SVG fills its container; container width is controlled by ringWidthPercent prop */
+  /* SVG fills its container; container width drives ring size (height scales via viewBox aspect ratio) */
   .vp-stats-svg { width: 100%; height: auto; }
 
   .vp-stats-label {
@@ -161,6 +162,7 @@
     gap: 24px;
     width: 100%;
     margin-top: 8px;
+    flex-shrink: 0;
   }
 
   .vp-tally-col {
@@ -178,4 +180,14 @@
   .vp-tally-tasks .vp-tally-count { color: var(--vp-tasks-color); }
 
   .vp-stats-empty { font-size: 0.8rem; color: var(--text-muted); text-align: center; padding: 16px; }
+
+  /* Responsive ring: reduce ring width at shorter panel heights so tallies stay visible.
+   * Shrinking width is the only way to shrink an SVG with a fixed viewBox aspect ratio.
+   * container-type: size on .vp-stats enables height-based container queries. */
+  @container (max-height: 320px) {
+    .vp-stats-rings { width: 55%; }
+  }
+  @container (max-height: 220px) {
+    .vp-stats-rings { width: 38%; }
+  }
 </style>

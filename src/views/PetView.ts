@@ -31,7 +31,6 @@ interface StatsProps {
   fileWordCount: number | null;
   fileWordGoal: number | null;
   colorMode: 'warm' | 'cool';
-  ringWidthPercent: number;
 }
 
 export class PetView extends ItemView {
@@ -478,7 +477,6 @@ export class PetView extends ItemView {
       fileWordCount,
       fileWordGoal,
       colorMode: plugin.settings.dashboardColorMode,
-      ringWidthPercent: 80,
     };
   }
 
