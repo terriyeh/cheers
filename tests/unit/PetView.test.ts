@@ -37,7 +37,7 @@ describe('PetView', () => {
     });
 
     it('should return correct icon', () => {
-      expect(petView.getIcon()).toBe('cat');
+      expect(petView.getIcon()).toBe('party-popper');
     });
 
     it('should export VIEW_TYPE_PET constant', () => {

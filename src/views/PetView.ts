@@ -478,9 +478,7 @@ export class PetView extends ItemView {
       fileWordCount,
       fileWordGoal,
       colorMode: plugin.settings.dashboardColorMode,
-      ringWidthPercent: dailyWordGoal && dailyWordGoal > 0
-        ? Math.min(100, Math.round((daily.wordsAddedToday / dailyWordGoal) * 100))
-        : 0,
+      ringWidthPercent: 80,
     };
   }
 

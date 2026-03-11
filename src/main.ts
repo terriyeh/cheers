@@ -51,8 +51,11 @@ export default class CheersPlugin extends Plugin {
 			}
 		);
 
-		// Initialize the view in the left sidebar (creates tab icon for switching)
-		this.initializePetView();
+		// Initialize the view in the left sidebar after the workspace is ready.
+		// getLeftLeaf() returns null if called before layout is mounted (e.g. fresh Obsidian open).
+		this.app.workspace.onLayoutReady(() => {
+			this.initializePetView();
+		});
 
 		// Add settings tab
 		this.addSettingTab(new CheersSettingTab(this.app, this));
