@@ -36,7 +36,7 @@ export default class CheersPlugin extends Plugin {
 	celebrationService?: CelebrationService;
 
 	async onload() {
-		console.log('🦊 Cheers loading...');
+		console.log('🎉 Cheers loading...');
 
 		// Load settings
 		await this.loadSettings();
@@ -85,38 +85,38 @@ export default class CheersPlugin extends Plugin {
 					const view = this.getActivePetView();
 					if (view) {
 						view.transitionState(state);
-						console.log(`🦊 Transitioned to: ${state}`);
+						console.log(`🎉 Transitioned to: ${state}`);
 					} else {
-						console.error('🦊 No active pet view. Open Cheers first.');
+						console.error('🎉 No active pet view. Open Cheers first.');
 					}
 				},
 				getCurrentState: () => {
 					const view = this.getActivePetView();
 					const state = view?.getCurrentState() ?? null;
-					console.log(`🦊 Current state: ${state ?? 'no view'}`);
+					console.log(`🎉 Current state: ${state ?? 'no view'}`);
 					return state;
 				},
 				reset: () => {
 					const view = this.getActivePetView();
 					if (view) {
 						view.transitionState('walking');
-						console.log('🦊 Reset to walking');
+						console.log('🎉 Reset to walking');
 					} else {
-						console.error('🦊 No active pet view. Open Cheers first.');
+						console.error('🎉 No active pet view. Open Cheers first.');
 					}
 				},
 				setSpeed: (speed: number) => {
 					const view = this.getActivePetView();
 					if (view?.petComponent) {
 						view.petComponent.$set({ movementSpeed: speed });
-						console.log(`🦊 Movement speed set to: ${speed}%`);
+						console.log(`🎉 Movement speed set to: ${speed}%`);
 					} else {
-						console.error('🦊 No active pet view. Open Cheers first.');
+						console.error('🎉 No active pet view. Open Cheers first.');
 					}
 				},
 				help: () => {
 					console.log(`
-🦊 Cheers Debug Commands:
+🎉 Cheers Debug Commands:
   cheersDebug.transitionState('state') - Transition to a state
   cheersDebug.getCurrentState()        - Get current state
   cheersDebug.reset()                  - Reset to walking
@@ -131,12 +131,12 @@ Available states:
 				}
 			};
 
-			console.log('🦊 Debug commands available: window.cheersDebug.help()');
+			console.log('🎉 Debug commands available: window.cheersDebug.help()');
 		}
 	}
 
 	onunload() {
-		console.log('🦊 Cheers unloaded');
+		console.log('🎉 Cheers unloaded');
 
 		// Clean up celebration service
 		this.celebrationService?.cleanup();
