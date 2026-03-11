@@ -142,11 +142,17 @@
     align-items: center;
     margin-bottom: 16px;
     width: 80%;
-    flex-shrink: 0;
+    /* Grow to fill available height; shrink when panel is short.
+     * min-height: 0 lets flexbox shrink below natural content size. */
+    flex: 1 1 0;
+    min-height: 0;
+    overflow: hidden;
   }
 
-  /* SVG fills its container; container width drives ring size (height scales via viewBox aspect ratio) */
-  .vp-stats-svg { width: 100%; height: auto; }
+  /* SVG fills the rings container height so it scales continuously with panel size.
+   * viewBox="0 0 200 200" + preserveAspectRatio="xMidYMid meet" (SVG default)
+   * keeps the ring circular and centered regardless of element dimensions. */
+  .vp-stats-svg { width: 100%; flex: 1 1 0; min-height: 0; }
 
   .vp-stats-label {
     font-size: 0.75rem;
@@ -181,13 +187,4 @@
 
   .vp-stats-empty { font-size: 0.8rem; color: var(--text-muted); text-align: center; padding: 16px; }
 
-  /* Responsive ring: reduce ring width at shorter panel heights so tallies stay visible.
-   * Shrinking width is the only way to shrink an SVG with a fixed viewBox aspect ratio.
-   * container-type: size on .vp-stats enables height-based container queries. */
-  @container (max-height: 320px) {
-    .vp-stats-rings { width: 55%; }
-  }
-  @container (max-height: 220px) {
-    .vp-stats-rings { width: 38%; }
-  }
 </style>
