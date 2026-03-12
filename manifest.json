@@ -1,7 +1,7 @@
 {
 	"id": "cheers",
 	"name": "Cheers",
-	"version": "1.0.1",
+	"version": "1.0.2",
 	"minAppVersion": "1.4.0",
 	"description": "A vault companion that celebrates your writing, notetaking, and vault-building progress.",
 	"author": "Terri Yeh",
