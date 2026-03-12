@@ -153,7 +153,7 @@ export class CelebrationService {
 			});
 
 			// Listen for editor changes (debounced) — not deferred so typing responsiveness is immediate
-			const editorChangeRef = workspace.on('editor-change', this.editorChangeHandler!);
+			const editorChangeRef = workspace.on('editor-change', this.editorChangeHandler);
 			if (editorChangeRef) {
 				this.eventRefs.push(editorChangeRef);
 			} else {

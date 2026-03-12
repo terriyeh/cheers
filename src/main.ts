@@ -167,7 +167,7 @@ Available states:
 
 		// Reveal the view (either existing or newly created)
 		if (leaf) {
-			workspace.revealLeaf(leaf);
+			void workspace.revealLeaf(leaf);
 		}
 	}
 
