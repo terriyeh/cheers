@@ -132,7 +132,7 @@ MIT — see [LICENSE](LICENSE) for details.
 
 ## Say Thanks 🙏
 
-- **Support continued development of Cheers & receive new background(s) of your choice**: [Cozy Engineer on Ko-fi](https://ko-fi.com/terriyeh)
+- **Support continued development of Cheers & receive new background(s) of your choice**: [Terri Yeh on Ko-fi](https://ko-fi.com/terriyeh)
 - **Request features**: [GitHub Issues](https://github.com/terriyeh/cheers/issues)
 
 
